@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aieds.rand0m.ai/spec/v1/aieds.schema.json",
+  "title": "AIEDS Disclosure",
+  "description": "AI Energy Disclosure Standard v1 — a single disclosure record for an AI subject's energy consumption and carbon footprint. AIEDS scope is device / usage / inference / training and is NOT the planetary Earth health score produced by rand0m.ai's earthHealthScoreRefresh function.",
+  "type": "object",
+  "required": [
+    "id",
+    "subject",
+    "scope",
+    "window",
+    "energyKWh",
+    "gCO2e",
+    "gridIntensity",
+    "confidence",
+    "methodologyVersion",
+    "source",
+    "generatedAt"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional JSON Schema URI — may be included for editor tooling."
+    },
+    "id": {
+      "type": "string",
+      "description": "Stable unique identifier for this disclosure record. UUID or URI recommended (e.g. 'aieds:my-model:inference:2026-06-29:001')."
+    },
+    "subject": {
+      "type": "object",
+      "description": "The AI subject this disclosure covers.",
+      "required": ["kind", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["model", "agent", "app"],
+          "description": "model = a foundation/fine-tuned model; agent = an orchestrated AI agent; app = an AI-powered application."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name of the subject."
+        },
+        "version": {
+          "type": "string",
+          "description": "Optional semver or other version string."
+        }
+      }
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["device", "usage", "inference", "training"],
+      "description": "Measurement boundary. 'device' = client device energy (CPU/GPU/display) running an AI app; 'usage' = device + server-side inference combined; 'inference' = server-side inference only; 'training' = model training run. AIEDS v1 is optimised for device/usage/inference (agent-native). Training disclosures are supported but factor tables are inference-focused."
+    },
+    "window": {
+      "type": "string",
+      "pattern": "^P(?:\\d+Y)?(?:\\d+M)?(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+S)?)?$",
+      "description": "ISO 8601 duration this disclosure covers (e.g. 'P30D' = 30 days, 'PT15M' = 15 minutes, 'PT1H' = 1 hour)."
+    },
+    "compute": {
+      "type": "object",
+      "description": "Optional compute metrics used to derive energyKWh. Provide at least one of tokens, gpuSeconds, or flops for provenance; omit if energy was measured directly.",
+      "additionalProperties": false,
+      "properties": {
+        "tokens": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total tokens processed (input + output)."
+        },
+        "gpuSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Wall-clock GPU-seconds consumed across all accelerators."
+        },
+        "flops": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total floating-point operations (FP16/BF16 equivalent)."
+        },
+        "hardware": {
+          "type": "string",
+          "description": "Accelerator identifier (e.g. 'NVIDIA H100 SXM', 'Google TPU v4'). Used with gpuSeconds to derive energy."
+        }
+      }
+    },
+    "energyKWh": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total energy consumed in kilowatt-hours for the declared scope and window."
+    },
+    "gCO2e": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total greenhouse gas emissions in grams of CO2-equivalent. Must be derived as energyKWh × gridIntensity.gCO2ePerKWh (within rounding tolerance)."
+    },
+    "gridIntensity": {
+      "type": "object",
+      "description": "Grid carbon intensity applied to convert energy to CO2e.",
+      "required": ["gCO2ePerKWh"],
+      "additionalProperties": false,
+      "properties": {
+        "gCO2ePerKWh": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Carbon intensity in grams of CO2-equivalent per kilowatt-hour."
+        },
+        "region": {
+          "type": "string",
+          "description": "Grid region or country code used (e.g. 'US', 'EU27', 'France', 'global_average')."
+        }
+      }
+    },
+    "confidence": {
+      "description": "Confidence in the energyKWh figure. String enum or fractional 0–1. 'high' = direct hardware power measurement; 'med' = GPU-seconds × TDP factor; 'low' = token or FLOP proxy.",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["low", "med", "high"]
+        },
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      ]
+    },
+    "methodologyVersion": {
+      "type": "string",
+      "description": "AIEDS methodology version (semver, e.g. '1.0.0'). Must match the published version in spec/methodology.md."
+    },
+    "source": {
+      "type": "string",
+      "description": "URI or name of the tool or process that generated this disclosure (e.g. 'aieds-mcp v1.0.0', 'my-energy-meter v2')."
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 datetime when this disclosure was generated."
+    }
+  }
+}

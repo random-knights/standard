@@ -1,0 +1,26 @@
+{
+  "name": "@random-knights/aieds-mcp",
+  "version": "1.0.0",
+  "description": "AIEDS v1 MCP server — AI Energy Disclosure Standard tools for agents and providers",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "node --test dist/test/server.test.js"
+  },
+  "keywords": ["aieds", "mcp", "ai", "energy", "carbon", "disclosure"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

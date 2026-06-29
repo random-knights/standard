@@ -1,0 +1,23 @@
+{
+  "id": "aieds:rand0m-assistant:session:2026-06-29:72a3",
+  "subject": {
+    "kind": "agent",
+    "name": "rand0m assistant",
+    "version": "1.0"
+  },
+  "scope": "usage",
+  "window": "PT15M",
+  "compute": {
+    "tokens": 4500
+  },
+  "energyKWh": 0.00225,
+  "gCO2e": 0.87,
+  "gridIntensity": {
+    "gCO2ePerKWh": 386,
+    "region": "US"
+  },
+  "confidence": "low",
+  "methodologyVersion": "1.0.0",
+  "source": "rand0m-agent v1.0",
+  "generatedAt": "2026-06-29T14:30:00Z"
+}

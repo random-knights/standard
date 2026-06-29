@@ -1,0 +1,20 @@
+{
+  "id": "aieds:xyz-earth:device:2026-06:P30D",
+  "subject": {
+    "kind": "app",
+    "name": "xyz-earth",
+    "version": "0.1.0"
+  },
+  "scope": "device",
+  "window": "P30D",
+  "energyKWh": 4.2,
+  "gCO2e": 1159,
+  "gridIntensity": {
+    "gCO2ePerKWh": 276,
+    "region": "EU27"
+  },
+  "confidence": 0.4,
+  "methodologyVersion": "1.0.0",
+  "source": "xyz-earth device-energy-estimate v0.1",
+  "generatedAt": "2026-06-29T00:00:00Z"
+}
