@@ -4,6 +4,7 @@
 
 - **Schema changes** (`spec/aieds.schema.json`) — new fields, stricter validation, or clarifications. Must remain backward-compatible within a major version.
 - **Factor table / methodology updates** (`spec/methodology.md`, `mcp/src/factors.ts`) — new hardware, updated grid intensities, new regions. Owner-ratified (see Governance below).
+- **Reference-library changes** (`lib/`) — MUST keep the parity fixture green (it pins the shipped rand0m.ai app's numbers); constant changes are methodology changes (owner-ratified).
 - **MCP server fixes and new tools** (`mcp/`) — bug fixes, additional tool parameters, new estimation paths.
 - **New conformance examples** (`spec/examples/`) — must be valid against the schema; validate with `node examples/validate.mjs`.
 
@@ -18,6 +19,12 @@ The read API/SDK and `.well-known/aieds.json` are deferred to v1.1. Do not add n
 cd spec
 npm install
 node examples/validate.mjs      # all 3 examples must pass
+
+# Reference library
+cd lib
+npm install
+npm run build                   # TypeScript → dist/
+npm test                        # parity fixture vs the shipped app + contract tests
 
 # MCP server
 cd mcp
@@ -34,7 +41,7 @@ AIEDS uses two independent version numbers:
 
 | Version | Where | Meaning |
 |---------|-------|---------|
-| **Methodology version** | `spec/methodology.md` header + `mcp/src/factors.ts` `METHODOLOGY_VERSION` | Bumped when factor tables or the compute path changes. Semver: patch for table corrections, minor for new factors/regions, major for path changes. |
+| **Methodology version** | `spec/methodology.md` header + `mcp/src/factors.ts` `METHODOLOGY_VERSION` + `lib/src/index.ts` `METHODOLOGY_VERSION` | Bumped when factor tables or the compute path changes. Semver: patch for table corrections, minor for new factors/regions, major for path changes. |
 | **Schema version** | `spec/aieds.schema.json` `$id` URI | Bumped when the disclosure shape changes (new required fields = major; new optional fields = minor). |
 
 **Factor table / methodology changes are owner-ratified.** The rule (mirroring ADR 0008):
@@ -52,4 +59,4 @@ The MCP server (`mcp/`) must never require an API key, auth token, environment s
 
 ## License of contributions
 
-By contributing you agree that your contributions to `spec/aieds.schema.json` and `mcp/` are licensed MIT, and contributions to `spec/methodology.md` and `spec/examples/` are licensed CC BY 4.0, consistent with the repository [LICENSE](LICENSE).
+By contributing you agree that your contributions to `spec/aieds.schema.json`, `lib/`, and `mcp/` are licensed MIT, and contributions to `spec/methodology.md` and `spec/examples/` are licensed CC BY 4.0, consistent with the repository [LICENSE](LICENSE).

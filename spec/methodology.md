@@ -2,7 +2,7 @@
 
 > **License:** CC BY 4.0 rand0m.ai — [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 1.0.0 (AIEDS methodology semver — distinct from repo/MCP server versions)
+**Version:** 1.1.0 (AIEDS methodology semver — distinct from repo/MCP server versions)
 **Status:** Ratified
 **Effective:** 2026-06-29
 
@@ -10,6 +10,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 1.1.0   | 2026-07-09 | Metric hierarchy (§1.1). Carbon-first response-surface path (§2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (§2.5). Response-surface confidence ladder mapping (§5.1). Reference library (`/lib`). Additive only. |
 | 1.0.0   | 2026-06-29 | Initial ratification. GPU-seconds, FLOP, and token compute paths. Hardware TDP table (11 accelerators). Grid intensity table (14 regions). Three confidence levels. |
 
 ---
@@ -31,6 +32,20 @@ AIEDS scope definitions:
 - **usage** — device + server-side inference combined (full user-facing footprint).
 - **inference** — server-side inference only (no client energy).
 - **training** — a model training run. Factor tables are inference-optimised; apply training-specific measured values where available.
+
+### 1.1 Metric Hierarchy
+
+Every AIEDS disclosure is read top-down through three levels. Lower levels are
+derived from (never a substitute for) the level above:
+
+| Level | Class | Metrics | Nature |
+|-------|-------|---------|--------|
+| 1 | **Modeled scientific estimates** | `energyKWh`/`energyWh`, `gCO2e` | The disclosure's substance. Modeled via §2–§3 (forward) or §2.4 (carbon-first). |
+| 2 | **Operational metrics** | tokens in/out, cost, latency | Facts of the run, passed through untransformed. |
+| 3 | **Human equivalencies** | Tree-Time, phone charges, LED-bulb hours, laptop minutes, driving meters | Educational comparisons ONLY (§2.5). Never compliance figures, never offset/restoration claims. |
+
+Required copy on every rendered disclosure: *"Energy and carbon are modeled
+estimates."* and *"Tree-Time and equivalents are educational comparisons."*
 
 ---
 
@@ -62,6 +77,43 @@ energyKWh = (tokens / 1_000_000) × Wh_per_million / 1_000
 ```
 
 `Wh_per_million` by model scale from **Table 2** (§4). This path is order-of-magnitude only; hardware utilisation, batch size, and serving efficiency dominate actual consumption. **Confidence: `low`.**
+
+### 2.4 Carbon-First (Response-Surface) Path
+
+Chat/agent surfaces usually receive a per-response **CO₂e estimate** (from the
+provider or a client-side model) but no energy telemetry. The response-surface
+path inverts §3:
+
+```
+energyWh = carbon_g_co2e / 429 × 1000
+```
+
+`429 gCO₂e/kWh` is the **pinned app-surface modeled global grid intensity**.
+It is deliberately its own constant, distinct from Table 3's `global_average`
+(436): the shipped rand0m.ai app disclosed with 429 from AIEDS v1 day one, and
+the standard follows the shipped number rather than silently diverging from
+every disclosure already rendered. Changing either constant is a methodology
+change (owner-ratified; §6). The reference implementation of this path is
+[`/lib`](../lib/) — it byte-mirrors the app's `aieds_disclosure.dart`.
+
+Negative or missing carbon clamps to zero. **Confidence:** `estimated` (§5.1).
+
+### 2.5 Human Equivalencies (Level 3)
+
+Educational comparisons derived from the Level-1 metrics. Formulas and pinned
+constants (all illustrative, modeled):
+
+| Equivalency | Formula | Constant |
+|-------------|---------|----------|
+| **Tree-Time** (minutes) | `carbon_g / 22 000 × 525 600` | 1 Mature Reference Tree (MRT) sequesters 22 kg CO₂e/year |
+| Phone charges | `energyWh / 12` | 12 Wh per full charge |
+| LED-bulb hours | `energyWh / 10` | 10 W bulb |
+| Laptop minutes | `energyWh / 50 × 60` | 50 W laptop |
+| Driving meters | `carbon_g / 170 × 1000` | 170 gCO₂e/km average car |
+
+Tree-Time is AIEDS's signature equivalency: how long one mature reference tree
+takes to sequester the disclosed carbon. Equivalencies MUST be labeled
+educational and MUST NOT be presented as offsets, credits, or restoration.
 
 ---
 
@@ -135,6 +187,20 @@ Derived from published A100/H100 inference benchmarks. These are rough order-of-
 | `low` | Token proxy (Table 2), FLOP proxy, or hardware not in Table 1. | `tokens`, `flops`, or unknown hardware |
 
 Fractional confidence (0–1) may be substituted for the string enum when a probabilistic derivation is available.
+
+### 5.1 Response-Surface Confidence Ladder
+
+Response surfaces (the §2.4 path, the rand0m.ai app, `/lib`) use a four-rung
+ladder; the two enums map as follows:
+
+| Response-surface rung | Meaning | Estimation-path equivalent |
+|-----------------------|---------|---------------------------|
+| `estimated` | Carbon inverted from a client/provider heuristic. | `low` |
+| `modeled` | Carbon from a documented model (factor tables, measured sample). | `low`–`med` |
+| `provider-derived` | Provider-reported telemetry. Requires an approved evidence phase. | `med`–`high` |
+| `verified` | Independently verified measurement. Requires an approved evidence phase. | `high` |
+
+AIEDS v1 disclosures use `estimated` or `modeled` only.
 
 ---
 
