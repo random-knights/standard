@@ -4,12 +4,37 @@
 
 AIEDS v1 surfaces:
 - **`/spec`** — the JSON Schema (`aieds.schema.json`) + methodology (`methodology.md`) + conformance examples.
+- **`/lib`** — the reference library (TypeScript/Node): tokens/model/carbon in → full AIEDS disclosure out, byte-mirroring the rand0m.ai app so app and standard agree to the number.
 - **`/mcp`** — a keyless MCP server (TypeScript/Node) exposing three tools: `aieds_estimate`, `aieds_factors`, `aieds_disclose`.
+
+**Metric hierarchy** (methodology §1.1): Level 1 modeled scientific estimates (energy, CO₂e) → Level 2 operational metrics (tokens, cost, latency) → Level 3 human equivalencies (Tree-Time, phone charges, …; educational only, never offsets).
 
 > **AIEDS scope is device / usage / inference / training.**
 > It is NOT the planetary Earth Health Score produced by `rand0m.ai/earthHealthScoreRefresh`. See [spec/methodology.md §1](spec/methodology.md#1-scope-and-non-overlap).
 
-## Quick start
+## Quick start (one minute)
+
+Disclose your first response with the reference library:
+
+```bash
+cd lib && npm install && npm run build
+node examples/request-to-disclosure.mjs   # request in → disclosure out
+```
+
+Or in your own code:
+
+```js
+import { disclosureFromResponse } from "@random-knights/aieds-reference";
+
+const d = disclosureFromResponse({
+  provider: "GoogleAI", model: "gemini-2.0-flash",
+  inputTokens: 412, outputTokens: 890,
+  costUsd: 0.0031, carbonGrams: 0.62,
+});
+// d.energyWh, d.carbonGrams, d.treeTimeLabel ("14.8 min"), d.notes (required copy)
+```
+
+The rest of the toolset:
 
 ```bash
 # Validate the bundled examples against the schema:
@@ -48,6 +73,7 @@ AIEDS is specified in ADR 0010 (random-knights/readless CODEX). The key design c
 | Schema | `spec/aieds.schema.json` | MIT | JSON Schema 2020-12 for one disclosure |
 | Methodology | `spec/methodology.md` | CC BY 4.0 | Compute→energy→CO₂e path + factor tables |
 | Examples | `spec/examples/` | CC BY 4.0 | 3 valid disclosures + conformance script |
+| Reference library | `lib/` | MIT | Carbon-first disclosures (mirrors the rand0m.ai app; parity-tested) |
 | MCP server | `mcp/` | MIT | TypeScript Node MCP: estimate / factors / disclose |
 
 ## Roadmap
@@ -69,6 +95,6 @@ AIEDS is specified in ADR 0010 (random-knights/readless CODEX). The key design c
 ## License
 
 - `spec/methodology.md` and `spec/examples/` — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- `spec/aieds.schema.json` and `mcp/` — [MIT](LICENSE#mit-license)
+- `spec/aieds.schema.json`, `lib/`, and `mcp/` — [MIT](LICENSE#mit-license)
 
 See [LICENSE](LICENSE) for full terms.
