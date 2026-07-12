@@ -11,10 +11,16 @@
 | Version | Date       | Changes |
 |---------|------------|---------|
 | 1.2.0   | 2026-07-12 | ENERGY-FIRST response surface (§2.4 v2): per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr across all implementations. Carbon-first inversion retired for cloud (kept for reading v1 rows). |
-| 1.1.0   | 2026-07-09 | Metric hierarchy (§1.1). Carbon-first response-surface path (§2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (§2.5). Response-surface confidence ladder mapping (§5.1). Reference library (`/lib`). Additive only. |
+| 1.1.0   | 2026-07-11 | Metric hierarchy (§1.1). Carbon-first response-surface path (§2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (§2.5). Response-surface confidence ladder mapping (§5.1). Reference library (`/lib`). Additive only. |
 | 1.0.0   | 2026-06-29 | Initial ratification. GPU-seconds, FLOP, and token compute paths. Hardware TDP table (11 accelerators). Grid intensity table (14 regions). Three confidence levels. |
 
----
+> **Tagging note (2026-07-12):** the repo carried no git tags until 2026-07-12.
+> On that date, annotated tags `v1.0.0` (commit `7f548c1`) and `v1.1.0` (commit
+> `a09812a`) were cut RETROACTIVELY so each ratified version has an artifact;
+> their releases state plainly that they are backfills, not tags that existed at
+> the time. The 1.1.0 date above was corrected from a previously-claimed
+> 2026-07-09 to 2026-07-11, the actual commit date (no commit corroborated
+> 2026-07-09). `v1.2.0` is tagged at its real ratification merge.
 
 ## 1. Scope and Non-Overlap
 
