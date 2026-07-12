@@ -1,8 +1,14 @@
-# AIEDS v1 Methodology
+# AIEDS Methodology
+
+> **CURRENT VERSION: 2.0.0. Versions 1.x are SUPERSEDED and MUST NOT be
+> implemented.** 1.x specified a flat 0.30 gCO2e per 1k tokens for every model
+> and derived energy backward from carbon. Both are wrong. Implement 2.0.0 (see
+> the changelog below and `README.md`). Do not pick up 1.0.0 because it reads
+> like a stable base; it is not.
 
 > **License:** CC BY 4.0 rand0m.ai — [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 1.2.0 (AIEDS methodology semver — distinct from repo/MCP server versions)
+**Version:** 2.0.0 (AIEDS methodology semver — distinct from repo/MCP server versions)
 **Status:** Ratified
 **Effective:** 2026-07-12
 
@@ -10,7 +16,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
-| 1.2.0   | 2026-07-12 | ENERGY-FIRST response surface (§2.4 v2): per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr across all implementations. Carbon-first inversion retired for cloud (kept for reading v1 rows). |
+| 2.0.0   | 2026-07-12 | **MAJOR (breaking).** ENERGY-FIRST response surface (§2.4 v2): energy-first derivation replaces the flat 0.30 gCO2e/1k-token constant and the carbon-first inversion. The SAME input now yields DIFFERENT output (a typical exchange moves 0.375 g -> 0.103 g), so under semver this is a breaking change, NOT the minor 1.2.0 it was briefly cut as (see tagging note). Per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr. |
 | 1.1.0   | 2026-07-11 | Metric hierarchy (§1.1). Carbon-first response-surface path (§2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (§2.5). Response-surface confidence ladder mapping (§5.1). Reference library (`/lib`). Additive only. |
 | 1.0.0   | 2026-06-29 | Initial ratification. GPU-seconds, FLOP, and token compute paths. Hardware TDP table (11 accelerators). Grid intensity table (14 regions). Three confidence levels. |
 
@@ -20,7 +26,12 @@
 > their releases state plainly that they are backfills, not tags that existed at
 > the time. The 1.1.0 date above was corrected from a previously-claimed
 > 2026-07-09 to 2026-07-11, the actual commit date (no commit corroborated
-> 2026-07-09). `v1.2.0` is tagged at its real ratification merge.
+> 2026-07-09). The current ratification was briefly cut as `v1.2.0` (a MINOR
+> bump) on 2026-07-12 and RETRACTED the same day, because the change is breaking
+> and a minor version misstates compatibility; it was re-published as `v2.0.0`.
+> `v1.0.0` and `v1.1.0` remain tagged (deleting them would recreate a changelog
+> that claims versions with no artifacts) but are SUPERSEDED and must not be
+> implemented.
 
 ## 1. Scope and Non-Overlap
 

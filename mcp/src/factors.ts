@@ -1,7 +1,7 @@
 // AIEDS v1 factor tables — the single source of truth for deterministic estimation.
 // Owner-ratified: changes require a methodology version bump (see methodology.md §6).
 
-export const METHODOLOGY_VERSION = "1.2.0";
+export const METHODOLOGY_VERSION = "2.0.0";
 
 export interface HardwareFactor {
   powerW: number;

@@ -1,8 +1,14 @@
 # AIEDS — AI Energy Disclosure Standard
 
+> **CURRENT VERSION: methodology 2.0.0 (MCP server 2.0.0). Versions 1.x are
+> SUPERSEDED and MUST NOT be implemented.** 1.x specified a flat 0.30 gCO2e per
+> 1k tokens for every model and derived energy backward from carbon. Both are
+> wrong. If you are new here, implement 2.0.0; do not pick up 1.0.0 because it
+> sounds like the stable base. See `spec/methodology.md`.
+
 **AI Energy Disclosure Standard (AIEDS)** is an open schema and toolset for self-attested energy and carbon footprint disclosures for AI models, agents, and apps.
 
-AIEDS v1 surfaces:
+AIEDS surfaces:
 - **`/spec`** — the JSON Schema (`aieds.schema.json`) + methodology (`methodology.md`) + conformance examples.
 - **`/lib`** — the reference library (TypeScript/Node): tokens/model/carbon in → full AIEDS disclosure out, byte-mirroring the rand0m.ai app so app and standard agree to the number.
 - **`/mcp`** — a keyless MCP server (TypeScript/Node) exposing three tools: `aieds_estimate`, `aieds_factors`, `aieds_disclose`.
