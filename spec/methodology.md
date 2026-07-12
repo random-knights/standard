@@ -2,15 +2,15 @@
 
 > **License:** CC BY 4.0 rand0m.ai — [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 1.1.0 (AIEDS methodology semver — distinct from repo/MCP server versions)
+**Version:** 1.2.0 (AIEDS methodology semver — distinct from repo/MCP server versions)
 **Status:** Ratified
-**Effective:** 2026-06-29
+**Effective:** 2026-07-12
 
 ## CHANGELOG
 
 | Version | Date       | Changes |
 |---------|------------|---------|
-| 1.2.0 (proposed) | 2026-07-11 | ENERGY-FIRST response surface (§2.4 v2): per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr across all implementations. Carbon-first inversion retired for cloud (kept for reading v1 rows). |
+| 1.2.0   | 2026-07-12 | ENERGY-FIRST response surface (§2.4 v2): per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr across all implementations. Carbon-first inversion retired for cloud (kept for reading v1 rows). |
 | 1.1.0   | 2026-07-09 | Metric hierarchy (§1.1). Carbon-first response-surface path (§2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (§2.5). Response-surface confidence ladder mapping (§5.1). Reference library (`/lib`). Additive only. |
 | 1.0.0   | 2026-06-29 | Initial ratification. GPU-seconds, FLOP, and token compute paths. Hardware TDP table (11 accelerators). Grid intensity table (14 regions). Three confidence levels. |
 
@@ -81,7 +81,7 @@ energyKWh = (tokens / 1_000_000) × Wh_per_million / 1_000
 
 ### 2.4 Response-Surface Path (v2: ENERGY-FIRST)
 
-> **1.2.0 (PROPOSED):** the 1.1.0 carbon-first inversion is RETIRED for cloud
+> **1.2.0:** the 1.1.0 carbon-first inversion is RETIRED for cloud
 > responses. Carbon, energy, and tree-time were one multiply printed in three
 > units; v2 makes energy the primary quantity and derives carbon from it.
 
