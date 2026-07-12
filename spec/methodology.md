@@ -10,6 +10,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 1.2.0 (proposed) | 2026-07-11 | ENERGY-FIRST response surface (§2.4 v2): per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr across all implementations. Carbon-first inversion retired for cloud (kept for reading v1 rows). |
 | 1.1.0   | 2026-07-09 | Metric hierarchy (§1.1). Carbon-first response-surface path (§2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (§2.5). Response-surface confidence ladder mapping (§5.1). Reference library (`/lib`). Additive only. |
 | 1.0.0   | 2026-06-29 | Initial ratification. GPU-seconds, FLOP, and token compute paths. Hardware TDP table (11 accelerators). Grid intensity table (14 regions). Three confidence levels. |
 
@@ -78,14 +79,49 @@ energyKWh = (tokens / 1_000_000) × Wh_per_million / 1_000
 
 `Wh_per_million` by model scale from **Table 2** (§4). This path is order-of-magnitude only; hardware utilisation, batch size, and serving efficiency dominate actual consumption. **Confidence: `low`.**
 
-### 2.4 Carbon-First (Response-Surface) Path
+### 2.4 Response-Surface Path (v2: ENERGY-FIRST)
 
-Chat/agent surfaces usually receive a per-response **CO₂e estimate** (from the
-provider or a client-side model) but no energy telemetry. The response-surface
-path inverts §3:
+> **1.2.0 (PROPOSED):** the 1.1.0 carbon-first inversion is RETIRED for cloud
+> responses. Carbon, energy, and tree-time were one multiply printed in three
+> units; v2 makes energy the primary quantity and derives carbon from it.
+
+Cloud chat/agent responses carry token counts. Energy comes from a per-model
+coefficient table (output tokens cost 4x input per token: decode is
+sequential, prefill is parallel; provider pricing ratios run 3-5x):
 
 ```
-energyWh = carbon_g_co2e / 429 × 1000
+energyWh  = inTok/1000 x whPer1kIn[model] + outTok/1000 x whPer1kOut[model]
+energyWh x= pue[provider]      (1.0 when the vendor basis figure is all-in)
+carbonG   = energyWh/1000 x 429
+```
+
+Every coefficient carries a CONFIDENCE TIER and a CITATION (the honesty
+contract - a number without provenance does not belong in the table):
+
+| tier | meaning |
+| --- | --- |
+| measured | we benchmarked it |
+| vendor-published | provider published a figure (cited; split assumptions noted) |
+| class-estimated | inferred from model class; no provider figure exists |
+| unknown | nothing sourceable; class fallback, labeled unknown |
+
+Reference coefficients (mirrors `rk_ai ai_impact.dart`, citations there):
+gemini 0.12/0.48 Wh per 1k in/out, PUE 1.0, vendor-published (Google Aug
+2025, arXiv:2508.15734: 0.24 Wh median prompt); gpt/o* 0.17/0.68, PUE 1.0,
+vendor-published (OpenAI blog Jun 2025: ~0.34 Wh avg query, blog-grade);
+claude 0.145/0.58, PUE 1.2, class-estimated (no Anthropic figure as of
+2026-01); grok + unmatched: the class fallback, labeled unknown.
+
+Disclosures and usage rows are stamped `aiedsImpactModelVersion` (currently
+`v2`); aggregates MUST NOT blend rows across impact-model versions.
+
+DEVICE scope (local inference) already measured energy forward
+(modeled watts x elapsed) and is unchanged.
+
+Legacy (1.1.0) carbon-first inversion, kept ONLY for reading v1-era rows:
+
+```
+energyWh = carbon_g_co2e / 429 x 1000
 ```
 
 `429 gCO₂e/kWh` is the **pinned app-surface modeled global grid intensity**.
