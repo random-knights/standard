@@ -158,7 +158,7 @@ constants (all illustrative, modeled):
 
 | Equivalency | Formula | Constant |
 |-------------|---------|----------|
-| **Tree-Time** (minutes) | `carbon_g / 22 000 × 525 600` | 1 Mature Reference Tree (MRT) sequesters 22 kg CO₂e/year |
+| **Tree-Time** (minutes) | `carbon_g / 21 000 × 525 600` | 1 Mature Reference Tree (MRT) sequesters 21 kg CO₂e/year (v2 unified; v1 used 22 kg) |
 | Phone charges | `energyWh / 12` | 12 Wh per full charge |
 | LED-bulb hours | `energyWh / 10` | 10 W bulb |
 | Laptop minutes | `energyWh / 50 × 60` | 50 W laptop |

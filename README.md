@@ -10,7 +10,7 @@
 
 AIEDS surfaces:
 - **`/spec`** — the JSON Schema (`aieds.schema.json`) + methodology (`methodology.md`) + conformance examples.
-- **`/lib`** — the reference library (TypeScript/Node): tokens/model/carbon in → full AIEDS disclosure out, byte-mirroring the rand0m.ai app so app and standard agree to the number.
+- **`/lib`** — the reference library (TypeScript/Node): **tokens + model in; energy-first disclosure out** (energy modeled from per-model coefficients, carbon derived from energy), byte-mirroring the rand0m.ai app so app and standard agree to the number.
 - **`/mcp`** — a keyless MCP server (TypeScript/Node) exposing three tools: `aieds_estimate`, `aieds_factors`, `aieds_disclose`.
 
 **Metric hierarchy** (methodology §1.1): Level 1 modeled scientific estimates (energy, CO₂e) → Level 2 operational metrics (tokens, cost, latency) → Level 3 human equivalencies (Tree-Time, phone charges, …; educational only, never offsets).
@@ -27,7 +27,9 @@ cd lib && npm install && npm run build
 node examples/request-to-disclosure.mjs   # request in → disclosure out
 ```
 
-Or in your own code:
+Or in your own code (ENERGY-FIRST: pass tokens + model; energy is modeled from
+the per-model coefficient and carbon is DERIVED from energy - you never pass
+carbon in):
 
 ```js
 import { disclosureFromResponse } from "@random-knights/aieds-reference";
@@ -35,9 +37,14 @@ import { disclosureFromResponse } from "@random-knights/aieds-reference";
 const d = disclosureFromResponse({
   provider: "GoogleAI", model: "gemini-2.0-flash",
   inputTokens: 412, outputTokens: 890,
-  costUsd: 0.0031, carbonGrams: 0.62,
+  costUsd: 0.0031,
 });
-// d.energyWh, d.carbonGrams, d.treeTimeLabel ("14.8 min"), d.notes (required copy)
+// Real output (run examples/request-to-disclosure.mjs to reproduce):
+//   d.energyWh      0.47664            modeled FIRST from gemini's coefficient
+//   d.carbonGrams   0.20448            derived: energyWh / 1000 * 429
+//   d.treeTimeLabel "5.1 min"
+//   d.confidence    "vendor-published" per-model tier, never hidden
+//   d.citation      "Google (Aug 2025) ... arxiv.org/abs/2508.15734 ..."
 ```
 
 The rest of the toolset:
@@ -63,6 +70,24 @@ AIEDS provides:
 2. **A methodology** (`methodology.md`) with versioned factor tables (hardware TDP, grid intensity, token proxies) and a governance rule: no silent drift (owner-ratified changes, CHANGELOG).
 3. **An MCP server** that any agent can wire in to get `aieds_estimate` / `aieds_factors` / `aieds_disclose` over stdio — keyless, deterministic, zero network calls.
 
+## Why 2.0.0 (energy-first) beats 1.x
+
+1.x used a single flat constant - **0.30 gCO2e per 1k tokens for every model** - and derived energy backward from carbon. That is what 2.0.0 abolishes. The response-surface path (methodology 2.4, implemented in `/lib`) replaces it with:
+
+- **Per-model energy coefficients, not one constant.** Each model class has its own `whPer1kIn` / `whPer1kOut` (output tokens cost ~4x input: decode is sequential, prefill is parallel). Gemini `0.12 / 0.48`, GPT/o* `0.17 / 0.68`, Claude `0.145 / 0.58` Wh per 1k tokens, plus a per-provider PUE.
+- **Confidence tiers on every coefficient**, surfaced in the disclosure, never hidden:
+
+  | tier | meaning |
+  | --- | --- |
+  | `measured` | we benchmarked it |
+  | `vendor-published` | the provider published a figure (cited; split assumptions noted) |
+  | `class-estimated` | inferred from model class; no provider figure exists |
+  | `unknown` | nothing sourceable; frontier-class fallback, labeled `unknown` |
+
+- **A sourced citation per coefficient** (the honesty contract: a number without provenance does not belong in the table). Gemini cites Google Aug 2025 (arXiv:2508.15734); GPT cites the OpenAI Jun 2025 blog figure; Claude states plainly it is a class estimate (no Anthropic figure as of 2026-01); an unlisted model returns the frontier-class fallback labeled `unknown` rather than a confident guess.
+
+Concretely: the same 412-in / 890-out exchange that 1.x would have blurred into one flat number now discloses `0.47664 Wh` energy-first with a `vendor-published` tier and a citation for Gemini, versus `0.691128 Wh` labeled `unknown` for a model not in the table - the reader can see both the number and how much to trust it.
+
 ## Architecture (ADR 0010)
 
 AIEDS is specified in ADR 0010 (random-knights/readless CODEX). The key design choices:
@@ -72,26 +97,27 @@ AIEDS is specified in ADR 0010 (random-knights/readless CODEX). The key design c
 - **Agent-native** — the MCP tool interface means an agent can disclose its own session footprint inline, not as a post-hoc batch job.
 - **Keyless** — the schema and MCP server require no API keys, no auth, no secrets.
 
-## v1 surfaces
+## Surfaces
 
 | Surface | Path | License | Description |
 |---------|------|---------|-------------|
 | Schema | `spec/aieds.schema.json` | MIT | JSON Schema 2020-12 for one disclosure |
-| Methodology | `spec/methodology.md` | CC BY 4.0 | Compute→energy→CO₂e path + factor tables |
+| Methodology | `spec/methodology.md` | CC BY 4.0 | 2.0.0: energy-first path + per-model coefficients + factor tables |
 | Examples | `spec/examples/` | CC BY 4.0 | 3 valid disclosures + conformance script |
-| Reference library | `lib/` | MIT | Carbon-first disclosures (mirrors the rand0m.ai app; parity-tested) |
+| Reference library | `lib/` | MIT | Energy-first disclosures: per-model coefficients + confidence tiers + citations (mirrors the rand0m.ai app; contract-tested) |
 | MCP server | `mcp/` | MIT | TypeScript Node MCP: estimate / factors / disclose |
 
 ## Roadmap
 
-### v1.0 (this repo — owner-gated publish)
+### Shipped (this repo)
 - [x] `aieds.schema.json` (JSON Schema draft 2020-12)
-- [x] `methodology.md` v1.0.0 with factor tables + governance
+- [x] `methodology.md` 2.0.0 (energy-first; per-model coefficients + confidence tiers + citations) with factor tables + governance
 - [x] 3 conformance examples + validate script
-- [x] MCP server: `aieds_estimate`, `aieds_factors`, `aieds_disclose`
+- [x] MCP server 2.0.0: `aieds_estimate`, `aieds_factors`, `aieds_disclose`
+- [x] Reference library 2.0.0: energy-first, byte-mirrors the app
 - [x] CI: schema validation + build + unit tests
 
-### v1.1 (deferred)
+### Deferred
 - [ ] Read API / SDK for ingesting disclosures from external producers
 - [ ] `.well-known/aieds.json` auto-discovery endpoint
 - [ ] npm publish `@random-knights/aieds-mcp`

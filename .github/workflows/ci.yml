@@ -40,3 +40,22 @@ jobs:
 
       - name: Unit tests
         run: cd mcp && npm test
+
+  lib:
+    name: Build + test reference library
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install lib deps
+        run: cd lib && npm install
+
+      - name: Build (TypeScript)
+        run: cd lib && npm run build
+
+      - name: Unit tests
+        run: cd lib && npm test
