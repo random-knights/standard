@@ -2,7 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # This repo's default branch is master, not main. This filter said [main]
+    # from the start, so push-CI NEVER fired on any commit that landed here -
+    # only pull_request runs did. That gap is how lib/ drifted a major version
+    # without a single failing signal. Keep this in sync with the default
+    # branch; if the default is ever renamed, change it here too.
+    branches: [master]
   pull_request:
 
 jobs:

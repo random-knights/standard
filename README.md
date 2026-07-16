@@ -124,6 +124,14 @@ AIEDS is specified in ADR 0010 (random-knights/readless CODEX). The key design c
 - [ ] Scope 3 embodied carbon (hardware manufacture)
 - [ ] Real-time grid intensity (carbon-aware scheduling)
 
+## Operating this repo
+
+- [RUNBOOK.md](RUNBOOK.md) - humans: how to publish, roll back, where secrets
+  live, what breaks and how to fix it.
+- [CODEX.md](CODEX.md) - agents: the rules that apply in this repo.
+
+Note: this repo's default branch is `master`, not `main`.
+
 ## License
 
 - `spec/methodology.md` and `spec/examples/` — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
