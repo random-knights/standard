@@ -64,3 +64,14 @@ jobs:
 
       - name: Unit tests
         run: cd lib && npm test
+
+  # Aggregating gate: one check that is green only when all three jobs above
+  # pass. Named "CI Gate" so the org ci-gate-required ruleset can pin a single
+  # context for this repo. Does no work of its own; it only depends on the jobs.
+  ci-gate:
+    name: CI Gate
+    runs-on: ubuntu-latest
+    needs: [spec, mcp, lib]
+    steps:
+      - name: All required jobs passed
+        run: echo "spec, mcp, and lib all passed."
