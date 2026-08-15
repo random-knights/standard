@@ -1,8 +1,8 @@
-# CODEX - agent rules for aieds
+# AGENTS - agent rules for aieds
 
-Canonical rules live in `C:\rand0m\CODEX.md` (the working-root codex). This
+Canonical rules live in `C:\rand0m\AGENTS.md` (the working-root standard). This
 file restates the rules an agent MUST follow here, plus the specifics of this
-repo. If the two ever disagree, the working-root codex wins.
+repo. If the two ever disagree, the working-root standard wins.
 
 ## Owner ethos
 
