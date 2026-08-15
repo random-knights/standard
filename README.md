@@ -128,7 +128,7 @@ AIEDS is specified in ADR 0010 (random-knights/readless CODEX). The key design c
 
 - [RUNBOOK.md](RUNBOOK.md) - humans: how to publish, roll back, where secrets
   live, what breaks and how to fix it.
-- [CODEX.md](CODEX.md) - agents: the rules that apply in this repo.
+- [AGENTS.md](AGENTS.md) - agents: the rules that apply in this repo.
 
 Note: this repo's default branch is `master`, not `main`.
 

@@ -1,6 +1,6 @@
 # RUNBOOK - aieds (human operator)
 
-For agent rules see `CODEX.md`. This file is for a human with a terminal.
+For agent rules see `AGENTS.md`. This file is for a human with a terminal.
 
 ## What this is
 
