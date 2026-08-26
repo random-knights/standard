@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// AIEDS spec example conformance script — CC BY 4.0 rand0m.ai
+// AIEDS spec example conformance script - CC BY 4.0 rand0m.ai
 // Run from the spec/ directory: node examples/validate.mjs
 // Validates all bundled disclosures against aieds.schema.json.
 
@@ -39,7 +39,7 @@ for (const name of examples) {
   } else {
     console.error(`  FAIL  ${name}`);
     for (const err of validate.errors ?? []) {
-      console.error(`       ${err.instancePath || "(root)"} — ${err.message}`);
+      console.error(`       ${err.instancePath || "(root)"} - ${err.message}`);
     }
     fail++;
   }

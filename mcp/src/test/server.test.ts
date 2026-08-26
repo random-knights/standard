@@ -18,7 +18,7 @@ import {
   energyProfileForModel,
 } from "../factors.js";
 
-// Load the canonical schema — same path the server uses at runtime.
+// Load the canonical schema - same path the server uses at runtime.
 const schemaPath = new URL("../../../spec/aieds.schema.json", import.meta.url);
 const schema = JSON.parse(readFileSync(schemaPath, "utf-8"));
 const ajv = new Ajv2020({ strict: false });
@@ -29,14 +29,14 @@ const validate = ajv.compile(schema);
 // aieds_estimate
 // ---------------------------------------------------------------------------
 describe("aieds_estimate", () => {
-  it("gpuSeconds + known hardware → deterministic med-confidence result", () => {
+  it("gpuSeconds + known hardware -> deterministic med-confidence result", () => {
     const r = estimate({
       subject: { kind: "model", name: "test-model" },
       compute: { gpuSeconds: 3600, hardware: "NVIDIA H100 SXM" },
     });
-    // 3600 s × 700 W / 3_600_000 = 0.7 kWh
+    // 3600 s x 700 W / 3_600_000 = 0.7 kWh
     assert.strictEqual(r.energyKWh, 0.7);
-    // 0.7 × 436 gCO2e/kWh = 305.2
+    // 0.7 x 436 gCO2e/kWh = 305.2
     assert.strictEqual(r.gCO2e, 305.2);
     assert.strictEqual(r.confidence, "med");
     assert.strictEqual(r.methodologyVersion, METHODOLOGY_VERSION);
@@ -44,30 +44,30 @@ describe("aieds_estimate", () => {
     assert.strictEqual(r.gridIntensity.gCO2ePerKWh, GRID_FACTORS["global_average"].gCO2ePerKWh);
   });
 
-  it("gpuSeconds without hardware falls back to default power → low confidence", () => {
+  it("gpuSeconds without hardware falls back to default power -> low confidence", () => {
     const r = estimate({
       subject: { kind: "agent", name: "test-agent" },
       compute: { gpuSeconds: 3600 },
     });
-    // default 400 W: 3600 × 400 / 3_600_000 = 0.4 kWh
+    // default 400 W: 3600 x 400 / 3_600_000 = 0.4 kWh
     assert.strictEqual(r.energyKWh, 0.4);
     assert.strictEqual(r.confidence, "low");
   });
 
-  it("tokens only → low confidence, medium scale", () => {
+  it("tokens only -> low confidence, medium scale", () => {
     const r = estimate({
       subject: { kind: "agent", name: "test-agent" },
       compute: { tokens: 1_000_000, modelScale: "medium" },
     });
-    // 1M tokens × 500 Wh/1M / 1000 = 0.5 kWh
+    // 1M tokens x 500 Wh/1M / 1000 = 0.5 kWh
     assert.strictEqual(r.energyKWh, 0.5);
-    // 0.5 × 436 = 218
+    // 0.5 x 436 = 218
     assert.strictEqual(r.gCO2e, 218);
     assert.strictEqual(r.confidence, "low");
     assert.ok(r.notes.some((n) => n.includes("Token proxy")));
   });
 
-  it("flops path → low confidence", () => {
+  it("flops path -> low confidence", () => {
     const r = estimate({
       subject: { kind: "model", name: "test-model" },
       // 1 PFLOP: (1e15/1e12) * 0.35 J = 350 J = 9.72e-5 kWh
@@ -86,7 +86,7 @@ describe("aieds_estimate", () => {
     });
     assert.strictEqual(r.gridIntensity.region, "France");
     assert.strictEqual(r.gridIntensity.gCO2ePerKWh, GRID_FACTORS["France"].gCO2ePerKWh);
-    // 0.7 × 85 = 59.5
+    // 0.7 x 85 = 59.5
     assert.strictEqual(r.gCO2e, 59.5);
   });
 
@@ -134,7 +134,7 @@ describe("aieds_disclose (schema)", () => {
     assert.ok(ok, `Validation errors: ${JSON.stringify(validate.errors)}`);
   });
 
-  it("accepts numeric confidence (0–1)", () => {
+  it("accepts numeric confidence (0 to 1)", () => {
     const ok = validate({ ...validBase, confidence: 0.75 });
     assert.ok(ok);
   });

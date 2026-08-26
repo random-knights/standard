@@ -209,7 +209,7 @@
         },
         {
           "scale": "medium",
-          "parameters": "7B - 70B",
+          "parameters": "7B to 70B",
           "whPerMillionTokens": 500
         },
         {

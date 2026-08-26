@@ -23,7 +23,7 @@ const factors = JSON.parse(
 );
 const doc = readFileSync(resolve(here, "../methodology.md"), "utf8");
 
-const norm = (s) => s.replace(/ /g, " ").replace(/\s+/g, " ").trim();
+const norm = (s) => s.replace(/\u00a0/g, " ").replace(/\s+/g, " ").trim();
 const num = (s) => Number(norm(s).replace(/[\s,]/g, ""));
 
 // Slice one markdown table out of the document. Stops at the next heading of

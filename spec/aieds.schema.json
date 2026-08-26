@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://aieds.rand0m.ai/spec/v1/aieds.schema.json",
   "title": "AIEDS Disclosure",
-  "description": "AI Energy Disclosure Standard v1 — a single disclosure record for an AI subject's energy consumption and carbon footprint. AIEDS scope is device / usage / inference / training and is NOT the planetary Earth health score produced by rand0m.ai's earthHealthScoreRefresh function.",
+  "description": "AI Energy Disclosure Standard v1 - a single disclosure record for an AI subject's energy consumption and carbon footprint. AIEDS scope is device / usage / inference / training and is NOT the planetary Earth health score produced by rand0m.ai's earthHealthScoreRefresh function.",
   "type": "object",
   "required": [
     "id",
@@ -21,7 +21,7 @@
   "properties": {
     "$schema": {
       "type": "string",
-      "description": "Optional JSON Schema URI — may be included for editor tooling."
+      "description": "Optional JSON Schema URI - may be included for editor tooling."
     },
     "id": {
       "type": "string",
@@ -92,7 +92,7 @@
     "gCO2e": {
       "type": "number",
       "minimum": 0,
-      "description": "Total greenhouse gas emissions in grams of CO2-equivalent. Must be derived as energyKWh × gridIntensity.gCO2ePerKWh (within rounding tolerance)."
+      "description": "Total greenhouse gas emissions in grams of CO2-equivalent. Must be derived as energyKWh x gridIntensity.gCO2ePerKWh (within rounding tolerance)."
     },
     "gridIntensity": {
       "type": "object",
@@ -112,7 +112,7 @@
       }
     },
     "confidence": {
-      "description": "Confidence in the energyKWh figure. String enum or fractional 0–1. 'high' = direct hardware power measurement; 'med' = GPU-seconds × TDP factor; 'low' = token or FLOP proxy.",
+      "description": "Confidence in the energyKWh figure. String enum or fractional 0 to 1. 'high' = direct hardware power measurement; 'med' = GPU-seconds x TDP factor; 'low' = token or FLOP proxy.",
       "oneOf": [
         {
           "type": "string",

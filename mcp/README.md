@@ -1,13 +1,13 @@
 # aieds-mcp
 
 MCP server for the [AI Energy Disclosure Standard (AIEDS) v1](../spec/methodology.md).
-Exposes three tools any agent or provider can wire in over stdio — keyless, no secrets, no network.
+Exposes three tools any agent or provider can wire in over stdio - keyless, no secrets, no network.
 
 ## Tools
 
 ### `aieds_estimate`
 
-Deterministic energy + CO₂e estimate from compute metrics.
+Deterministic energy + CO2e estimate from compute metrics.
 
 ```json
 {
@@ -20,9 +20,9 @@ Deterministic energy + CO₂e estimate from compute metrics.
 Returns `{ energyKWh, gCO2e, confidence, methodologyVersion, gridIntensity, notes }`.
 
 Confidence path:
-- `gpuSeconds + hardware in table` → **med**
-- `gpuSeconds + unknown hardware` or `tokens` or `flops` → **low**
-- Direct power measurement (not emitted by this tool) → **high**
+- `gpuSeconds + hardware in table` -> **med**
+- `gpuSeconds + unknown hardware` or `tokens` or `flops` -> **low**
+- Direct power measurement (not emitted by this tool) -> **high**
 
 ### `aieds_factors`
 
@@ -37,9 +37,9 @@ Validates a disclosure object against `spec/aieds.schema.json` (JSON Schema draf
 { "disclosure": { ...your disclosure... } }
 ```
 
-Returns `{ conforms: bool, errors: [...], methodologyBadge: "AIEDS v1.0.0 · med confidence" | null }`.
+Returns `{ conforms: bool, errors: [...], methodologyBadge: "AIEDS v1.0.0, med confidence" | null }`.
 
-AIEDS disclosures are **self-attested** — this tool checks schema conformance only. It does not re-derive or verify the energy math.
+AIEDS disclosures are **self-attested** - this tool checks schema conformance only. It does not re-derive or verify the energy math.
 
 ## Wiring (stdio)
 
@@ -65,7 +65,7 @@ For agents calling via the SDK directly, pass `args: ["dist/index.js"]` and set 
 ```bash
 cd mcp
 npm install
-npm run build    # tsc → dist/
+npm run build    # tsc -> dist/
 npm test         # node:test unit tests
 ```
 
