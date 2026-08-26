@@ -87,7 +87,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "aieds_disclose",
       description:
-        "Validate a disclosure object against aieds.schema.json (AIEDS v1 JSON Schema draft 2020-12). " +
+        "Validate a disclosure object against aieds.schema.json (AIEDS v2 JSON Schema draft 2020-12). " +
         "Returns {conforms, errors, methodologyBadge}. The badge is a short attestation string " +
         "for display or log embedding (e.g. 'AIEDS v1.0.0, med confidence'). " +
         "AIEDS disclosures are self-attested - this tool checks schema conformance only.",

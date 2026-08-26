@@ -124,8 +124,8 @@ describe("aieds_disclose (schema)", () => {
     gCO2e: 305.2,
     gridIntensity: { gCO2ePerKWh: 436, region: "global_average" },
     confidence: "med",
-    methodologyVersion: "1.0.0",
-    source: "aieds-mcp v1.0.0",
+    methodologyVersion: "2.0.0",
+    source: "aieds-mcp v2.0.0",
     generatedAt: "2026-06-29T12:00:00Z",
   };
 
@@ -181,17 +181,47 @@ describe("aieds_disclose (schema)", () => {
     assert.ok(!ok);
   });
 
-  it("validates all three bundled examples", () => {
+  it("validates every bundled v2 example", () => {
     for (const name of [
       "disclosure-model-inference.json",
       "disclosure-agent-session.json",
       "disclosure-app-monthly.json",
+      "disclosure-model-inference-no-provenance.json",
     ]) {
       const path = new URL(`../../../spec/examples/${name}`, import.meta.url);
       const data = JSON.parse(readFileSync(path, "utf-8"));
       const ok = validate(data);
       assert.ok(ok, `${name}: ${JSON.stringify(validate.errors)}`);
     }
+  });
+
+  // Methodology 1.x is superseded and must not be used for new disclosures, so
+  // a v2 schema that accepts a v1 record certifies nonconformance. Before this
+  // change every bundled fixture stamped 1.0.0 and every one passed, which
+  // meant this suite was proving the server accepts v1 records.
+  it("rejects every deprecated v1 example", () => {
+    for (const name of [
+      "deprecated-v1-model-inference.json",
+      "deprecated-v1-agent-session.json",
+      "deprecated-v1-app-monthly.json",
+    ]) {
+      const path = new URL(`../../../spec/examples/${name}`, import.meta.url);
+      const data = JSON.parse(readFileSync(path, "utf-8"));
+      assert.ok(!validate(data), `${name} validated against the v2 schema`);
+    }
+  });
+
+  it("accepts an optional provenance value and rejects an unknown one", () => {
+    for (const value of ["measured", "vendor-published", "class-estimated", "unknown"]) {
+      assert.ok(validate({ ...validBase, provenance: value }), `provenance ${value} rejected`);
+    }
+    assert.ok(!validate({ ...validBase, provenance: "guessed" }));
+    // Optional means optional: the base record carries none and still validates.
+    assert.ok(validate(validBase));
+  });
+
+  it("rejects a 1.x methodologyVersion outright", () => {
+    assert.ok(!validate({ ...validBase, methodologyVersion: "1.0.0" }));
   });
 });
 

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aieds.rand0m.ai/spec/v1/aieds.schema.json",
-  "title": "AIEDS Disclosure",
-  "description": "AI Energy Disclosure Standard v1 - a single disclosure record for an AI subject's energy consumption and carbon footprint. AIEDS scope is device / usage / inference / training and is NOT the planetary Earth health score produced by rand0m.ai's earthHealthScoreRefresh function.",
+  "$id": "https://standard.rand0m.ai/aieds/v2/aieds.schema.json",
+  "title": "AIEDS Disclosure Record",
+  "description": "AI Energy Disclosure Standard 2.0.0 - a single disclosure record for an AI subject's modeled energy consumption and carbon footprint. AIEDS scope is device, usage, inference, or training. It is a per-subject disclosure and is NOT a planetary or Earth-system health score, which is a different kind of claim with different inputs.",
   "type": "object",
   "required": [
     "id",
@@ -30,12 +30,19 @@
     "subject": {
       "type": "object",
       "description": "The AI subject this disclosure covers.",
-      "required": ["kind", "name"],
+      "required": [
+        "kind",
+        "name"
+      ],
       "additionalProperties": false,
       "properties": {
         "kind": {
           "type": "string",
-          "enum": ["model", "agent", "app"],
+          "enum": [
+            "model",
+            "agent",
+            "app"
+          ],
           "description": "model = a foundation/fine-tuned model; agent = an orchestrated AI agent; app = an AI-powered application."
         },
         "name": {
@@ -50,7 +57,12 @@
     },
     "scope": {
       "type": "string",
-      "enum": ["device", "usage", "inference", "training"],
+      "enum": [
+        "device",
+        "usage",
+        "inference",
+        "training"
+      ],
       "description": "Measurement boundary. 'device' = client device energy (CPU/GPU/display) running an AI app; 'usage' = device + server-side inference combined; 'inference' = server-side inference only; 'training' = model training run. AIEDS v1 is optimised for device/usage/inference (agent-native). Training disclosures are supported but factor tables are inference-focused."
     },
     "window": {
@@ -97,7 +109,9 @@
     "gridIntensity": {
       "type": "object",
       "description": "Grid carbon intensity applied to convert energy to CO2e.",
-      "required": ["gCO2ePerKWh"],
+      "required": [
+        "gCO2ePerKWh"
+      ],
       "additionalProperties": false,
       "properties": {
         "gCO2ePerKWh": {
@@ -116,7 +130,11 @@
       "oneOf": [
         {
           "type": "string",
-          "enum": ["low", "med", "high"]
+          "enum": [
+            "low",
+            "med",
+            "high"
+          ]
         },
         {
           "type": "number",
@@ -125,9 +143,20 @@
         }
       ]
     },
+    "provenance": {
+      "type": "string",
+      "enum": [
+        "measured",
+        "vendor-published",
+        "class-estimated",
+        "unknown"
+      ],
+      "description": "Optional. Where the emission or energy factor came from, on the section 5.1 ladder: measured, vendor-published, class-estimated, or unknown. This is a DIFFERENT ladder from `confidence`, which grades how the energy figure itself was arrived at. A record may carry both; neither implies the other. Never upgrade either because an estimate looks plausible."
+    },
     "methodologyVersion": {
       "type": "string",
-      "description": "AIEDS methodology version (semver, e.g. '1.0.0'). Must match the published version in spec/methodology.md."
+      "pattern": "^2\\.\\d+\\.\\d+$",
+      "description": "AIEDS methodology version, semver. Must be a 2.x version: the standard states that 1.x is superseded and must not be used for new disclosures, so a 1.x record is not conformant under this schema."
     },
     "source": {
       "type": "string",

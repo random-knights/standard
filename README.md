@@ -47,6 +47,48 @@ const d = disclosureFromResponse({
 //   d.citation      "Google (Aug 2025) ... arxiv.org/abs/2508.15734 ..."
 ```
 
+## Validating a record today
+
+The schema is `spec/aieds.schema.json`, JSON Schema draft 2020-12, methodology
+2.0.0.
+
+Its `$id` is `https://standard.rand0m.ai/aieds/v2/aieds.schema.json`. **That host
+does not serve the schema yet.** A JSON Schema `$id` is an identifier, not a
+locator: a schema loaded from a local file validates perfectly well with an `$id`
+that does not resolve, because nothing dereferences it. Local file validation is
+the supported path today. When the host is stood up, remote fetch starts working
+with no change to the schema.
+
+So, to validate a record right now, load the file:
+
+```bash
+cd spec && npm install
+node examples/validate.mjs          # the bundled fixtures
+```
+
+```js
+import Ajv2020 from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
+import { readFileSync } from "node:fs";
+
+const ajv = new Ajv2020({ strict: false });
+addFormats(ajv);
+const validate = ajv.compile(JSON.parse(readFileSync("spec/aieds.schema.json", "utf-8")));
+
+if (!validate(myRecord)) console.error(validate.errors);
+```
+
+A record stamping a 1.x `methodologyVersion` is REJECTED. Methodology 1.x is
+superseded and must not be used for new disclosures, so a v2 schema that accepted
+a v1 record would be certifying nonconformance. The `deprecated-v1-*.json`
+fixtures exist to prove that rejection, not to be copied.
+
+`provenance` is optional. It carries the section 5.1 ladder (measured,
+vendor-published, class-estimated, unknown) and says where the FACTOR came from.
+`confidence` is unchanged and carries the section 5 ladder, which says how the
+ENERGY figure was arrived at. They are different ladders and neither implies the
+other, which is why they are separate fields rather than one widened one.
+
 The rest of the toolset:
 
 ```bash
@@ -92,7 +134,7 @@ Concretely: the same 412-in / 890-out exchange that 1.x would have blurred into 
 
 AIEDS is specified in ADR 0010 (random-knights/readless CODEX). The key design choices:
 
-- **Self-attestation** - producers derive and sign their own disclosures; consumers verify schema conformance. No registry or central authority in v1.
+- **Self-attestation** - producers derive and sign their own disclosures; consumers verify schema conformance. No registry or central authority.
 - **Methodology versioning** - `methodologyVersion` in every disclosure ties the number to a specific factor table snapshot. An auditor can replay the math.
 - **Agent-native** - the MCP tool interface means an agent can disclose its own session footprint inline, not as a post-hoc batch job.
 - **Keyless** - the schema and MCP server require no API keys, no auth, no secrets.
