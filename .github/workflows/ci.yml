@@ -10,6 +10,13 @@ on:
     # again, and this time it matches.
     branches: [main]
   pull_request:
+  # Manual escape hatch. On 2026-08-26 pull_request events stopped creating
+  # runs for this repo's own workflows while GitHub-managed CodeQL kept
+  # firing, which left PRs with no CI signal at all and a required check that
+  # could never arrive. A dispatch on the same ref runs the identical jobs, so
+  # the suite can still be verified against a real runner while that is
+  # investigated. This does not bypass anything: it is the same gate.
+  workflow_dispatch:
 
 jobs:
   spec:
