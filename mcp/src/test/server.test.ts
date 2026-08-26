@@ -4,7 +4,19 @@ import { readFileSync } from "node:fs";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { estimate } from "../estimate.js";
-import { METHODOLOGY_VERSION, GRID_FACTORS } from "../factors.js";
+import {
+  DEFAULT_POWER_W,
+  FACTORS,
+  GRID_FACTORS,
+  IMPACT_MODEL_VERSION,
+  JOULES_PER_TFLOP,
+  METHODOLOGY_VERSION,
+  MODEL_ENERGY_PROFILES,
+  RESPONSE_SURFACE_GRID_GRAMS_PER_KWH,
+  TOKENS_WH_PER_MILLION,
+  UNKNOWN_MODEL_PROFILE,
+  energyProfileForModel,
+} from "../factors.js";
 
 // Load the canonical schema — same path the server uses at runtime.
 const schemaPath = new URL("../../../spec/aieds.schema.json", import.meta.url);
@@ -180,5 +192,85 @@ describe("aieds_disclose (schema)", () => {
       const ok = validate(data);
       assert.ok(ok, `${name}: ${JSON.stringify(validate.errors)}`);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Factor-table wiring
+// ---------------------------------------------------------------------------
+describe("factor tables come from the published file", () => {
+  it("stamps the version the table declares, not a hardcoded one", () => {
+    // This used to be a literal "2.0.0" sitting above tables that implement
+    // 1.0.0, so the server stamped records with a version its own numbers did
+    // not support. The stamp is now read from the table it labels.
+    assert.strictEqual(FACTORS.methodologyVersion, METHODOLOGY_VERSION);
+    assert.strictEqual(METHODOLOGY_VERSION, "2.0.0");
+    assert.strictEqual(IMPACT_MODEL_VERSION, "v2");
+  });
+
+  it("exposes Tables 1 to 3 by reference, not as a second transcription", () => {
+    // Identity, not equality: a re-inlined literal would pass an equality
+    // check and fail this one.
+    assert.strictEqual(
+      DEFAULT_POWER_W,
+      FACTORS.computePaths.hardwareTdp.defaultPowerW,
+    );
+    assert.strictEqual(
+      JOULES_PER_TFLOP,
+      FACTORS.computePaths.flop.joulesPerTflop,
+    );
+    assert.strictEqual(FACTORS.computePaths.hardwareTdp.entries.length, 11);
+    assert.strictEqual(FACTORS.computePaths.gridByRegion.entries.length, 14);
+    assert.strictEqual(FACTORS.computePaths.tokenProxy.entries.length, 3);
+  });
+
+  it("keeps the token-proxy default an alias, not a fourth value", () => {
+    // v1 carried `default: 500` with no counterpart row in Table 2. Anyone
+    // reading the table could not tell whether 500 was a documented figure or
+    // a coincidence. It now resolves through defaultScale.
+    const defaultScale = FACTORS.computePaths.tokenProxy.defaultScale;
+    const row = FACTORS.computePaths.tokenProxy.entries.find(
+      (e) => e.scale === defaultScale,
+    );
+    assert.ok(row, "defaultScale must name a real row");
+    assert.strictEqual(TOKENS_WH_PER_MILLION["default"], row.whPerMillionTokens);
+    assert.strictEqual(TOKENS_WH_PER_MILLION[defaultScale], row.whPerMillionTokens);
+  });
+
+  it("keeps the two grid intensities distinct and separately scoped", () => {
+    // 436 serves the compute paths (section 3, Table 3). 429 serves the
+    // response-surface path (section 2.4). A consumer calling two tools gets
+    // two different carbon figures for the same energy, which is a real
+    // finding filed for owner ratification, not something to paper over here.
+    assert.strictEqual(GRID_FACTORS["global_average"].gCO2ePerKWh, 436);
+    assert.strictEqual(RESPONSE_SURFACE_GRID_GRAMS_PER_KWH, 429);
+    assert.notStrictEqual(
+      GRID_FACTORS["global_average"].gCO2ePerKWh,
+      RESPONSE_SURFACE_GRID_GRAMS_PER_KWH,
+    );
+    assert.strictEqual(
+      FACTORS.gridIntensity.responseSurfacePinned.citation,
+      null,
+      "429 must stay labeled as a project modeled constant with no citation",
+    );
+    assert.ok(
+      (FACTORS.gridIntensity.tableGlobalAverage.citation ?? "").length > 0,
+    );
+  });
+
+  it("carries a citation on every response-surface coefficient", () => {
+    const all = [...MODEL_ENERGY_PROFILES, UNKNOWN_MODEL_PROFILE];
+    assert.strictEqual(all.length, 5);
+    for (const p of all) {
+      assert.ok(
+        p.citation.trim().length > 0,
+        `${p.matchPrefixes[0] ?? "fallback"} has no citation`,
+      );
+      assert.ok(p.whPer1kOut > p.whPer1kIn);
+    }
+    assert.strictEqual(UNKNOWN_MODEL_PROFILE.confidence, "unknown");
+    assert.strictEqual(energyProfileForModel("gpt-4o").confidence, "vendor-published");
+    assert.strictEqual(energyProfileForModel("o3-mini").confidence, "vendor-published");
+    assert.strictEqual(energyProfileForModel("nobody-elses").confidence, "unknown");
   });
 });
