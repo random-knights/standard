@@ -1,0 +1,298 @@
+{
+  "$comment": "Canonical AIEDS factor data. This file is the single source of truth for every coefficient the AIEDS tooling emits. The TypeScript packages read it directly; the Dart package mirrors it as compile-time constants and is gated against a vendored copy by test. Editing a value here is a methodology change: bump methodology.md and its changelog in the same commit (methodology.md section 6).",
+  "schemaVersion": 1,
+  "methodologyVersion": "2.0.0",
+  "impactModelVersion": "v2",
+  "constants": {
+    "matureReferenceTreeCo2eGramsPerYear": {
+      "value": 21000,
+      "unit": "gCO2e/year",
+      "methodologySection": "2.5",
+      "provenance": "class-estimated",
+      "note": "One Mature Reference Tree (MRT). Common forestry heuristic, unified at 21 kg in methodology 2.0.0; 1.x used 22 kg."
+    },
+    "minutesPerYear": {
+      "value": 525600,
+      "unit": "minutes",
+      "methodologySection": "2.5"
+    }
+  },
+  "gridIntensity": {
+    "$comment": "TWO normative values for one physical quantity, deliberately split by methodology 2.4. They are NOT interchangeable: each applies to a different derivation path. See the finding filed with this lane.",
+    "responseSurfacePinned": {
+      "value": 429,
+      "unit": "gCO2e/kWh",
+      "methodologySection": "2.4",
+      "appliesTo": "response-surface path (section 2.4)",
+      "provenance": "project-modeled-constant",
+      "citation": null,
+      "note": "Pinned app-surface modeled global grid intensity. The shipped rand0m.ai app has disclosed with this value since AIEDS v1, so the standard follows the shipped number. This is a project modeled constant and carries no external citation."
+    },
+    "tableGlobalAverage": {
+      "value": 436,
+      "unit": "gCO2e/kWh",
+      "methodologySection": "3, Table 3",
+      "appliesTo": "compute paths (sections 2.1, 2.2, 2.3) when region is unknown",
+      "provenance": "cited",
+      "citation": "IEA World Energy Outlook 2023"
+    }
+  },
+  "responseSurface": {
+    "methodologySection": "2.4",
+    "formula": [
+      "energyWh = inTok/1000 * whPer1kIn + outTok/1000 * whPer1kOut",
+      "energyWh = energyWh * pue",
+      "gCO2e = energyWh/1000 * gridIntensity.responseSurfacePinned",
+      "treeTimeMinutes = gCO2e / matureReferenceTreeCo2eGramsPerYear * minutesPerYear"
+    ],
+    "splitAssumption": "split assumption: median exchange ~1000 in + 250 out tokens, output 4x input per token",
+    "confidenceTiers": [
+      "measured",
+      "vendor-published",
+      "class-estimated",
+      "unknown"
+    ],
+    "profiles": [
+      {
+        "matchPrefixes": [
+          "gemini"
+        ],
+        "whPer1kIn": 0.12,
+        "whPer1kOut": 0.48,
+        "pue": 1,
+        "confidence": "vendor-published",
+        "citation": "Google (Aug 2025): median Gemini Apps text prompt = 0.24 Wh, 0.03 gCO2e (arxiv.org/abs/2508.15734, \"Measuring the environmental impact of delivering AI\"); split assumption: median exchange ~1000 in + 250 out tokens, output 4x input per token."
+      },
+      {
+        "matchPrefixes": [
+          "gpt",
+          "o1",
+          "o3",
+          "o4",
+          "chatgpt"
+        ],
+        "whPer1kIn": 0.17,
+        "whPer1kOut": 0.68,
+        "pue": 1,
+        "confidence": "vendor-published",
+        "citation": "OpenAI / S. Altman blog \"The Gentle Singularity\" (Jun 2025): average ChatGPT query ~0.34 Wh (blog-grade figure, no methodology published); split assumption: median exchange ~1000 in + 250 out tokens, output 4x input per token."
+      },
+      {
+        "matchPrefixes": [
+          "claude"
+        ],
+        "whPer1kIn": 0.145,
+        "whPer1kOut": 0.58,
+        "pue": 1.2,
+        "confidence": "class-estimated",
+        "citation": "No Anthropic-published per-query figure as of 2026-01. Class estimate: midpoint of the two published frontier figures (0.24 Wh Google, 0.34 Wh OpenAI) = 0.29 Wh/prompt; split assumption: median exchange ~1000 in + 250 out tokens, output 4x input per token; PUE 1.2 (hyperscaler class)."
+      },
+      {
+        "matchPrefixes": [
+          "grok"
+        ],
+        "whPer1kIn": 0.145,
+        "whPer1kOut": 0.58,
+        "pue": 1.2,
+        "confidence": "unknown",
+        "citation": "No xAI-published figure found. UNKNOWN: falls back to the frontier-class estimate (see claude entry); treat as order-of-magnitude only."
+      }
+    ],
+    "unknownProfile": {
+      "matchPrefixes": [],
+      "whPer1kIn": 0.145,
+      "whPer1kOut": 0.58,
+      "pue": 1.2,
+      "confidence": "unknown",
+      "citation": "Model not in the coefficient table. UNKNOWN: frontier-class estimate (midpoint of published 0.24-0.34 Wh/prompt figures, output 4x input, PUE 1.2); order-of-magnitude only."
+    }
+  },
+  "computePaths": {
+    "hardwareTdp": {
+      "methodologySection": "2.1, Table 1",
+      "unit": "W",
+      "defaultPowerW": 400,
+      "entries": [
+        {
+          "id": "NVIDIA H100 SXM",
+          "label": "NVIDIA H100 SXM",
+          "powerW": 700,
+          "source": "NVIDIA datasheet 2023"
+        },
+        {
+          "id": "NVIDIA H100 PCIe",
+          "label": "NVIDIA H100 PCIe",
+          "powerW": 350,
+          "source": "NVIDIA datasheet 2023"
+        },
+        {
+          "id": "NVIDIA A100 SXM",
+          "label": "NVIDIA A100 SXM",
+          "powerW": 400,
+          "source": "NVIDIA datasheet 2021"
+        },
+        {
+          "id": "NVIDIA A100 PCIe",
+          "label": "NVIDIA A100 PCIe",
+          "powerW": 300,
+          "source": "NVIDIA datasheet 2021"
+        },
+        {
+          "id": "NVIDIA V100 SXM",
+          "label": "NVIDIA V100 SXM",
+          "powerW": 300,
+          "source": "NVIDIA datasheet 2018"
+        },
+        {
+          "id": "NVIDIA RTX 4090",
+          "label": "NVIDIA RTX 4090",
+          "powerW": 450,
+          "source": "NVIDIA datasheet 2022"
+        },
+        {
+          "id": "NVIDIA RTX 3090",
+          "label": "NVIDIA RTX 3090",
+          "powerW": 350,
+          "source": "NVIDIA datasheet 2020"
+        },
+        {
+          "id": "NVIDIA L40S",
+          "label": "NVIDIA L40S",
+          "powerW": 350,
+          "source": "NVIDIA datasheet 2023"
+        },
+        {
+          "id": "NVIDIA A40",
+          "label": "NVIDIA A40",
+          "powerW": 300,
+          "source": "NVIDIA datasheet 2020"
+        },
+        {
+          "id": "Google TPU v4",
+          "label": "Google TPU v4 (per chip)",
+          "powerW": 170,
+          "source": "Google Cloud 2023"
+        },
+        {
+          "id": "Google TPU v5e",
+          "label": "Google TPU v5e (per chip)",
+          "powerW": 200,
+          "source": "Google Cloud 2024"
+        }
+      ]
+    },
+    "flop": {
+      "methodologySection": "2.2",
+      "joulesPerTflop": 0.35,
+      "note": "Representative for FP16/BF16 on A100/H100 class hardware."
+    },
+    "tokenProxy": {
+      "methodologySection": "2.3, Table 2",
+      "unit": "Wh per million tokens",
+      "defaultScale": "medium",
+      "entries": [
+        {
+          "scale": "small",
+          "parameters": "< 7B",
+          "whPerMillionTokens": 100
+        },
+        {
+          "scale": "medium",
+          "parameters": "7B - 70B",
+          "whPerMillionTokens": 500
+        },
+        {
+          "scale": "large",
+          "parameters": "> 70B",
+          "whPerMillionTokens": 2000
+        }
+      ]
+    },
+    "gridByRegion": {
+      "methodologySection": "3, Table 3",
+      "unit": "gCO2e/kWh",
+      "basis": "2023 market average",
+      "defaultRegion": "global_average",
+      "entries": [
+        {
+          "region": "global_average",
+          "gCO2ePerKWh": 436,
+          "source": "IEA World Energy Outlook 2023"
+        },
+        {
+          "region": "US",
+          "gCO2ePerKWh": 386,
+          "source": "EPA eGRID 2023"
+        },
+        {
+          "region": "EU27",
+          "gCO2ePerKWh": 276,
+          "source": "EEA 2023"
+        },
+        {
+          "region": "UK",
+          "gCO2ePerKWh": 233,
+          "source": "DESNZ 2023"
+        },
+        {
+          "region": "France",
+          "gCO2ePerKWh": 85,
+          "source": "RTE 2023"
+        },
+        {
+          "region": "Germany",
+          "gCO2ePerKWh": 385,
+          "source": "UBA 2023"
+        },
+        {
+          "region": "Poland",
+          "gCO2ePerKWh": 746,
+          "source": "KOBiZE 2023"
+        },
+        {
+          "region": "China",
+          "gCO2ePerKWh": 530,
+          "source": "IEA 2023"
+        },
+        {
+          "region": "India",
+          "gCO2ePerKWh": 713,
+          "source": "CEA 2023"
+        },
+        {
+          "region": "Japan",
+          "gCO2ePerKWh": 463,
+          "source": "IEA 2023"
+        },
+        {
+          "region": "Canada",
+          "gCO2ePerKWh": 130,
+          "source": "CER 2023"
+        },
+        {
+          "region": "Australia",
+          "gCO2ePerKWh": 590,
+          "source": "DISER 2023"
+        },
+        {
+          "region": "Sweden",
+          "gCO2ePerKWh": 45,
+          "source": "Swedish Energy Agency 2023"
+        },
+        {
+          "region": "Norway",
+          "gCO2ePerKWh": 29,
+          "source": "NVE 2023"
+        }
+      ]
+    }
+  },
+  "humanEquivalencies": {
+    "methodologySection": "2.5",
+    "note": "Level 3. Educational comparisons only. Never offsets, credits, certifications or restoration claims.",
+    "phoneChargeWh": 12,
+    "ledBulbWatts": 10,
+    "laptopWatts": 50,
+    "carDrivingGramsCo2ePerKm": 170
+  }
+}

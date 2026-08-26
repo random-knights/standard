@@ -2,12 +2,13 @@ name: CI
 
 on:
   push:
-    # This repo's default branch is master, not main. This filter said [main]
-    # from the start, so push-CI NEVER fired on any commit that landed here -
-    # only pull_request runs did. That gap is how lib/ drifted a major version
-    # without a single failing signal. Keep this in sync with the default
-    # branch; if the default is ever renamed, change it here too.
-    branches: [master]
+    # Keep this in sync with the default branch. It said [main] while the
+    # default was master, so push-CI never fired on any commit that landed
+    # here and only pull_request runs did; that gap is how lib/ drifted a
+    # major version without a single failing signal. The default branch was
+    # renamed master to main on 2026-08-26, so this filter now names main
+    # again, and this time it matches.
+    branches: [main]
   pull_request:
 
 jobs:
@@ -26,8 +27,8 @@ jobs:
       - name: Install spec deps
         run: cd spec && npm install
 
-      - name: Validate examples against aieds.schema.json
-        run: cd spec && node examples/validate.mjs
+      - name: Validate examples and gate the factor tables
+        run: cd spec && npm test
 
   mcp:
     name: Build + test MCP server
