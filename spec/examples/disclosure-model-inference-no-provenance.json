@@ -1,5 +1,5 @@
 {
-  "id": "aieds:rand0m-ai-v2:inference:2026-06-29:001",
+  "id": "aieds:rand0m-ai-v2:inference:2026-06-29:001-no-provenance",
   "subject": {
     "kind": "model",
     "name": "rand0m-ai-v2",
@@ -18,7 +18,6 @@
     "region": "global_average"
   },
   "confidence": "med",
-  "provenance": "vendor-published",
   "methodologyVersion": "2.0.0",
   "source": "aieds-mcp v1.0.0",
   "generatedAt": "2026-06-29T06:10:00Z"

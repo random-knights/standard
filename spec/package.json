@@ -1,9 +1,12 @@
 {
   "name": "aieds-spec",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "AIEDS v1 spec tooling — example conformance validation",
+  "description": "AIEDS 2.0.0 spec tooling: example conformance and factor-table gates",
+  "scripts": {
+    "test": "node examples/validate.mjs && node --test test/ascii.test.mjs test/factors.test.mjs"
+  },
   "dependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1"

@@ -39,7 +39,7 @@ export interface EstimateResult {
 
 // Deterministic estimate from AIEDS v1 factor tables.
 // Priority: gpuSeconds > flops > tokens. "high" confidence requires direct power measurement
-// (not available in this tool — use "med" for gpuSeconds + known hardware).
+// (not available in this tool - use "med" for gpuSeconds + known hardware).
 export function estimate(input: EstimateInput): EstimateResult {
   const notes: string[] = [];
   const { compute, gridRegion = "global_average" } = input;

@@ -11,8 +11,13 @@ import test from "node:test";
 import {
   AIEDS_VERSION,
   AIEDS_IMPACT_MODEL_VERSION,
+  FACTORS,
   MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR,
+  METHODOLOGY_VERSION,
+  MODEL_ENERGY_PROFILES,
   MODELED_GRID_INTENSITY_GRAMS_PER_KWH,
+  TABLE_GLOBAL_AVERAGE_GRAMS_PER_KWH,
+  UNKNOWN_MODEL_PROFILE,
   disclosureFromResponse,
   disclosureFromV1CarbonRow,
   energyProfileForModel,
@@ -142,4 +147,43 @@ test("v1 read path is retained (read-only) and re-reads old rows with 22 kg MRT"
   const zero = disclosureFromV1CarbonRow({ provider: "x", carbonGrams: -3 });
   assert.equal(zero.energyWh, 0);
   assert.equal(zero.carbonGrams, 0);
+});
+
+test("the coefficients come from the published file, not a second copy", () => {
+  // Pins the wiring, not a value. Before this, lib carried a hand-maintained
+  // transcription of the Dart table and the only thing holding them together
+  // was a comment saying "byte-for-byte port". A comment is not a gate.
+  //
+  // If someone re-inlines the table, these identity checks fail: the exported
+  // profiles must BE the parsed file's array, not an equal-looking literal.
+  assert.equal(MODEL_ENERGY_PROFILES, FACTORS.responseSurface.profiles);
+  assert.equal(UNKNOWN_MODEL_PROFILE, FACTORS.responseSurface.unknownProfile);
+  assert.equal(METHODOLOGY_VERSION, FACTORS.methodologyVersion);
+  assert.equal(
+    MODELED_GRID_INTENSITY_GRAMS_PER_KWH,
+    FACTORS.gridIntensity.responseSurfacePinned.value,
+  );
+  assert.equal(
+    MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR,
+    FACTORS.constants.matureReferenceTreeCo2eGramsPerYear.value,
+  );
+});
+
+test("the two grid intensities are both readable and stay distinct", () => {
+  // A consumer must be able to see BOTH and tell them apart, because they
+  // apply to different derivation paths. Collapsing them silently would make
+  // two tools disagree about the carbon behind the same energy.
+  assert.notEqual(
+    MODELED_GRID_INTENSITY_GRAMS_PER_KWH,
+    TABLE_GLOBAL_AVERAGE_GRAMS_PER_KWH,
+  );
+  assert.equal(FACTORS.gridIntensity.responseSurfacePinned.citation, null);
+  assert.equal(
+    FACTORS.gridIntensity.responseSurfacePinned.provenance,
+    "project-modeled-constant",
+  );
+  assert.ok(
+    (FACTORS.gridIntensity.tableGlobalAverage.citation ?? "").length > 0,
+    "the compute-path global average must keep its citation",
+  );
 });

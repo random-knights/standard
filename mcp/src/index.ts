@@ -16,11 +16,11 @@ import {
 } from "./factors.js";
 import { estimate, type EstimateInput } from "./estimate.js";
 
-// Load and compile the canonical schema at startup — validates on every aieds_disclose call.
+// Load and compile the canonical schema at startup - validates on every aieds_disclose call.
 const schemaPath = new URL("../../spec/aieds.schema.json", import.meta.url);
 const schema = JSON.parse(readFileSync(schemaPath, "utf-8"));
 const ajv = new Ajv2020({ strict: false });
-// ajv-formats v3 is CJS; NodeNext treats the default as module.exports — cast required.
+// ajv-formats v3 is CJS; NodeNext treats the default as module.exports - cast required.
 (addFormats as unknown as (a: Ajv2020) => void)(ajv);
 const validateDisclosure = ajv.compile(schema);
 
@@ -36,8 +36,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description:
         "Estimate energy consumption (kWh) and CO2e emissions (gCO2e) for an AI subject " +
         "from compute metrics. Returns a deterministic result from AIEDS v1 factor tables. " +
-        "Confidence reflects the input path: gpuSeconds + known hardware → 'med'; " +
-        "tokens or flops only → 'low'. Direct power measurement → 'high' (not emitted by this tool).",
+        "Confidence reflects the input path: gpuSeconds + known hardware -> 'med'; " +
+        "tokens or flops only -> 'low'. Direct power measurement -> 'high' (not emitted by this tool).",
       inputSchema: {
         type: "object",
         required: ["subject", "compute"],
@@ -87,10 +87,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "aieds_disclose",
       description:
-        "Validate a disclosure object against aieds.schema.json (AIEDS v1 JSON Schema draft 2020-12). " +
+        "Validate a disclosure object against aieds.schema.json (AIEDS v2 JSON Schema draft 2020-12). " +
         "Returns {conforms, errors, methodologyBadge}. The badge is a short attestation string " +
-        "for display or log embedding (e.g. 'AIEDS v1.0.0 · med confidence'). " +
-        "AIEDS disclosures are self-attested — this tool checks schema conformance only.",
+        "for display or log embedding (e.g. 'AIEDS v1.0.0, med confidence'). " +
+        "AIEDS disclosures are self-attested - this tool checks schema conformance only.",
       inputSchema: {
         type: "object",
         required: ["disclosure"],
@@ -130,7 +130,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const errors = conforms ? [] : (validateDisclosure.errors ?? []);
     const d = disclosure as Record<string, unknown>;
     const methodologyBadge = conforms
-      ? `AIEDS v${d["methodologyVersion"]} · ${d["confidence"]} confidence`
+      ? `AIEDS v${d["methodologyVersion"]}, ${d["confidence"]} confidence`
       : null;
     return {
       content: [

@@ -6,9 +6,9 @@
 > the changelog below and `README.md`). Do not pick up 1.0.0 because it reads
 > like a stable base; it is not.
 
-> **License:** CC BY 4.0 rand0m.ai — [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
+> **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 2.0.0 (AIEDS methodology semver — distinct from repo/MCP server versions)
+**Version:** 2.0.0 (AIEDS methodology semver - distinct from repo/MCP server versions)
 **Status:** Ratified
 **Effective:** 2026-07-12
 
@@ -16,8 +16,8 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
-| 2.0.0   | 2026-07-12 | **MAJOR (breaking).** ENERGY-FIRST response surface (§2.4 v2): energy-first derivation replaces the flat 0.30 gCO2e/1k-token constant and the carbon-first inversion. The SAME input now yields DIFFERENT output (a typical exchange moves 0.375 g -> 0.103 g), so under semver this is a breaking change, NOT the minor 1.2.0 it was briefly cut as (see tagging note). Per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr. |
-| 1.1.0   | 2026-07-11 | Metric hierarchy (§1.1). Carbon-first response-surface path (§2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (§2.5). Response-surface confidence ladder mapping (§5.1). Reference library (`/lib`). Additive only. |
+| 2.0.0   | 2026-07-12 | **MAJOR (breaking).** ENERGY-FIRST response surface (section 2.4 v2): energy-first derivation replaces the flat 0.30 gCO2e/1k-token constant and the carbon-first inversion. The SAME input now yields DIFFERENT output (a typical exchange moves 0.375 g -> 0.103 g), so under semver this is a breaking change, NOT the minor 1.2.0 it was briefly cut as (see tagging note). Per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr. |
+| 1.1.0   | 2026-07-11 | Metric hierarchy (section 1.1). Carbon-first response-surface path (section 2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (section 2.5). Response-surface confidence ladder mapping (section 5.1). Reference library (`/lib`). Additive only. |
 | 1.0.0   | 2026-06-29 | Initial ratification. GPU-seconds, FLOP, and token compute paths. Hardware TDP table (11 accelerators). Grid intensity table (14 regions). Three confidence levels. |
 
 > **Tagging note (2026-07-12):** the repo carried no git tags until 2026-07-12.
@@ -35,21 +35,21 @@
 
 ## 1. Scope and Non-Overlap
 
-AIEDS measures **AI-system energy and CO₂e** at the subject level (a model, agent, or app). It is NOT the planetary Earth Health Score produced by `rand0m.ai/earthHealthScoreRefresh`. The two systems are independent:
+AIEDS measures **AI-system energy and CO2e** at the subject level (a model, agent, or app). It is NOT the planetary Earth Health Score produced by `rand0m.ai/earthHealthScoreRefresh`. The two systems are independent:
 
 | Dimension | AIEDS | Earth Health Score |
 |-----------|-------|--------------------|
 | Object | One AI subject | Planetary health |
-| Unit | kWh / gCO₂e | 0–100 index |
+| Unit | kWh / gCO2e | 0 to 100 index |
 | Scope | device / usage / inference / training | Global + regional biosphere |
 | Update | Per-session or batch | Daily (06:10 UTC) |
 
 AIEDS scope definitions:
 
-- **device** — energy consumed by the client device (CPU, GPU, display) running an AI app.
-- **usage** — device + server-side inference combined (full user-facing footprint).
-- **inference** — server-side inference only (no client energy).
-- **training** — a model training run. Factor tables are inference-optimised; apply training-specific measured values where available.
+- **device** - energy consumed by the client device (CPU, GPU, display) running an AI app.
+- **usage** - device + server-side inference combined (full user-facing footprint).
+- **inference** - server-side inference only (no client energy).
+- **training** - a model training run. Factor tables are inference-optimised; apply training-specific measured values where available.
 
 ### 1.1 Metric Hierarchy
 
@@ -58,31 +58,31 @@ derived from (never a substitute for) the level above:
 
 | Level | Class | Metrics | Nature |
 |-------|-------|---------|--------|
-| 1 | **Modeled scientific estimates** | `energyKWh`/`energyWh`, `gCO2e` | The disclosure's substance. Modeled via §2–§3 (forward) or §2.4 (carbon-first). |
+| 1 | **Modeled scientific estimates** | `energyKWh`/`energyWh`, `gCO2e` | The disclosure's substance. Modeled via sections 2 to 3 (forward) or section 2.4 (carbon-first). |
 | 2 | **Operational metrics** | tokens in/out, cost, latency | Facts of the run, passed through untransformed. |
-| 3 | **Human equivalencies** | Tree-Time, phone charges, LED-bulb hours, laptop minutes, driving meters | Educational comparisons ONLY (§2.5). Never compliance figures, never offset/restoration claims. |
+| 3 | **Human equivalencies** | Tree-Time, phone charges, LED-bulb hours, laptop minutes, driving meters | Educational comparisons ONLY (section 2.5). Never compliance figures, never offset/restoration claims. |
 
 Required copy on every rendered disclosure: *"Energy and carbon are modeled
 estimates."* and *"Tree-Time and equivalents are educational comparisons."*
 
 ---
 
-## 2. Compute → Energy
+## 2. Compute -> Energy
 
 ### 2.1 GPU-Seconds Path (preferred)
 
 ```
-energyKWh = gpuSeconds × powerW / 3_600_000
+energyKWh = gpuSeconds x powerW / 3_600_000
 ```
 
-`powerW` is the accelerator TDP from **Table 1** (§4). TDP is an upper bound; actual draw at sustained inference is typically 60–95% of TDP. Using TDP yields a conservative (slightly high) estimate, which is the correct bias for environmental disclosure.
+`powerW` is the accelerator TDP from **Table 1** (section 4). TDP is an upper bound; actual draw at sustained inference is typically 60 to 95% of TDP. Using TDP yields a conservative (slightly high) estimate, which is the correct bias for environmental disclosure.
 
 **Confidence:** `med` when hardware is in Table 1; `low` when hardware is unknown (default 400 W applied).
 
 ### 2.2 FLOP Path
 
 ```
-joules   = (flops / 1 × 10¹²) × J_per_TFLOP
+joules   = (flops / 1 x 10^12) x J_per_TFLOP
 energyKWh = joules / 3_600_000
 ```
 
@@ -91,10 +91,10 @@ energyKWh = joules / 3_600_000
 ### 2.3 Token Proxy Path (fallback)
 
 ```
-energyKWh = (tokens / 1_000_000) × Wh_per_million / 1_000
+energyKWh = (tokens / 1_000_000) x Wh_per_million / 1_000
 ```
 
-`Wh_per_million` by model scale from **Table 2** (§4). This path is order-of-magnitude only; hardware utilisation, batch size, and serving efficiency dominate actual consumption. **Confidence: `low`.**
+`Wh_per_million` by model scale from **Table 2** (section 4). This path is order-of-magnitude only; hardware utilisation, batch size, and serving efficiency dominate actual consumption. **Confidence: `low`.**
 
 ### 2.4 Response-Surface Path (v2: ENERGY-FIRST)
 
@@ -141,15 +141,15 @@ Legacy (1.1.0) carbon-first inversion, kept ONLY for reading v1-era rows:
 energyWh = carbon_g_co2e / 429 x 1000
 ```
 
-`429 gCO₂e/kWh` is the **pinned app-surface modeled global grid intensity**.
+`429 gCO2e/kWh` is the **pinned app-surface modeled global grid intensity**.
 It is deliberately its own constant, distinct from Table 3's `global_average`
 (436): the shipped rand0m.ai app disclosed with 429 from AIEDS v1 day one, and
 the standard follows the shipped number rather than silently diverging from
 every disclosure already rendered. Changing either constant is a methodology
-change (owner-ratified; §6). The reference implementation of this path is
-[`/lib`](../lib/) — it byte-mirrors the app's `aieds_disclosure.dart`.
+change (owner-ratified; section 6). The reference implementation of this path is
+[`/lib`](../lib/) - it byte-mirrors the app's `aieds_disclosure.dart`.
 
-Negative or missing carbon clamps to zero. **Confidence:** `estimated` (§5.1).
+Negative or missing carbon clamps to zero. **Confidence:** `estimated` (section 5.1).
 
 ### 2.5 Human Equivalencies (Level 3)
 
@@ -158,11 +158,11 @@ constants (all illustrative, modeled):
 
 | Equivalency | Formula | Constant |
 |-------------|---------|----------|
-| **Tree-Time** (minutes) | `carbon_g / 21 000 × 525 600` | 1 Mature Reference Tree (MRT) sequesters 21 kg CO₂e/year (v2 unified; v1 used 22 kg) |
+| **Tree-Time** (minutes) | `carbon_g / 21 000 x 525 600` | 1 Mature Reference Tree (MRT) sequesters 21 kg CO2e/year (v2 unified; v1 used 22 kg) |
 | Phone charges | `energyWh / 12` | 12 Wh per full charge |
 | LED-bulb hours | `energyWh / 10` | 10 W bulb |
-| Laptop minutes | `energyWh / 50 × 60` | 50 W laptop |
-| Driving meters | `carbon_g / 170 × 1000` | 170 gCO₂e/km average car |
+| Laptop minutes | `energyWh / 50 x 60` | 50 W laptop |
+| Driving meters | `carbon_g / 170 x 1000` | 170 gCO2e/km average car |
 
 Tree-Time is AIEDS's signature equivalency: how long one mature reference tree
 takes to sequester the disclosed carbon. Equivalencies MUST be labeled
@@ -170,19 +170,19 @@ educational and MUST NOT be presented as offsets, credits, or restoration.
 
 ---
 
-## 3. Energy → CO₂e
+## 3. Energy -> CO2e
 
 ```
-gCO2e = energyKWh × gCO2ePerKWh
+gCO2e = energyKWh x gCO2ePerKWh
 ```
 
-`gCO2ePerKWh` is the grid carbon intensity for the declared region from **Table 3** (§4). Use the grid that served the inference or device workload. When unknown, use `global_average` (436 gCO₂e/kWh, IEA 2023).
+`gCO2ePerKWh` is the grid carbon intensity for the declared region from **Table 3** (section 4). Use the grid that served the inference or device workload. When unknown, use `global_average` (436 gCO2e/kWh, IEA 2023).
 
 ---
 
 ## 4. Factor Tables
 
-### Table 1 — Hardware Power Draw (TDP, Watts)
+### Table 1 - Hardware Power Draw (TDP, Watts)
 
 | Hardware | TDP (W) | Source |
 |----------|---------|--------|
@@ -200,19 +200,19 @@ gCO2e = energyKWh × gCO2ePerKWh
 
 Default (unknown hardware): **400 W** (approximate A100 PCIe).
 
-### Table 2 — Token Energy Proxy (Wh per million tokens)
+### Table 2 - Token Energy Proxy (Wh per million tokens)
 
 | Scale | Parameters | Wh / 1M tokens |
 |-------|-----------|----------------|
 | small | < 7B | 100 |
-| medium | 7B – 70B | 500 |
+| medium | 7B to 70B | 500 |
 | large | > 70B | 2 000 |
 
 Derived from published A100/H100 inference benchmarks. These are rough order-of-magnitude figures; provide `gpuSeconds + hardware` for higher confidence.
 
-### Table 3 — Grid Carbon Intensity (gCO₂e / kWh, 2023 market average)
+### Table 3 - Grid Carbon Intensity (gCO2e / kWh, 2023 market average)
 
-| Region | gCO₂e/kWh | Source |
+| Region | gCO2e/kWh | Source |
 |--------|-----------|--------|
 | global_average | 436 | IEA World Energy Outlook 2023 |
 | US | 386 | EPA eGRID 2023 |
@@ -235,22 +235,22 @@ Derived from published A100/H100 inference benchmarks. These are rough order-of-
 
 | Level | Meaning | Typical path |
 |-------|---------|-------------|
-| `high` | Direct hardware power measurement (e.g. NVIDIA SMI, IPMI, PDU). | Power meter → kWh |
-| `med` | GPU-seconds × known TDP from Table 1. | `gpuSeconds + hardware` |
+| `high` | Direct hardware power measurement (e.g. NVIDIA SMI, IPMI, PDU). | Power meter -> kWh |
+| `med` | GPU-seconds x known TDP from Table 1. | `gpuSeconds + hardware` |
 | `low` | Token proxy (Table 2), FLOP proxy, or hardware not in Table 1. | `tokens`, `flops`, or unknown hardware |
 
-Fractional confidence (0–1) may be substituted for the string enum when a probabilistic derivation is available.
+Fractional confidence (0 to 1) may be substituted for the string enum when a probabilistic derivation is available.
 
 ### 5.1 Response-Surface Confidence Ladder
 
-Response surfaces (the §2.4 path, the rand0m.ai app, `/lib`) use a four-rung
+Response surfaces (the section 2.4 path, the rand0m.ai app, `/lib`) use a four-rung
 ladder; the two enums map as follows:
 
 | Response-surface rung | Meaning | Estimation-path equivalent |
 |-----------------------|---------|---------------------------|
 | `estimated` | Carbon inverted from a client/provider heuristic. | `low` |
-| `modeled` | Carbon from a documented model (factor tables, measured sample). | `low`–`med` |
-| `provider-derived` | Provider-reported telemetry. Requires an approved evidence phase. | `med`–`high` |
+| `modeled` | Carbon from a documented model (factor tables, measured sample). | `low` to `med` |
+| `provider-derived` | Provider-reported telemetry. Requires an approved evidence phase. | `med` to `high` |
 | `verified` | Independently verified measurement. Requires an approved evidence phase. | `high` |
 
 AIEDS v1 disclosures use `estimated` or `modeled` only.
@@ -272,9 +272,9 @@ Factor tables and methodology changes are **owner-ratified** (mirrors ADR 0008 /
 
 AIEDS disclosures are designed to interoperate with:
 
-- **Hugging Face `co2_eq_emissions`** — the `gCO2e` field maps directly to HF's `co2_eq_emissions` (unit: grams). `source` maps to `training_type`/`framework`. `scope` maps to HF's `training_type` field where applicable.
-- **EU AI Act model documentation** — the `energyKWh` and `gCO2e` fields satisfy the Act's Art. 13(3)(b)(iv) energy-consumption disclosure requirement. `confidence` and `methodologyVersion` support the transparency and accuracy obligations.
-- **ISO 14064-1 / GHG Protocol** — `scope` maps to Scope 2 (grid electricity) for inference and device disclosures. Training may include Scope 1 where on-site generation is used.
+- **Hugging Face `co2_eq_emissions`** - the `gCO2e` field maps directly to HF's `co2_eq_emissions` (unit: grams). `source` maps to `training_type`/`framework`. `scope` maps to HF's `training_type` field where applicable.
+- **EU AI Act model documentation** - the `energyKWh` and `gCO2e` fields satisfy the Act's Art. 13(3)(b)(iv) energy-consumption disclosure requirement. `confidence` and `methodologyVersion` support the transparency and accuracy obligations.
+- **ISO 14064-1 / GHG Protocol** - `scope` maps to Scope 2 (grid electricity) for inference and device disclosures. Training may include Scope 1 where on-site generation is used.
 
 ---
 

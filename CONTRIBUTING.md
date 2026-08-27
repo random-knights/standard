@@ -2,11 +2,11 @@
 
 ## What belongs here
 
-- **Schema changes** (`spec/aieds.schema.json`) — new fields, stricter validation, or clarifications. Must remain backward-compatible within a major version.
-- **Factor table / methodology updates** (`spec/methodology.md`, `mcp/src/factors.ts`) — new hardware, updated grid intensities, new regions. Owner-ratified (see Governance below).
-- **Reference-library changes** (`lib/`) — MUST keep the parity fixture green (it pins the shipped rand0m.ai app's numbers); constant changes are methodology changes (owner-ratified).
-- **MCP server fixes and new tools** (`mcp/`) — bug fixes, additional tool parameters, new estimation paths.
-- **New conformance examples** (`spec/examples/`) — must be valid against the schema; validate with `node examples/validate.mjs`.
+- **Schema changes** (`spec/aieds.schema.json`) - new fields, stricter validation, or clarifications. Must remain backward-compatible within a major version.
+- **Factor table / methodology updates** (`spec/methodology.md`, `mcp/src/factors.ts`) - new hardware, updated grid intensities, new regions. Owner-ratified (see Governance below).
+- **Reference-library changes** (`lib/`) - MUST keep the parity fixture green (it pins the shipped rand0m.ai app's numbers); constant changes are methodology changes (owner-ratified).
+- **MCP server fixes and new tools** (`mcp/`) - bug fixes, additional tool parameters, new estimation paths.
+- **New conformance examples** (`spec/examples/`) - must be valid against the schema; validate with `node examples/validate.mjs`.
 
 ## Out of scope (v1)
 
@@ -23,13 +23,13 @@ node examples/validate.mjs      # all 3 examples must pass
 # Reference library
 cd lib
 npm install
-npm run build                   # TypeScript → dist/
+npm run build                   # TypeScript -> dist/
 npm test                        # parity fixture vs the shipped app + contract tests
 
 # MCP server
 cd mcp
 npm install
-npm run build                   # TypeScript → dist/
+npm run build                   # TypeScript -> dist/
 npm test                        # node:test unit tests
 ```
 
@@ -49,7 +49,7 @@ AIEDS uses two independent version numbers:
 1. Open a PR with the proposed change and a CHANGELOG entry.
 2. The PR must update `methodology.md`, `mcp/src/factors.ts`, and the CHANGELOG in `methodology.md` atomically.
 3. All existing conformance examples must still pass (or be updated with rationale).
-4. An owner merges — no silent drift via unreviewed commits.
+4. An owner merges - no silent drift via unreviewed commits.
 
 Schema-only changes (documentation, stricter patterns) can be merged by any maintainer after CI passes.
 
