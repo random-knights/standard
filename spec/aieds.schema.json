@@ -155,7 +155,7 @@
     },
     "methodologyVersion": {
       "type": "string",
-      "pattern": "^2\\.\\d+\\.\\d+$",
+      "pattern": "^2[.][0-9]+[.][0-9]+$",
       "description": "AIEDS methodology version, semver. Must be a 2.x version: the standard states that 1.x is superseded and must not be used for new disclosures, so a 1.x record is not conformant under this schema."
     },
     "source": {
