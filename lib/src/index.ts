@@ -11,9 +11,9 @@
 //   carbonG  = energyWh/1000 * MODELED_GRID_INTENSITY_GRAMS_PER_KWH
 //   treeMin  = carbonG / MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR * MINUTES_PER_YEAR
 //
-// This is a byte-for-byte port of the shipped model in
-// `rk_ai/lib/src/impact/ai_impact.dart` (the app's source of truth); same
-// coefficients, same formula, so the app and the standard agree to the number.
+// This is a byte-for-byte port of the shipped rand0m.ai app's energy model
+// (its source of truth); same coefficients, same formula, so the app and the
+// standard agree to the number.
 // Changing any coefficient here is a methodology change (owner-ratified; bump
 // METHODOLOGY_VERSION and methodology.md atomically - see CONTRIBUTING).
 //
