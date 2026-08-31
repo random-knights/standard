@@ -5,7 +5,7 @@
   "type": "module",
   "description": "AIEDS 2.0.0 spec tooling: example conformance and factor-table gates",
   "scripts": {
-    "test": "node examples/validate.mjs && node --test test/ascii.test.mjs test/factors.test.mjs"
+    "test": "node examples/validate.mjs && node --test test/ascii.test.mjs test/factors.test.mjs test/build-site.test.mjs"
   },
   "dependencies": {
     "ajv": "^8.17.1",
