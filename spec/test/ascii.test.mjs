@@ -18,6 +18,11 @@ import { fileURLToPath } from "node:url";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const SKIP_DIRS = new Set([".git", "node_modules", "dist"]);
 const TEXT = /\.(json|ts|md|mjs|yml|yaml)$/;
+// Extension-less text files, named explicitly rather than matched by "no dot":
+// a broad no-extension rule would also try to read a future binary asset as
+// text. LICENSE and LICENSE-DOCS slipped past the extension-based rule above
+// until this line; both were checked by hand when added.
+const EXTENSIONLESS_TEXT = new Set(["LICENSE", "LICENSE-DOCS"]);
 
 /** Files allowed to carry a non-ASCII character, each with a stated reason. */
 const ALLOWED = new Map([]);
@@ -32,7 +37,7 @@ function walk(dir, out = []) {
     if (SKIP_DIRS.has(name)) continue;
     const full = join(dir, name);
     if (statSync(full).isDirectory()) walk(full, out);
-    else if (TEXT.test(name)) out.push(full);
+    else if (TEXT.test(name) || EXTENSIONLESS_TEXT.has(name)) out.push(full);
   }
   return out;
 }

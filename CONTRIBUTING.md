@@ -59,4 +59,4 @@ The MCP server (`mcp/`) must never require an API key, auth token, environment s
 
 ## License of contributions
 
-By contributing you agree that your contributions to `spec/aieds.schema.json`, `lib/`, and `mcp/` are licensed MIT, and contributions to `spec/methodology.md` and `spec/examples/` are licensed CC BY 4.0, consistent with the repository [LICENSE](LICENSE).
+By contributing you agree that your contributions to `spec/aieds.schema.json`, `lib/`, and `mcp/` are licensed Apache 2.0 under [LICENSE](LICENSE), and contributions to `spec/methodology.md`, `spec/examples/`, and `spec/v2/aieds-factors.json` are licensed CC BY 4.0 under [LICENSE-DOCS](LICENSE-DOCS).
