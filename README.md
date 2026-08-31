@@ -132,7 +132,7 @@ Concretely: the same 412-in / 890-out exchange that 1.x would have blurred into 
 
 ## Architecture (ADR 0010)
 
-AIEDS is specified in ADR 0010 (random-knights/readless CODEX). The key design choices:
+AIEDS is specified in an owner-ratified architecture decision record. The key design choices:
 
 - **Self-attestation** - producers derive and sign their own disclosures; consumers verify schema conformance. No registry or central authority.
 - **Methodology versioning** - `methodologyVersion` in every disclosure ties the number to a specific factor table snapshot. An auditor can replay the math.
@@ -170,13 +170,27 @@ AIEDS is specified in ADR 0010 (random-knights/readless CODEX). The key design c
 
 - [RUNBOOK.md](RUNBOOK.md) - humans: how to publish, roll back, where secrets
   live, what breaks and how to fix it.
-- [AGENTS.md](AGENTS.md) - agents: the rules that apply in this repo.
-
-Note: this repo's default branch is `master`, not `main`.
+- [CONTRIBUTING.md](CONTRIBUTING.md) - contributors and agents: what belongs
+  where, versioning and governance, the keyless rule.
 
 ## License
 
-- `spec/methodology.md` and `spec/examples/` - [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- `spec/aieds.schema.json`, `lib/`, and `mcp/` - [MIT](LICENSE#mit-license)
+Two licenses, split by what a path IS, not by which directory it sits in.
+Code and the schema (so implementers can vendor them without attribution
+friction) are Apache 2.0. Text and data that document or parameterize the
+standard (so attribution survives forks and citation stays intact) are
+CC BY 4.0.
 
-See [LICENSE](LICENSE) for full terms.
+| Path | License |
+|------|---------|
+| `lib/` | [Apache 2.0](LICENSE) |
+| `mcp/` | [Apache 2.0](LICENSE) |
+| `spec/aieds.schema.json` | [Apache 2.0](LICENSE) |
+| `spec/methodology.md` | [CC BY 4.0](LICENSE-DOCS) |
+| `spec/examples/` | [CC BY 4.0](LICENSE-DOCS) |
+| `spec/v2/aieds-factors.json` | [CC BY 4.0](LICENSE-DOCS) |
+
+K13 is decided to join this repository under CC BY 4.0 but has not moved in
+yet; see [LICENSE-DOCS](LICENSE-DOCS) for status.
+
+See [LICENSE](LICENSE) and [LICENSE-DOCS](LICENSE-DOCS) for full terms.

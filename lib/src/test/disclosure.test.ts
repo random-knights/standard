@@ -1,10 +1,9 @@
 // Contract tests for the AIEDS 2.0.0 reference library (ENERGY-FIRST).
 //
-// The coefficients are a verbatim port of the shipped app model in
-// `rk_ai/lib/src/impact/ai_impact.dart` (same numbers, same formula), so the
-// app and the standard agree to the number. These tests pin the energy-first
-// derivation, the per-model coefficient selection, the confidence tiers, and
-// the retained v1 read path.
+// The coefficients are a verbatim port of the shipped rand0m.ai app's energy
+// model (same numbers, same formula), so the app and the standard agree to the
+// number. These tests pin the energy-first derivation, the per-model
+// coefficient selection, the confidence tiers, and the retained v1 read path.
 import assert from "node:assert/strict";
 import test from "node:test";
 
