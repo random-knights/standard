@@ -16,7 +16,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const SKIP_DIRS = new Set([".git", "node_modules", "dist"]);
+const SKIP_DIRS = new Set([".git", "node_modules", "dist", ".firebase"]);
 const TEXT = /\.(json|ts|md|mjs|yml|yaml)$/;
 // Extension-less text files, named explicitly rather than matched by "no dot":
 // a broad no-extension rule would also try to read a future binary asset as
