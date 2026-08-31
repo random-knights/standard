@@ -42,6 +42,12 @@ const d = disclosureFromResponse({
 // Real output (run examples/request-to-disclosure.mjs to reproduce):
 //   d.energyWh      0.47664            modeled FIRST from gemini's coefficient
 //   d.carbonGrams   0.20448            derived: energyWh / 1000 * 429
+//                                      429 gCO2e/kWh is the pinned
+//                                      response-surface grid intensity
+//                                      (methodology 2.4). It is a project
+//                                      modeled constant with no external
+//                                      citation, labeled as such in
+//                                      spec/v2/aieds-factors.json.
 //   d.treeTimeLabel "5.1 min"
 //   d.confidence    "vendor-published" per-model tier, never hidden
 //   d.citation      "Google (Aug 2025) ... arxiv.org/abs/2508.15734 ..."
@@ -143,18 +149,19 @@ AIEDS is specified in an owner-ratified architecture decision record. The key de
 
 | Surface | Path | License | Description |
 |---------|------|---------|-------------|
-| Schema | `spec/aieds.schema.json` | MIT | JSON Schema 2020-12 for one disclosure |
+| Schema | `spec/aieds.schema.json` | Apache 2.0 | JSON Schema 2020-12 for one disclosure |
 | Methodology | `spec/methodology.md` | CC BY 4.0 | 2.0.0: energy-first path + per-model coefficients + factor tables |
-| Examples | `spec/examples/` | CC BY 4.0 | 3 valid disclosures + conformance script |
-| Reference library | `lib/` | MIT | Energy-first disclosures: per-model coefficients + confidence tiers + citations (mirrors the rand0m.ai app; contract-tested) |
-| MCP server | `mcp/` | MIT | TypeScript Node MCP: estimate / factors / disclose |
+| Coefficient tables | `spec/v2/aieds-factors.json` | CC BY 4.0 | The published factor data every surface reads |
+| Examples | `spec/examples/` | CC BY 4.0 | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script |
+| Reference library | `lib/` | Apache 2.0 | Energy-first disclosures: per-model coefficients + confidence tiers + citations (mirrors the rand0m.ai app; contract-tested) |
+| MCP server | `mcp/` | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose |
 
 ## Roadmap
 
 ### Shipped (this repo)
 - [x] `aieds.schema.json` (JSON Schema draft 2020-12)
 - [x] `methodology.md` 2.0.0 (energy-first; per-model coefficients + confidence tiers + citations) with factor tables + governance
-- [x] 3 conformance examples + validate script
+- [x] 7 conformance examples (4 valid, 3 superseded-1.x rejection cases) + validate script
 - [x] MCP server 2.0.0: `aieds_estimate`, `aieds_factors`, `aieds_disclose`
 - [x] Reference library 2.0.0: energy-first, byte-mirrors the app
 - [x] CI: schema validation + build + unit tests
