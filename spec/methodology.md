@@ -11,6 +11,7 @@
 **Version:** 2.0.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
 **Status:** Ratified
 **Effective:** 2026-07-12
+**Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
 ## CHANGELOG
 

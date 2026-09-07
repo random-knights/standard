@@ -180,6 +180,21 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 - [CONTRIBUTING.md](CONTRIBUTING.md) - contributors and agents: what belongs
   where, versioning and governance, the keyless rule.
 
+## Cite
+
+If you implement this standard, cite the methodology version you implemented.
+Versions are not interchangeable: 1.x derived energy backward from carbon and
+2.0.0 models energy first, so a citation without a version does not say which
+numbers were used.
+
+> Random Knights, LLC (2026). AIEDS - AI Energy Disclosure Standard,
+> version 2.0.0. CC BY 4.0. https://standard.rand0m.ai
+
+**Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
+
+Machine-readable metadata is in [CITATION.cff](CITATION.cff), which GitHub
+reads to offer APA and BibTeX exports from the sidebar.
+
 ## License
 
 Two licenses, split by what a path IS, not by which directory it sits in.
