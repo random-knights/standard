@@ -1,0 +1,47 @@
+cff-version: 1.2.0
+message: "If you use AIEDS, cite the methodology version you implemented."
+title: "AIEDS - AI Energy Disclosure Standard"
+# CFF 1.2.0 allows only 'dataset' or 'software' here. This work is a
+# standard, but that is not an option the format offers at the top level,
+# and an invalid file makes GitHub drop the citation panel entirely. The
+# nested reference below keeps type: standard, which the reference schema
+# does allow.
+type: software
+version: 2.0.0
+date-released: 2026-08-27
+license: CC-BY-4.0
+license-url: https://creativecommons.org/licenses/by/4.0/
+repository-code: https://github.com/random-knights/standard
+url: https://standard.rand0m.ai
+abstract: >-
+  An open schema and toolset for self-attested energy and carbon footprint
+  disclosures for AI models, agents, and apps. Energy is modeled first from
+  per-model coefficients; carbon is derived from energy. Scope is device,
+  usage, inference, and training. It is not a planetary health score.
+keywords:
+  - AI energy disclosure
+  - carbon accounting
+  - inference energy
+  - open standard
+authors:
+  - name: "Random Knights, LLC"
+    orcid: "https://orcid.org/0009-0006-5066-1693"
+    city: Roswell
+    region: Georgia
+    country: US
+    website: https://randomknights.xyz
+contact:
+  - name: "Random Knights, LLC"
+    email: knights@rand0m.ai
+references:
+  - type: standard
+    title: "K13 - the response standard"
+    version: 1.1.0
+    license: CC-BY-4.0
+    authors:
+      - name: "Random Knights, LLC"
+        orcid: "https://orcid.org/0009-0006-5066-1693"
+    notes: >-
+      K13 is published by the same author and is scheduled to move into this
+      repository under the flat layout. Until that lands, its canonical text is
+      the workspace-root K13.md.
