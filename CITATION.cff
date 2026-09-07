@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use AIEDS, cite the methodology version you implemented."
-title: "AIEDS - AI Energy Disclosure Standard"
+message: "If you use AiEDs, cite the methodology version you implemented."
+title: "AiEDs - AI Energy Disclosure Standard"
 # CFF 1.2.0 allows only 'dataset' or 'software' here. This work is a
 # standard, but that is not an option the format offers at the top level,
 # and an invalid file makes GitHub drop the citation panel entirely. The
