@@ -1,4 +1,4 @@
-# RUNBOOK - aieds (human operator)
+# RUNBOOK - standard (human operator)
 
 This repository has no repo-local AGENTS.md; see CONTRIBUTING.md for what belongs where and the contribution process. This file is for a human with a terminal.
 

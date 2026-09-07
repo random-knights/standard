@@ -1,4 +1,123 @@
-# AiEDs - AI Energy Disclosure Standard
+<a name="readme-top"></a>
+
+<!-- HEADER -->
+<div align="center">
+  <img alt="Random Knights standards: K13 and AiEDs" src="assets/readme-header.png?v=20260907">
+
+<h3 align="center" style="color:#ff4124">standard</h3>
+
+  <p align="center">
+    Two open standards from Random Knights. K13 is how we write. AiEDs is how
+    we report modeled energy and carbon from AI work.
+    <br />
+    <a href="https://randomknights.xyz"><strong>Read them on the docs site &raquo;</strong></a>
+    <br />
+    <br />
+    <a href="https://randomknights.xyz/k13/">K13</a>
+    &#183;
+    <a href="https://randomknights.xyz/aieds/">AiEDs</a>
+    &#183;
+    <a href="https://standard.rand0m.ai">Artifacts</a>
+    &#183;
+    <a href="https://github.com/random-knights/standard/issues">Report Bug</a>
+    &#183;
+    <a href="https://github.com/random-knights/standard/issues">Request Feature</a>
+    <br />
+    <br />
+    &#127979; 2025-2030 &#128760; roswell, ga &#127825;
+    <a href="https://randomknights.xyz">&#7450;k.xyz</a> +
+    <a href="https://randomknights.llc">&#7450;k.llc</a> +
+    <a href="https://randomknights.org">&#7450;k.org</a> &#127984;
+    <a href="https://rand0m.ai">rand0m.ai</a>
+  </p>
+</div>
+
+Both are published and free to read. Both are CC BY 4.0, so you can adopt
+either without asking.
+
+| Standard | Version | What it governs | In this repo |
+|---|---|---|---|
+| **K13** | 1.1.0 | How a response is written: thirteen ordered steps for checking facts, reporting cost, and writing so it can be read. | Not yet. Canonical text is [published here](https://randomknights.xyz/source/K13.md) until it moves in. |
+| **AiEDs** | methodology 2.0.0 | How modeled energy and carbon from AI work are reported. Provider-neutral. | Yes: `spec/`, `lib/`, `mcp/`. |
+
+> **Repository scope.** This repo is the home for both standards, but only
+> AiEDs has moved in so far. K13's canonical bytes are served at
+> [randomknights.xyz/source/K13.md](https://randomknights.xyz/source/K13.md),
+> sha256 `f4a5e8dae25a`. Saying otherwise here would be the exact failure both
+> standards exist to prevent.
+
+## K13, the response standard
+
+Thirteen steps, run in order, every time. Every time does not mean every step
+takes real work: on short replies the steps collapse to a second each and the
+four passes come out identical. That is the standard being met, not skipped.
+
+Steps 9 to 12 are one ladder. A reader picks a level and the answer is
+**written at that level, never rewritten from another one.** All levels state
+the same facts and the same figures. If two levels disagree on a number, the
+answer is wrong.
+
+| Level | Grades | Step |
+|---|---|---|
+| &#129475; juice box | K-5 | 9 |
+| &#129380; soda pop | 6-8 | 10 |
+| &#129483; energy drink | 9-12 | 11, default |
+| &#9749; black coffee | College | 12 |
+
+Two expert levels are RESERVED above black coffee: &#129750; `loose leaf`
+(Masters) and &#129481; `yerba mate` (Doctorate). They are not reading levels,
+they assume a different reader, so they carry no step number and do not change
+the count.
+
+Level three is named "energy drink" and carries the bubble tea glyph. That
+mismatch is an intentional owner decision. Do not reconcile one to the other.
+
+### Demo: one fact, written at every level
+
+The same fact about the same feed on the same date. Only the sentences change.
+This is the whole claim, so it is worth reading all four rather than one.
+
+> **&#129475; juice box.** The ocean map is old. New data stopped arriving on
+> 12 July. The map still draws. It is showing you an average of past years,
+> not the water today.
+
+> **&#129380; soda pop.** This map shows ocean currents, the paths that water
+> moves along. The data behind it stopped updating on 12 July. Since then the
+> map uses a climatology, which is an average worked out from many past years
+> rather than a reading taken today. The map still draws, but what it shows is
+> that average, not the water as it is now.
+
+> **&#129483; energy drink.** The OSCAR ocean current feed has not refreshed
+> since 12 July. With no new data, the renderer falls back to a climatology
+> grid: a field of long-term average values for each point on the map,
+> computed from years of past observations. The map still renders, and every
+> value on it is one of those averages rather than a measurement taken since
+> 12 July.
+
+> **&#9749; black coffee.** The OSCAR near-real-time surface current product
+> has not refreshed since 12 July. The renderer degrades to the representative
+> climatology grid and marks freshness stale, so the field stays fully
+> populated while every rendered vector is a climatological mean rather than a
+> near-real-time observation. A consumer that treats the surface as current
+> will read means as observations.
+
+Every version says the feed stopped on 12 July and that the map now shows an
+average. Same fact, same date, four readers.
+
+The interactive version, including the two reserved levels, is at
+[randomknights.xyz/k13/demo](https://randomknights.xyz/k13/demo/).
+[Get started](https://randomknights.xyz/k13/get-started/) covers adopting it
+in your own pipeline.
+
+## AiEDs, the AI energy disclosure standard
+
+An open schema and toolset for self-attested energy and carbon footprint
+disclosures for AI models, agents, and apps.
+
+AiEDs surfaces:
+- **`/spec`** - the JSON Schema (`aieds.schema.json`) + methodology (`methodology.md`) + conformance examples.
+- **`/lib`** - the reference library (TypeScript/Node): **tokens + model in; energy-first disclosure out** (energy modeled from per-model coefficients, carbon derived from energy), byte-mirroring the rand0m.ai app so app and standard agree to the number.
+- **`/mcp`** - a keyless MCP server (TypeScript/Node) exposing three tools: `aieds_estimate`, `aieds_factors`, `aieds_disclose`.
 
 > **CURRENT VERSION: methodology 2.0.0 (MCP server 2.0.1). Versions 1.x are
 > SUPERSEDED and MUST NOT be implemented.** 1.x specified a flat 0.30 gCO2e per
@@ -6,19 +125,12 @@
 > wrong. If you are new here, implement 2.0.0; do not pick up 1.0.0 because it
 > sounds like the stable base. See `spec/methodology.md`.
 
-**AI Energy Disclosure Standard (AiEDs)** is an open schema and toolset for self-attested energy and carbon footprint disclosures for AI models, agents, and apps.
-
-AiEDs surfaces:
-- **`/spec`** - the JSON Schema (`aieds.schema.json`) + methodology (`methodology.md`) + conformance examples.
-- **`/lib`** - the reference library (TypeScript/Node): **tokens + model in; energy-first disclosure out** (energy modeled from per-model coefficients, carbon derived from energy), byte-mirroring the rand0m.ai app so app and standard agree to the number.
-- **`/mcp`** - a keyless MCP server (TypeScript/Node) exposing three tools: `aieds_estimate`, `aieds_factors`, `aieds_disclose`.
-
 **Metric hierarchy** (methodology section 1.1): Level 1 modeled scientific estimates (energy, CO2e) -> Level 2 operational metrics (tokens, cost, latency) -> Level 3 human equivalencies (Tree-Time, phone charges, ...; educational only, never offsets).
 
 > **AiEDs scope is device / usage / inference / training.**
 > It is NOT the planetary Earth Health Score produced by `rand0m.ai/earthHealthScoreRefresh`. See [spec/methodology.md section 1](spec/methodology.md#1-scope-and-non-overlap).
 
-## Quick start (one minute)
+### Quick start (one minute)
 
 Disclose your first response with the reference library:
 
@@ -53,7 +165,7 @@ const d = disclosureFromResponse({
 //   d.citation      "Google (Aug 2025) ... arxiv.org/abs/2508.15734 ..."
 ```
 
-## Validating a record today
+### Validating a record today
 
 The schema is `spec/aieds.schema.json`, JSON Schema draft 2020-12, methodology
 2.0.0.
@@ -155,6 +267,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Examples | `spec/examples/` | CC BY 4.0 | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script |
 | Reference library | `lib/` | Apache 2.0 | Energy-first disclosures: per-model coefficients + confidence tiers + citations (mirrors the rand0m.ai app; contract-tested) |
 | MCP server | `mcp/` | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose |
+| K13 | not in this repo yet | CC BY 4.0 | The response standard, 1.1.0. Canonical bytes at [randomknights.xyz/source/K13.md](https://randomknights.xyz/source/K13.md) until it moves in. |
 
 ## Roadmap
 
@@ -187,7 +300,7 @@ Versions are not interchangeable: 1.x derived energy backward from carbon and
 2.0.0 models energy first, so a citation without a version does not say which
 numbers were used.
 
-> Random Knights, LLC (2026). AIEDS - AI Energy Disclosure Standard,
+> Random Knights, LLC (2026). AiEDs - AI Energy Disclosure Standard,
 > version 2.0.0. CC BY 4.0. https://standard.rand0m.ai
 
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
