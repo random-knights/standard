@@ -12,7 +12,7 @@
 // already has one.
 //
 // PATH DERIVATION. The schema's own "$id" is the single source of truth for
-// where AIEDS artifacts live. This script parses it rather than hardcoding a
+// where AiEDs artifacts live. This script parses it rather than hardcoding a
 // second copy of the path, so the two cannot drift apart:
 //   https://standard.rand0m.ai/aieds/v2/aieds.schema.json
 //                              ^^^^^^^^ this segment is derived, not typed
@@ -68,7 +68,7 @@ const methodologyVersionMatch = methodologyText.match(
   /\*\*Version:\*\*\s*([\d.]+)/,
 );
 if (!methodologyVersionMatch) {
-  throw new Error("Could not read the AIEDS version out of methodology.md.");
+  throw new Error("Could not read the AiEDs version out of methodology.md.");
 }
 const methodologyVersion = methodologyVersionMatch[1];
 if (methodologyVersion !== factors.methodologyVersion) {
@@ -111,7 +111,7 @@ const K13 = {
 };
 
 const AIEDS = {
-  name: "AIEDS",
+  name: "AiEDs",
   fullName: "AI Energy Disclosure Standard",
   version: methodologyVersion,
   dir: aiedsDir,
@@ -408,7 +408,7 @@ const invokedDirectly =
 if (invokedDirectly) {
   writeSite();
   console.log(`standard.rand0m.ai site rendered to ${outputRoot}`);
-  console.log(`AIEDS artifacts served from /${aiedsDir}/`);
+  console.log(`AiEDs artifacts served from /${aiedsDir}/`);
   const k13Status = K13.files.every((f) => f.present)
     ? "published"
     : `pending (${K13.files.filter((f) => !f.present).map((f) => f.label).join(", ")} not present)`;

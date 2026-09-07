@@ -19,7 +19,7 @@ const schema = JSON.parse(
 );
 const files = expectedFiles();
 
-test("the AIEDS artifact directory matches the schema's own $id", () => {
+test("the AiEDs artifact directory matches the schema's own $id", () => {
   // The $id is https://standard.rand0m.ai/<dir>/aieds.schema.json. The build
   // must serve the schema at exactly that path relative to the site root, or
   // the identifier and the deployed location silently disagree.
@@ -33,7 +33,7 @@ test("the AIEDS artifact directory matches the schema's own $id", () => {
   );
 });
 
-test("every shipped AIEDS artifact is byte-identical to its spec/ source", () => {
+test("every shipped AiEDs artifact is byte-identical to its spec/ source", () => {
   const url = new URL(schema.$id);
   const dir = url.pathname.replace(/^\//, "").replace(/\/[^/]+$/, "");
   const pairs = [
@@ -56,11 +56,11 @@ test("every shipped AIEDS artifact is byte-identical to its spec/ source", () =>
   }
 });
 
-test("the index page lists AIEDS as live and K13 as not yet published", () => {
+test("the index page lists AiEDs as live and K13 as not yet published", () => {
   const indexKey = [...files.keys()].find((k) => k === "index.html");
   const html = files.get(indexKey).toString("utf8");
 
-  // AIEDS: real links, real license tags, a pointer to read on xyz.
+  // AiEDs: real links, real license tags, a pointer to read on xyz.
   assert.match(html, /AI Energy Disclosure Standard/);
   assert.match(html, new RegExp(schema.$id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(html, /Apache 2\.0/);

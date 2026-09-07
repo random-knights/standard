@@ -1,9 +1,9 @@
 {
   "name": "aieds-spec",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "type": "module",
-  "description": "AIEDS 2.0.0 spec tooling: example conformance and factor-table gates",
+  "description": "AiEDs 2.0.0 spec tooling: example conformance and factor-table gates",
   "scripts": {
     "test": "node examples/validate.mjs && node --test test/ascii.test.mjs test/factors.test.mjs test/build-site.test.mjs"
   },

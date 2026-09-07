@@ -1,7 +1,7 @@
 {
   "name": "@random-knights/aieds-reference",
-  "version": "2.0.0",
-  "description": "AIEDS 2.0.0 reference library - energy-first disclosures: tokens + model in, per-model modeled energy (with confidence tier + citation) and derived carbon out",
+  "version": "2.0.1",
+  "description": "AiEDs 2.0.0 reference library - energy-first disclosures: tokens + model in, per-model modeled energy (with confidence tier + citation) and derived carbon out",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

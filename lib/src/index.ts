@@ -1,7 +1,7 @@
-// AIEDS reference library - the ENERGY-FIRST response-surface path (methodology
+// AiEDs reference library - the ENERGY-FIRST response-surface path (methodology
 // 2.0.0, impact model v2).
 //
-// Given what an AI response carries (tokens + model), returns the full AIEDS
+// Given what an AI response carries (tokens + model), returns the full AiEDs
 // disclosure: modeled ENERGY first, carbon DERIVED from energy, and the Level-3
 // human equivalencies (Tree-Time, phone charges, LED-bulb hours, laptop
 // minutes, driving meters).
@@ -58,12 +58,12 @@ export {
 export type { AiedsConfidenceTier, ModelEnergyProfile } from "./factors.js";
 
 /** Human-facing version label. Tracks the impact-model version in the table. */
-export const AIEDS_VERSION = `AIEDS ${AIEDS_IMPACT_MODEL_VERSION}`;
+export const AIEDS_VERSION = `AiEDs ${AIEDS_IMPACT_MODEL_VERSION}`;
 
 // -- Tree-Time (Level 3) -----------------------------------------------------
 
 /**
- * AIEDS 2.0.0 Tree-Time:
+ * AiEDs 2.0.0 Tree-Time:
  * `tree_time_minutes = carbon_g / MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR * MINUTES_PER_YEAR`.
  */
 export function treeTimeMinutesFor(carbonGrams: number): number {
@@ -119,7 +119,7 @@ export interface AiedsResponseDisclosure {
   /** Provenance the UI must not hide. */
   confidence: AiedsConfidenceTier;
   citation: string;
-  /** Required AIEDS disclosure copy. */
+  /** Required AiEDs disclosure copy. */
   notes: readonly string[];
 }
 
@@ -130,7 +130,7 @@ export const ENERGY_FIRST_COPY =
   "Energy is modeled first from per-model coefficients; carbon is derived from energy.";
 
 /**
- * Builds an AIEDS 2.0.0 disclosure ENERGY-FIRST from what a response carries
+ * Builds an AiEDs 2.0.0 disclosure ENERGY-FIRST from what a response carries
  * (tokens + model). Energy is modeled from the per-model coefficient table;
  * carbon is derived from energy. The disclosure carries the coefficient's
  * confidence tier and citation.
@@ -212,7 +212,7 @@ export function disclosureFromV1CarbonRow(
   const outputTokens = Math.max(0, input.outputTokens ?? 0);
 
   return {
-    aiedsVersion: "AIEDS v1",
+    aiedsVersion: "AiEDs v1",
     methodologyVersion: "1.1.0",
     aiedsImpactModelVersion: "v1",
     provider: input.provider,
@@ -235,7 +235,7 @@ export function disclosureFromV1CarbonRow(
       "v1 row: flat 0.30 gCO2e/1k-token model, energy inverted from carbon. " +
       "SUPERSEDED by 2.0.0; read-only.",
     notes: [
-      "AIEDS v1 row (SUPERSEDED - read-only)",
+      "AiEDs v1 row (SUPERSEDED - read-only)",
       "v1 derived energy backward from carbon; do not use for new disclosures.",
       EDUCATIONAL_COMPARISON_COPY,
     ],

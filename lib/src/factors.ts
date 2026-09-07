@@ -1,6 +1,6 @@
 // Loader for the canonical factor table.
 //
-// There is exactly one copy of every AIEDS coefficient and it lives in
+// There is exactly one copy of every AiEDs coefficient and it lives in
 // `spec/v2/aieds-factors.json`. This module reads it. It does not restate any
 // value, because a second copy is how the table drifts: the 22 kg Mature
 // Reference Tree survived a month in published documents precisely because
@@ -75,7 +75,7 @@ function load(): FactorFile {
     parsed = JSON.parse(readFileSync(FACTORS_URL, "utf8")) as FactorFile;
   } catch (cause) {
     throw new Error(
-      `AIEDS factor table not readable at ${FACTORS_URL.pathname}. This ` +
+      `AiEDs factor table not readable at ${FACTORS_URL.pathname}. This ` +
         `package reads spec/v2/aieds-factors.json; it does not carry its own ` +
         `copy of the coefficients.`,
       { cause },
@@ -85,7 +85,7 @@ function load(): FactorFile {
   // disclosure built from NaN is worse than no disclosure.
   const profiles = parsed?.responseSurface?.profiles;
   if (!Array.isArray(profiles) || profiles.length === 0) {
-    throw new Error("AIEDS factor table has no response-surface profiles.");
+    throw new Error("AiEDs factor table has no response-surface profiles.");
   }
   for (const p of [...profiles, parsed.responseSurface.unknownProfile]) {
     if (
@@ -96,7 +96,7 @@ function load(): FactorFile {
       p.citation.length === 0
     ) {
       throw new Error(
-        `AIEDS factor table entry is incomplete: ${JSON.stringify(p?.matchPrefixes)}`,
+        `AiEDs factor table entry is incomplete: ${JSON.stringify(p?.matchPrefixes)}`,
       );
     }
   }
@@ -133,7 +133,7 @@ export const TABLE_GLOBAL_AVERAGE_GRAMS_PER_KWH =
 
 /**
  * One Mature Reference Tree (MRT) sequesters ~21 kg CO2e/year (common forestry
- * heuristic; the AIEDS 2.0.0 tree-time basis). 1.x used 22 kg.
+ * heuristic; the AiEDs 2.0.0 tree-time basis). 1.x used 22 kg.
  */
 export const MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR =
   FACTORS.constants.matureReferenceTreeCo2eGramsPerYear.value;

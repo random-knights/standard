@@ -1,4 +1,4 @@
-# Contributing to AIEDS
+# Contributing to AiEDs
 
 ## What belongs here
 
@@ -37,7 +37,7 @@ Gate before submitting: `validate.mjs` passes + `npm run build` clean + `npm tes
 
 ## Versioning and governance
 
-AIEDS uses two independent version numbers:
+AiEDs uses two independent version numbers:
 
 | Version | Where | Meaning |
 |---------|-------|---------|

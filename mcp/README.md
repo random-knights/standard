@@ -1,6 +1,6 @@
 # aieds-mcp
 
-MCP server for the [AI Energy Disclosure Standard (AIEDS) v1](../spec/methodology.md).
+MCP server for the [AI Energy Disclosure Standard (AiEDs) v1](../spec/methodology.md).
 Exposes three tools any agent or provider can wire in over stdio - keyless, no secrets, no network.
 
 ## Tools
@@ -26,7 +26,7 @@ Confidence path:
 
 ### `aieds_factors`
 
-Returns the full AIEDS v1 factor tables (hardware TDP, grid intensities, token proxies).
+Returns the full AiEDs v1 factor tables (hardware TDP, grid intensities, token proxies).
 Use this to inspect what the server uses, or to build disclosures manually.
 
 ### `aieds_disclose`
@@ -37,9 +37,9 @@ Validates a disclosure object against `spec/aieds.schema.json` (JSON Schema draf
 { "disclosure": { ...your disclosure... } }
 ```
 
-Returns `{ conforms: bool, errors: [...], methodologyBadge: "AIEDS v1.0.0, med confidence" | null }`.
+Returns `{ conforms: bool, errors: [...], methodologyBadge: "AiEDs v1.0.0, med confidence" | null }`.
 
-AIEDS disclosures are **self-attested** - this tool checks schema conformance only. It does not re-derive or verify the energy math.
+AiEDs disclosures are **self-attested** - this tool checks schema conformance only. It does not re-derive or verify the energy math.
 
 ## Wiring (stdio)
 
@@ -73,7 +73,7 @@ Tests cover: estimate determinism (gpuSeconds, tokens, flops, unknown hardware, 
 
 ## v1 trust model
 
-AIEDS v1 is **schema-conformance self-attestation**:
+AiEDs v1 is **schema-conformance self-attestation**:
 
 1. A producer calls `aieds_estimate` to derive `energyKWh` and `gCO2e` from compute metrics.
 2. The producer assembles a full disclosure and calls `aieds_disclose` to confirm it is schema-valid.
