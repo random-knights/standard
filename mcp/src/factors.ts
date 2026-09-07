@@ -1,4 +1,4 @@
-// Loader for the canonical AIEDS factor table.
+// Loader for the canonical AiEDs factor table.
 //
 // This file used to carry its own transcription of methodology.md Tables 1 to
 // 3. The values were correct, and that was luck rather than design: nothing
@@ -120,7 +120,7 @@ function load(): FactorFile {
     return JSON.parse(readFileSync(FACTORS_URL, "utf8")) as FactorFile;
   } catch (cause) {
     throw new Error(
-      `AIEDS factor table not readable at ${FACTORS_URL.pathname}. This server ` +
+      `AiEDs factor table not readable at ${FACTORS_URL.pathname}. This server ` +
         `reads spec/v2/aieds-factors.json; it does not carry its own copy of ` +
         `the coefficients.`,
       { cause },

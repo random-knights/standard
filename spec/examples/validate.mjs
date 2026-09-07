@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// AIEDS spec example conformance script - CC BY 4.0 rand0m.ai
+// AiEDs spec example conformance script - CC BY 4.0 rand0m.ai
 // Run from the spec/ directory: node examples/validate.mjs
 //
 // Two sets, and BOTH matter.

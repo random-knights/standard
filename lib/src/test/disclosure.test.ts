@@ -1,4 +1,4 @@
-// Contract tests for the AIEDS 2.0.0 reference library (ENERGY-FIRST).
+// Contract tests for the AiEDs 2.0.0 reference library (ENERGY-FIRST).
 //
 // The coefficients are a verbatim port of the shipped rand0m.ai app's energy
 // model (same numbers, same formula), so the app and the standard agree to the
@@ -52,7 +52,7 @@ test("energy-first: gemini (vendor-published), carbon DERIVED from energy", () =
   assert.equal(d.confidence, "vendor-published");
   assert.match(d.citation, /arxiv\.org\/abs\/2508\.15734/);
   assert.equal(d.aiedsVersion, AIEDS_VERSION);
-  assert.equal(d.aiedsVersion, "AIEDS v2");
+  assert.equal(d.aiedsVersion, "AiEDs v2");
   assert.equal(d.aiedsImpactModelVersion, AIEDS_IMPACT_MODEL_VERSION);
 });
 
@@ -140,7 +140,7 @@ test("v1 read path is retained (read-only) and re-reads old rows with 22 kg MRT"
   const d = disclosureFromV1CarbonRow({ provider: "x", carbonGrams: 429 });
   close(d.energyWh, 1000); // 429 g at 429 g/kWh == 1 kWh (v1 inversion)
   close(d.treeTimeMinutes, (429 / 22000) * 525600); // v1 MRT basis, unchanged
-  assert.equal(d.aiedsVersion, "AIEDS v1");
+  assert.equal(d.aiedsVersion, "AiEDs v1");
   assert.equal(d.aiedsImpactModelVersion, "v1");
   assert.match(d.citation, /SUPERSEDED/);
   const zero = disclosureFromV1CarbonRow({ provider: "x", carbonGrams: -3 });

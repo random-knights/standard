@@ -1,6 +1,6 @@
 // Gate: spec/v2/aieds-factors.json IS methodology.md, mechanically.
 //
-// WHY THIS EXISTS. Before this file there were five copies of AIEDS coefficient
+// WHY THIS EXISTS. Before this file there were five copies of AiEDs coefficient
 // data (the Dart app model, the TypeScript reference library, the MCP factor
 // tables, methodology.md section 2.4 prose, and methodology.md section 4
 // tables) and nothing compared any of them. That is the exact condition that

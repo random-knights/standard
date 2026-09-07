@@ -1,4 +1,4 @@
-# AIEDS Methodology
+# AiEDs Methodology
 
 > **CURRENT VERSION: 2.0.0. Versions 1.x are SUPERSEDED and MUST NOT be
 > implemented.** 1.x specified a flat 0.30 gCO2e per 1k tokens for every model
@@ -8,7 +8,7 @@
 
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 2.0.0 (AIEDS methodology semver - distinct from repo/MCP server versions)
+**Version:** 2.0.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
 **Status:** Ratified
 **Effective:** 2026-07-12
 
@@ -35,16 +35,16 @@
 
 ## 1. Scope and Non-Overlap
 
-AIEDS measures **AI-system energy and CO2e** at the subject level (a model, agent, or app). It is NOT the planetary Earth Health Score produced by `rand0m.ai/earthHealthScoreRefresh`. The two systems are independent:
+AiEDs measures **AI-system energy and CO2e** at the subject level (a model, agent, or app). It is NOT the planetary Earth Health Score produced by `rand0m.ai/earthHealthScoreRefresh`. The two systems are independent:
 
-| Dimension | AIEDS | Earth Health Score |
+| Dimension | AiEDs | Earth Health Score |
 |-----------|-------|--------------------|
 | Object | One AI subject | Planetary health |
 | Unit | kWh / gCO2e | 0 to 100 index |
 | Scope | device / usage / inference / training | Global + regional biosphere |
 | Update | Per-session or batch | Daily (06:10 UTC) |
 
-AIEDS scope definitions:
+AiEDs scope definitions:
 
 - **device** - energy consumed by the client device (CPU, GPU, display) running an AI app.
 - **usage** - device + server-side inference combined (full user-facing footprint).
@@ -53,7 +53,7 @@ AIEDS scope definitions:
 
 ### 1.1 Metric Hierarchy
 
-Every AIEDS disclosure is read top-down through three levels. Lower levels are
+Every AiEDs disclosure is read top-down through three levels. Lower levels are
 derived from (never a substitute for) the level above:
 
 | Level | Class | Metrics | Nature |
@@ -143,7 +143,7 @@ energyWh = carbon_g_co2e / 429 x 1000
 
 `429 gCO2e/kWh` is the **pinned app-surface modeled global grid intensity**.
 It is deliberately its own constant, distinct from Table 3's `global_average`
-(436): the shipped rand0m.ai app disclosed with 429 from AIEDS v1 day one, and
+(436): the shipped rand0m.ai app disclosed with 429 from AiEDs v1 day one, and
 the standard follows the shipped number rather than silently diverging from
 every disclosure already rendered. Changing either constant is a methodology
 change (owner-ratified; section 6). The reference implementation of this path is
@@ -164,7 +164,7 @@ constants (all illustrative, modeled):
 | Laptop minutes | `energyWh / 50 x 60` | 50 W laptop |
 | Driving meters | `carbon_g / 170 x 1000` | 170 gCO2e/km average car |
 
-Tree-Time is AIEDS's signature equivalency: how long one mature reference tree
+Tree-Time is AiEDs's signature equivalency: how long one mature reference tree
 takes to sequester the disclosed carbon. Equivalencies MUST be labeled
 educational and MUST NOT be presented as offsets, credits, or restoration.
 
@@ -253,7 +253,7 @@ ladder; the two enums map as follows:
 | `provider-derived` | Provider-reported telemetry. Requires an approved evidence phase. | `med` to `high` |
 | `verified` | Independently verified measurement. Requires an approved evidence phase. | `high` |
 
-AIEDS v1 disclosures use `estimated` or `modeled` only.
+AiEDs v1 disclosures use `estimated` or `modeled` only.
 
 ---
 
@@ -270,7 +270,7 @@ Factor tables and methodology changes are **owner-ratified** (mirrors ADR 0008 /
 
 ## 7. Interoperability
 
-AIEDS disclosures are designed to interoperate with:
+AiEDs disclosures are designed to interoperate with:
 
 - **Hugging Face `co2_eq_emissions`** - the `gCO2e` field maps directly to HF's `co2_eq_emissions` (unit: grams). `source` maps to `training_type`/`framework`. `scope` maps to HF's `training_type` field where applicable.
 - **EU AI Act model documentation** - the `energyKWh` and `gCO2e` fields satisfy the Act's Art. 13(3)(b)(iv) energy-consumption disclosure requirement. `confidence` and `methodologyVersion` support the transparency and accuracy obligations.

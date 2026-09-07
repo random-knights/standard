@@ -1,4 +1,4 @@
-AIEDS specification text, coefficient tables, and K13
+AiEDs specification text, coefficient tables, and K13
 Copyright 2026 rand0m.ai / Random Knights
 
 Licensed under CC BY 4.0 (Creative Commons Attribution 4.0 International).
@@ -34,7 +34,7 @@ Scope in this repository
 This license applies to the specification prose and the published
 coefficient tables:
 
-  spec/methodology.md          the AIEDS methodology text
+  spec/methodology.md          the AiEDs methodology text
   spec/examples/                the bundled conformance examples
   spec/v2/aieds-factors.json    the published coefficient tables
 

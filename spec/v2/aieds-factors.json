@@ -1,5 +1,5 @@
 {
-  "$comment": "Canonical AIEDS factor data. This file is the single source of truth for every coefficient the AIEDS tooling emits. The TypeScript packages read it directly; the Dart package mirrors it as compile-time constants and is gated against a vendored copy by test. Editing a value here is a methodology change: bump methodology.md and its changelog in the same commit (methodology.md section 6).",
+  "$comment": "Canonical AiEDs factor data. This file is the single source of truth for every coefficient the AiEDs tooling emits. The TypeScript packages read it directly; the Dart package mirrors it as compile-time constants and is gated against a vendored copy by test. Editing a value here is a methodology change: bump methodology.md and its changelog in the same commit (methodology.md section 6).",
   "schemaVersion": 1,
   "methodologyVersion": "2.0.0",
   "impactModelVersion": "v2",
@@ -26,7 +26,7 @@
       "appliesTo": "response-surface path (section 2.4)",
       "provenance": "project-modeled-constant",
       "citation": null,
-      "note": "Pinned app-surface modeled global grid intensity. The shipped rand0m.ai app has disclosed with this value since AIEDS v1, so the standard follows the shipped number. This is a project modeled constant and carries no external citation."
+      "note": "Pinned app-surface modeled global grid intensity. The shipped rand0m.ai app has disclosed with this value since AiEDs v1, so the standard follows the shipped number. This is a project modeled constant and carries no external citation."
     },
     "tableGlobalAverage": {
       "value": 436,

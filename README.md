@@ -1,21 +1,21 @@
-# AIEDS - AI Energy Disclosure Standard
+# AiEDs - AI Energy Disclosure Standard
 
-> **CURRENT VERSION: methodology 2.0.0 (MCP server 2.0.0). Versions 1.x are
+> **CURRENT VERSION: methodology 2.0.0 (MCP server 2.0.1). Versions 1.x are
 > SUPERSEDED and MUST NOT be implemented.** 1.x specified a flat 0.30 gCO2e per
 > 1k tokens for every model and derived energy backward from carbon. Both are
 > wrong. If you are new here, implement 2.0.0; do not pick up 1.0.0 because it
 > sounds like the stable base. See `spec/methodology.md`.
 
-**AI Energy Disclosure Standard (AIEDS)** is an open schema and toolset for self-attested energy and carbon footprint disclosures for AI models, agents, and apps.
+**AI Energy Disclosure Standard (AiEDs)** is an open schema and toolset for self-attested energy and carbon footprint disclosures for AI models, agents, and apps.
 
-AIEDS surfaces:
+AiEDs surfaces:
 - **`/spec`** - the JSON Schema (`aieds.schema.json`) + methodology (`methodology.md`) + conformance examples.
 - **`/lib`** - the reference library (TypeScript/Node): **tokens + model in; energy-first disclosure out** (energy modeled from per-model coefficients, carbon derived from energy), byte-mirroring the rand0m.ai app so app and standard agree to the number.
 - **`/mcp`** - a keyless MCP server (TypeScript/Node) exposing three tools: `aieds_estimate`, `aieds_factors`, `aieds_disclose`.
 
 **Metric hierarchy** (methodology section 1.1): Level 1 modeled scientific estimates (energy, CO2e) -> Level 2 operational metrics (tokens, cost, latency) -> Level 3 human equivalencies (Tree-Time, phone charges, ...; educational only, never offsets).
 
-> **AIEDS scope is device / usage / inference / training.**
+> **AiEDs scope is device / usage / inference / training.**
 > It is NOT the planetary Earth Health Score produced by `rand0m.ai/earthHealthScoreRefresh`. See [spec/methodology.md section 1](spec/methodology.md#1-scope-and-non-overlap).
 
 ## Quick start (one minute)
@@ -108,11 +108,11 @@ cd mcp && npm install && npm run build && npm test
 node mcp/dist/index.js
 ```
 
-## What AIEDS is
+## What AiEDs is
 
 Energy and carbon transparency for AI is fragmented: model cards use ad-hoc fields, EU AI Act compliance requires documented energy figures, and agent frameworks have no standard way to surface per-session footprint.
 
-AIEDS provides:
+AiEDs provides:
 
 1. **A schema** (`aieds.schema.json`, JSON Schema draft 2020-12) that is field-compatible with Hugging Face `co2_eq_emissions` and the EU AI Act model-documentation form - so a single disclosure is legible to both.
 2. **A methodology** (`methodology.md`) with versioned factor tables (hardware TDP, grid intensity, token proxies) and a governance rule: no silent drift (owner-ratified changes, CHANGELOG).
@@ -138,7 +138,7 @@ Concretely: the same 412-in / 890-out exchange that 1.x would have blurred into 
 
 ## Architecture (ADR 0010)
 
-AIEDS is specified in an owner-ratified architecture decision record. The key design choices:
+AiEDs is specified in an owner-ratified architecture decision record. The key design choices:
 
 - **Self-attestation** - producers derive and sign their own disclosures; consumers verify schema conformance. No registry or central authority.
 - **Methodology versioning** - `methodologyVersion` in every disclosure ties the number to a specific factor table snapshot. An auditor can replay the math.

@@ -37,7 +37,7 @@ export interface EstimateResult {
   notes: string[];
 }
 
-// Deterministic estimate from AIEDS v1 factor tables.
+// Deterministic estimate from AiEDs v1 factor tables.
 // Priority: gpuSeconds > flops > tokens. "high" confidence requires direct power measurement
 // (not available in this tool - use "med" for gpuSeconds + known hardware).
 export function estimate(input: EstimateInput): EstimateResult {
