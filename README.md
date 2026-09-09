@@ -164,14 +164,14 @@ const d = disclosureFromResponse({
 The schema is `spec/aieds.schema.json`, JSON Schema draft 2020-12, methodology
 2.0.0.
 
-Its `$id` is `https://standard.rand0m.ai/aieds/v2/aieds.schema.json`. **That host
-does not serve the schema yet.** A JSON Schema `$id` is an identifier, not a
-locator: a schema loaded from a local file validates perfectly well with an `$id`
-that does not resolve, because nothing dereferences it. Local file validation is
-the supported path today. When the host is stood up, remote fetch starts working
-with no change to the schema.
+Its `$id` is `https://standard.rand0m.ai/aieds/v2/aieds.schema.json`, and the
+host serves the schema at that URL, byte-identical to `spec/aieds.schema.json`
+(a test in `spec/` rebuilds the site tree and refuses a deploy where they
+differ). A JSON Schema `$id` is an identifier, not a locator: a schema loaded
+from a local file validates just as well, because nothing dereferences it.
+Local file validation is the supported path.
 
-So, to validate a record right now, load the file:
+So, to validate a record, load the file:
 
 ```bash
 cd spec && npm install
