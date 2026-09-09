@@ -37,11 +37,7 @@ coefficient tables:
   spec/methodology.md          the AiEDs methodology text
   spec/examples/                the bundled conformance examples
   spec/v2/aieds-factors.json    the published coefficient tables
-
-K13 is decided to join this repository and this license, but has not moved
-in yet as of this file's creation; K13.md does not exist here. When it
-lands, K13.md is CC BY 4.0 under this file and this line is updated to list
-it above.
+  K13.md                        the K13 - AI Response Standard text
 
 It does not apply to the reference library, the MCP server, or the JSON
 Schema. Those are licensed Apache 2.0 under LICENSE; see that file and
