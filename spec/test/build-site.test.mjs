@@ -56,7 +56,7 @@ test("every shipped AiEDs artifact is byte-identical to its spec/ source", () =>
   }
 });
 
-test("the index page lists AiEDs as live and K13 as not yet published", () => {
+test("the index page lists AiEDs as live and K13.md as published", () => {
   const indexKey = [...files.keys()].find((k) => k === "index.html");
   const html = files.get(indexKey).toString("utf8");
 
@@ -66,18 +66,29 @@ test("the index page lists AiEDs as live and K13 as not yet published", () => {
   assert.match(html, /Apache 2\.0/);
   assert.match(html, /randomknights\.xyz\/aieds\//);
 
-  // K13: present, but every claim about it says "not yet". This is a honesty
-  // gate, not a style gate: a future edit that quietly marks K13 live before
-  // K13.md exists in this repo should fail loudly here.
+  // K13: K13.md is in this repository, so the index links to the served copy
+  // and the build ships it byte-identical. This is a honesty gate, not a
+  // style gate: it fails if K13.md is removed while the page still claims it.
   assert.match(html, />K13</);
-  assert.match(html, /not yet published/);
-  assert.match(html, /has not moved in yet|not yet moved in/);
-  assert.doesNotMatch(
-    html,
-    /standard\.rand0m\.ai\/k13\//,
-    "K13 must not get a resolving standard.rand0m.ai artifact link until " +
-      "K13.md actually exists in this repository",
+  assert.match(html, /standard\.rand0m\.ai\/k13\/v1\/K13\.md/);
+  const k13Key = [...files.keys()].find(
+    (k) => k.replaceAll("\\", "/") === "k13/v1/K13.md",
   );
+  assert.ok(k13Key, "no output file for k13/v1/K13.md");
+  assert.ok(
+    files.get(k13Key).equals(readFileSync(resolve(repoRoot, "K13.md"))),
+    "k13/v1/K13.md differs from K13.md; the build must copy bytes verbatim",
+  );
+});
+
+test("the index page still says the K13 level registry is not yet published", () => {
+  // canon/k13-levels.json has not moved in. The page must say so rather than
+  // link to a path that 404s; this flips deliberately when the registry lands.
+  const indexKey = [...files.keys()].find((k) => k === "index.html");
+  const html = files.get(indexKey).toString("utf8");
+  assert.match(html, /not yet published/);
+  assert.match(html, /level registry/);
+  assert.doesNotMatch(html, /standard\.rand0m\.ai\/k13\/v1\/k13-levels\.json/);
 });
 
 test("chrome values match rk_branding/canon/site-canon.md verbatim", () => {

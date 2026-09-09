@@ -4,7 +4,7 @@
 <div align="center">
   <img alt="Random Knights standards: K13 and AiEDs" src="assets/readme-header.png?v=20260907">
 
-<h3 align="center" style="color:#ff4124">standard</h3>
+<h3 align="center" style="color:#ff4124">Random Knights Standards</h3>
 
   <p align="center">
     Two open standards from Random Knights. K13 is how we write. AiEDs is how
@@ -33,20 +33,14 @@
 </div>
 
 Both are published and free to read. Both are CC BY 4.0, so you can adopt
-either without asking.
+either without asking. Both live in this repository.
 
-| Standard | Version | What it governs | In this repo |
-|---|---|---|---|
-| **K13** | 1.1.0 | How a response is written: thirteen ordered steps for checking facts, reporting cost, and writing so it can be read. | Not yet. Canonical text is [published here](https://randomknights.xyz/source/K13.md) until it moves in. |
-| **AiEDs** | methodology 2.0.0 | How modeled energy and carbon from AI work are reported. Provider-neutral. | Yes: `spec/`, `lib/`, `mcp/`. |
+| Standard | Version | License | Canonical text | Read it |
+|---|---|---|---|---|
+| **AiEDs - AI Energy Disclosure Standard** | methodology 2.0.0 | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai) |
+| **K13 - AI Response Standard** | 1.1.0 | CC BY 4.0 | [K13.md](K13.md) | [randomknights.xyz/k13](https://randomknights.xyz/k13/) |
 
-> **Repository scope.** This repo is the home for both standards, but only
-> AiEDs has moved in so far. K13's canonical bytes are served at
-> [randomknights.xyz/source/K13.md](https://randomknights.xyz/source/K13.md),
-> sha256 `f4a5e8dae25a`. Saying otherwise here would be the exact failure both
-> standards exist to prevent.
-
-## K13, the response standard
+## K13 - AI Response Standard
 
 Thirteen steps, run in order, every time. Every time does not mean every step
 takes real work: on short replies the steps collapse to a second each and the
@@ -109,7 +103,7 @@ The interactive version, including the two reserved levels, is at
 [Get started](https://randomknights.xyz/k13/get-started/) covers adopting it
 in your own pipeline.
 
-## AiEDs, the AI energy disclosure standard
+## AiEDs - AI Energy Disclosure Standard
 
 An open schema and toolset for self-attested energy and carbon footprint
 disclosures for AI models, agents, and apps.
@@ -267,7 +261,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Examples | `spec/examples/` | CC BY 4.0 | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script |
 | Reference library | `lib/` | Apache 2.0 | Energy-first disclosures: per-model coefficients + confidence tiers + citations (mirrors the rand0m.ai app; contract-tested) |
 | MCP server | `mcp/` | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose |
-| K13 | not in this repo yet | CC BY 4.0 | The response standard, 1.1.0. Canonical bytes at [randomknights.xyz/source/K13.md](https://randomknights.xyz/source/K13.md) until it moves in. |
+| K13 | `K13.md` | CC BY 4.0 | K13 - AI Response Standard, 1.1.0. The canonical text. |
 
 ## Roadmap
 
@@ -295,18 +289,22 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 
 ## Cite
 
-If you implement this standard, cite the methodology version you implemented.
-Versions are not interchangeable: 1.x derived energy backward from carbon and
-2.0.0 models energy first, so a citation without a version does not say which
-numbers were used.
+Cite the version you implemented or adopted. AiEDs versions are not
+interchangeable: 1.x derived energy backward from carbon and 2.0.0 models
+energy first, so a citation without a version does not say which numbers were
+used.
 
 > Random Knights, LLC (2026). AiEDs - AI Energy Disclosure Standard,
 > version 2.0.0. CC BY 4.0. https://standard.rand0m.ai
 
+> Random Knights, LLC (2026). K13 - AI Response Standard, version 1.1.0.
+> CC BY 4.0. https://github.com/random-knights/standard
+
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
-Machine-readable metadata is in [CITATION.cff](CITATION.cff), which GitHub
-reads to offer APA and BibTeX exports from the sidebar.
+Machine-readable metadata: [CITATION.cff](CITATION.cff) describes AiEDs and
+is the file GitHub reads to offer APA and BibTeX exports from the sidebar;
+[CITATION.k13.cff](CITATION.k13.cff) describes K13 in the same format.
 
 ## License
 
@@ -324,8 +322,6 @@ CC BY 4.0.
 | `spec/methodology.md` | [CC BY 4.0](LICENSE-DOCS) |
 | `spec/examples/` | [CC BY 4.0](LICENSE-DOCS) |
 | `spec/v2/aieds-factors.json` | [CC BY 4.0](LICENSE-DOCS) |
-
-K13 is decided to join this repository under CC BY 4.0 but has not moved in
-yet; see [LICENSE-DOCS](LICENSE-DOCS) for status.
+| `K13.md` | [CC BY 4.0](LICENSE-DOCS) |
 
 See [LICENSE](LICENSE) and [LICENSE-DOCS](LICENSE-DOCS) for full terms.

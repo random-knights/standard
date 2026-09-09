@@ -3,12 +3,10 @@ message: "If you use AiEDs, cite the methodology version you implemented."
 title: "AiEDs - AI Energy Disclosure Standard"
 # CFF 1.2.0 allows only 'dataset' or 'software' here. This work is a
 # standard, but that is not an option the format offers at the top level,
-# and an invalid file makes GitHub drop the citation panel entirely. The
-# nested reference below keeps type: standard, which the reference schema
-# does allow.
+# and an invalid file makes GitHub drop the citation panel entirely.
 type: software
 version: 2.0.0
-date-released: 2026-08-27
+date-released: 2026-08-08
 license: CC-BY-4.0
 license-url: https://creativecommons.org/licenses/by/4.0/
 repository-code: https://github.com/random-knights/standard
@@ -33,15 +31,6 @@ authors:
 contact:
   - name: "Random Knights, LLC"
     email: knights@rand0m.ai
-references:
-  - type: standard
-    title: "K13 - the response standard"
-    version: 1.1.0
-    license: CC-BY-4.0
-    authors:
-      - name: "Random Knights, LLC"
-        orcid: "https://orcid.org/0009-0006-5066-1693"
-    notes: >-
-      K13 is published by the same author and is scheduled to move into this
-      repository under the flat layout. Until that lands, its canonical text is
-      the workspace-root K13.md.
+# K13 - AI Response Standard lives in this same repository (K13.md) and has
+# its own citation file, CITATION.k13.cff. A CFF file describes one work, so
+# the two standards are not folded into one entry here.
