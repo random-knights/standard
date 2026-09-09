@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "randomknights-xyz"
+  },
+  "targets": {
+    "randomknights-xyz": {
+      "hosting": {
+        "standard": ["standard-rand0m-ai"]
+      }
+    }
+  }
+}
