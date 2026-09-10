@@ -53,6 +53,49 @@ AiEDs uses two independent version numbers:
 
 Schema-only changes (documentation, stricter patterns) can be merged by any maintainer after CI passes.
 
+## Deploying the site
+
+Nothing auto-deploys. Publishing is deliberate and manual:
+
+1. Land the change on `main` via PR with CI green.
+2. Bump the version in the surface you are releasing (`lib/package.json` or
+   `mcp/package.json`) and the methodology version in `spec/methodology.md` if
+   the model changed.
+3. Publish from a clean checkout of `main`, from inside that surface:
+   `npm publish`. Requires an npm token; see Secrets below.
+
+There is no staging. The spec IS the artifact.
+
+### The standard.rand0m.ai site
+
+The machine-artifact host is Firebase Hosting (project `randomknights-xyz`,
+hosting target `standard`, site `standard-rand0m-ai`; `firebase.json` and
+`.firebaserc` are in this repo). It has no staging tier and nothing deploys
+it automatically. Deploy from a clean checkout of `main`, owner identity
+only:
+
+```
+node scripts/build-site.mjs
+cd spec && npm test && cd ..
+firebase deploy --only hosting:standard --project randomknights-xyz
+```
+
+`npm test` in `spec/` runs `test/site-output.test.mjs`, which rebuilds the
+tree and refuses if any served file is not byte-identical to its repo source
+or if a promised artifact is missing. Do not deploy from a tree where that
+test is red, and never deploy from a checkout that was not made with the
+repo's `.gitattributes` in force: on 2026-08-31 a hand deploy from such a
+working copy shipped the schema as CRLF, so its download hash never matched
+the repo, and left `aieds-factors.json` and `methodology.md` at 404.
+
+Verify after deploying. Both hashes must be equal:
+
+```
+curl -s https://standard.rand0m.ai/aieds/v2/aieds.schema.json | sha256sum
+git show main:spec/aieds.schema.json | sha256sum
+curl -sI https://standard.rand0m.ai/aieds/v2/aieds-factors.json | head -1
+```
+
 ## Keyless rule
 
 The MCP server (`mcp/`) must never require an API key, auth token, environment secret, or private dependency. It reads only `spec/aieds.schema.json` (bundled in the repo) and emits deterministic results from factor tables. Any PR that adds a network call, secret, or private package will be rejected.
