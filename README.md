@@ -282,10 +282,9 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 
 ## Operating this repo
 
-- [RUNBOOK.md](RUNBOOK.md) - humans: how to publish, roll back, where secrets
-  live, what breaks and how to fix it.
 - [CONTRIBUTING.md](CONTRIBUTING.md) - contributors and agents: what belongs
-  where, versioning and governance, the keyless rule.
+  where, versioning and governance, the keyless rule, and how to deploy the
+  site.
 
 ## Cite
 

@@ -8,3 +8,6 @@ Thumbs.db
 
 # Agent worktrees (local only)
 .worktrees/
+
+# Local agent config (local only)
+.claude/
