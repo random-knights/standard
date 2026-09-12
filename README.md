@@ -158,7 +158,8 @@ const d = disclosureFromResponse({
 //                                      citation, labeled as such in
 //                                      spec/v2/aieds-factors.json.
 //   d.treeTimeLabel "5.1 min"
-//   d.confidence    "vendor-published" per-model tier, never hidden
+//   d.provenance    "vendor-published" the per-model rung, never hidden
+//   d.confidence    "low"              a token proxy, unless you override it
 //   d.citation      "Google (Aug 2025) ... arxiv.org/abs/2508.15734 ..."
 ```
 
@@ -270,7 +271,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Methodology | `spec/methodology.md` | CC BY 4.0 | 2.1.0: energy-first path + per-model coefficients + factor tables + the provenance ladder |
 | Coefficient tables | `spec/v2/aieds-factors.json` | CC BY 4.0 | The published factor data every surface reads |
 | Examples | `spec/examples/` | CC BY 4.0 | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script |
-| Reference library | `lib/` | Apache 2.0 | Energy-first disclosures: per-model coefficients + confidence tiers + citations (mirrors the rand0m.ai app; contract-tested) |
+| Reference library | `lib/` | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested) |
 | MCP server | `mcp/` | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose |
 | K13 | `K13.md` | CC BY 4.0 | K13 - AI Response Standard, 2.0.0. The canonical text. |
 | K13 report templates | `templates/` | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement. |
@@ -282,7 +283,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 - [x] `methodology.md` 2.1.0 (energy-first; per-model coefficients + the provenance ladder + citations) with factor tables + governance
 - [x] 7 conformance examples (4 valid, 3 superseded-1.x rejection cases) + validate script
 - [x] MCP server 2.0.0: `aieds_estimate`, `aieds_factors`, `aieds_disclose`
-- [x] Reference library 2.0.0: energy-first, byte-mirrors the app
+- [x] Reference library 2.1.0: energy-first, byte-mirrors the app, emits provenance + confidence
 - [x] CI: schema validation + build + unit tests
 
 ### Deferred
