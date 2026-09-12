@@ -1,0 +1,1278 @@
+<title>K13 Report: [Lab Name]</title>
+<!-- ============================================================
+     K13 REPORT TEMPLATE, v2.0.0
+     Copy this file. Replace every FILL marker.
+     Licence: this template is Apache 2.0, a reference implementation you may
+     fork without attribution friction. The REQUIREMENT it renders, the
+     ordered section list in K13.md under "The report template", is
+     specification text and is CC BY 4.0. Fork the markup; cite the standard.
+     Rules:
+       - No em dashes (U+2014). Gate fails on one.
+       - No en dashes (U+2013), and no double hyphen used as a dash. Use a
+         comma, a colon, or a new sentence.
+       - Levels are "levels," never "reading levels."
+       - All six levels are NORMATIVE under K13 2.0.0.
+       - STRUCTURAL INVARIANCE. Every level carries all twelve tiles, in this
+         order, at the same positions and the same sizes. Only the register
+         changes: the finding sentence, the narrative prose and the wording of
+         actions. Data cells are byte-identical at every level. A level that
+         adds a tile the others lack, or omits one they have, fails the gate.
+       - EVIDENCE BLOCKS. Every command or query appears with its real rendered
+         result. A command with no result, or a result with no command, fails
+         the gate. Never fabricate a result. If one is too large, show a stated
+         subset and say what was cut.
+       - Default level is energy drink (K13 step 11), not juice box.
+       - LocalStorage key: change 'k13-level-LAB_SLUG' to your lab slug.
+       - AiEDs: fill every field. Unknown is a valid value; blank is not.
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* === tokens === */
+:root {
+  --bg:        #f5f7fb;
+  --surface:   #ffffff;
+  --surface2:  #eef1f7;
+  --border:    #dce2ef;
+  --text:      #111827;
+  --muted:     #52596b;
+  --dim:       #8892a4;
+  --accent:    #1d4ed8;
+  --accent-s:  #eff2ff;
+  --pass:      #15803d;
+  --pass-s:    #f0fdf4;
+  --fail:      #b91c1c;
+  --fail-s:    #fef2f2;
+  --warn:      #92400e;
+  --warn-s:    #fffbeb;
+  --trace:     #0d9488;
+  --trace-s:   #f0fdfa;
+  --mono:      'IBM Plex Mono', Consolas, monospace;
+  --sans:      'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --r:         6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117; --surface: #161b22; --surface2: #1c2128; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --dim: #6e7681;
+    --accent: #60a5fa; --accent-s: #0a1f3d;
+    --pass: #3fb950; --pass-s: #051f0d;
+    --fail: #f85149; --fail-s: #2d0806;
+    --warn: #e3b341; --warn-s: #1f1200;
+    --trace: #2dd4bf; --trace-s: #042f2e;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1117; --surface: #161b22; --surface2: #1c2128; --border: #21262d;
+  --text: #e6edf3; --muted: #8b949e; --dim: #6e7681;
+  --accent: #60a5fa; --accent-s: #0a1f3d;
+  --pass: #3fb950; --pass-s: #051f0d;
+  --fail: #f85149; --fail-s: #2d0806;
+  --warn: #e3b341; --warn-s: #1f1200;
+  --trace: #2dd4bf; --trace-s: #042f2e;
+}
+
+/* === reset + base === */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--mono); font-weight: 600; text-wrap: balance; margin: 0; }
+p { margin: 0 0 0.9em; }
+p:last-child { margin-bottom: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: var(--mono); font-size: 0.87em; }
+
+/* === layout === */
+.page { max-width: 860px; margin: 0 auto; padding: 0 1.25rem 4rem; }
+
+/* === page header === */
+.pg-header { padding: 2.2rem 0 1.4rem; border-bottom: 1px solid var(--border); }
+.pg-header .eyebrow { font-family: var(--mono); font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.09em; color: var(--dim); margin-bottom: 0.5rem; }
+.pg-header h1 { font-size: 1.6rem; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 0.55rem; }
+.pg-header .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.85rem; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem; font-size: 0.775rem; color: var(--dim); font-family: var(--mono); align-items: center; }
+
+/* gate badge: use the correct modifier class: pass / fail / raise / blocked */
+.gate-badge { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 0.72rem; font-weight: 600; padding: 0.25em 0.7em; border-radius: 999px; letter-spacing: 0.03em; }
+.gate-badge.pass    { background: var(--pass-s);  color: var(--pass);  border: 1px solid color-mix(in srgb, var(--pass)  20%, transparent); }
+.gate-badge.fail    { background: var(--fail-s);  color: var(--fail);  border: 1px solid color-mix(in srgb, var(--fail)  20%, transparent); }
+.gate-badge.raise   { background: var(--warn-s);  color: var(--warn);  border: 1px solid color-mix(in srgb, var(--warn)  20%, transparent); }
+.gate-badge.blocked { background: var(--trace-s); color: var(--trace); border: 1px solid color-mix(in srgb, var(--trace) 20%, transparent); }
+
+/* === tab bar
+     flex-wrap: nowrap enforces one line.
+     overflow-x: auto on .tab-wrap handles narrow screens via horizontal scroll.
+     Do NOT change these to pill/filled tabs: that style causes wrapping (see lab-14).
+     === */
+.tab-wrap { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border); padding-top: 0.55rem; margin-bottom: 2.2rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tab-k13 { text-align: center; font-size: 0.7rem; color: var(--dim); padding: 0.15rem 0 0.45rem; font-family: var(--mono); white-space: nowrap; }
+.tab-bar { display: flex; justify-content: center; flex-wrap: nowrap; gap: 0; margin-bottom: -1px; }
+.tab-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: 0.35rem 0.8rem 0.55rem; font-family: var(--mono); cursor: pointer; white-space: nowrap; display: flex; flex-direction: column; align-items: center; gap: 0.08rem; transition: color 0.12s, border-color 0.12s; margin-bottom: -1px; color: var(--dim); }
+.tab-btn .t-icon  { font-size: 1.15rem; line-height: 1; }
+.tab-btn .t-name  { font-size: 0.72rem; font-weight: 500; }
+.tab-btn .t-grade { font-size: 0.59rem; font-weight: 400; opacity: 0.7; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* === level panes === */
+.level-pane[hidden] { display: none; }
+.grade-chip { display: inline-flex; align-items: center; gap: 0.35rem; font-family: var(--mono); font-size: 0.68rem; font-weight: 500; padding: 0.2em 0.65em; border-radius: 999px; background: var(--surface2); color: var(--dim); border: 1px solid var(--border); margin-bottom: 0.9rem; }
+.finding-stmt { font-size: 1.1rem; letter-spacing: -0.02em; line-height: 1.3; margin-bottom: 1.3rem; color: var(--text); font-family: var(--mono); font-weight: 600; }
+.pane-body { color: var(--muted); }
+.pane-body p { font-size: 0.925rem; }
+
+/* === callout === */
+.callout { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0.9rem 1.1rem; margin: 1.2rem 0; font-size: 0.875rem; }
+.callout.pass { border-left: 3px solid var(--pass); }
+.callout.fail { border-left: 3px solid var(--fail); }
+.callout.warn { border-left: 3px solid var(--trace); }
+.callout h4 { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.45rem; }
+.callout.pass h4 { color: var(--pass); }
+.callout.fail h4 { color: var(--fail); }
+.callout.warn h4 { color: var(--trace); }
+.callout p { margin: 0; color: var(--text); }
+
+/* === action box === */
+.action-box { background: var(--accent-s); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius: var(--r); padding: 1rem 1.15rem; margin: 1.6rem 0 0; }
+.action-label { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--accent); margin-bottom: 0.5rem; }
+.action-box p { margin: 0; font-size: 0.88rem; color: var(--text); }
+.action-box ol, .action-box ul { margin: 0.35rem 0 0; padding-left: 1.3em; font-size: 0.88rem; color: var(--text); }
+.action-box li { margin-bottom: 0.4rem; }
+.action-box li:last-child { margin-bottom: 0; }
+
+/* visual action grid (juice_box) */
+.action-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.65rem; margin-top: 0.5rem; }
+.action-step { background: color-mix(in srgb, var(--accent) 8%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent); border-radius: var(--r); padding: 0.7rem 0.8rem; }
+.action-step .as-icon { font-size: 1.3rem; margin-bottom: 0.3rem; }
+.action-step .as-text { font-size: 0.82rem; color: var(--text); line-height: 1.4; }
+
+/* === flow diagram === */
+.flow-section-label { font-size: 0.8rem; font-weight: 600; color: var(--muted); margin: 1.6rem 0 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--mono); }
+.flow-diagram { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; margin: 0 0 1.4rem; }
+.flow-step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0.75rem 0.7rem; text-align: center; flex: 1; min-width: 110px; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.flow-icon { font-size: 1.5rem; line-height: 1; }
+.flow-text { font-size: 0.77rem; color: var(--muted); line-height: 1.3; }
+.flow-text strong { color: var(--text); display: block; font-size: 0.8rem; margin-bottom: 0.1rem; }
+.flow-arrow { font-size: 1.2rem; color: var(--dim); padding: 0 0.2rem; display: flex; align-items: center; flex-shrink: 0; align-self: center; }
+.flow-step.broken { border-color: color-mix(in srgb, var(--fail) 30%, transparent); background: var(--fail-s); }
+.flow-step.ok     { border-color: color-mix(in srgb, var(--pass) 30%, transparent); }
+.flow-step.trace  { border-color: color-mix(in srgb, var(--trace) 30%, transparent); background: var(--trace-s); }
+.flow-arrow.broken { color: var(--fail); }
+
+/* === check / data tables === */
+.check-table-wrap { overflow-x: auto; margin: 1.3rem 0; }
+table.checks { border-collapse: collapse; width: 100%; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+table.checks th { font-family: var(--mono); font-size: 0.65rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--dim); text-align: left; padding: 0.28rem 0.65rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+table.checks td { padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--muted); }
+table.checks tr:last-child td { border-bottom: none; }
+table.checks td.name    { font-family: var(--mono); font-size: 0.78rem; color: var(--text); }
+table.checks td.verdict { font-family: var(--mono); font-weight: 600; white-space: nowrap; }
+table.checks td.verdict.pass { color: var(--pass); }
+table.checks td.verdict.fail { color: var(--fail); }
+table.checks td.verdict.warn { color: var(--warn); }
+.bar-track { width: 90px; height: 5px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; }
+.bar-fill.pass  { background: var(--pass); }
+.bar-fill.fail  { background: var(--fail); }
+.bar-fill.trace { background: var(--trace); }
+
+table.plain { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+table.plain th { font-family: var(--sans); font-size: 0.82rem; font-weight: 600; text-align: left; padding: 0.45rem 0.8rem; background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+table.plain td { padding: 0.5rem 0.8rem; border: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+table.plain td.verdict { font-family: var(--mono); font-weight: 600; white-space: nowrap; }
+table.plain td.verdict.pass { color: var(--pass); }
+table.plain td.verdict.warn { color: var(--trace); }
+
+/* === node graph (black_coffee / loose_leaf) === */
+.node-graph { display: flex; flex-direction: column; gap: 0.35rem; margin: 1.3rem 0; }
+.ng-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
+.ng-node { font-family: var(--mono); font-size: 0.73rem; padding: 0.2em 0.6em; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); white-space: nowrap; }
+.ng-node.entry    { border-color: var(--trace); color: var(--trace); }
+.ng-node.terminal { border-color: var(--pass);  color: var(--pass);  }
+.ng-node.decision { border-color: var(--accent); color: var(--accent); }
+.ng-edge { font-size: 0.72rem; color: var(--muted); }
+.ng-cond { font-family: var(--mono); font-size: 0.68rem; color: var(--dim); padding: 0.15em 0.5em; background: var(--surface2); border-radius: 3px; border: 1px solid var(--border); }
+
+/* === env card === */
+.env-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0.85rem 1rem; margin: 1.4rem 0; font-size: 0.82rem; }
+.env-card .env-title { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin-bottom: 0.55rem; }
+.env-row { display: flex; gap: 0.5rem; padding: 0.18rem 0; border-bottom: 1px solid var(--border); }
+.env-row:last-child { border-bottom: none; }
+.env-key { font-family: var(--mono); font-size: 0.75rem; color: var(--dim); min-width: 160px; flex-shrink: 0; }
+.env-val { color: var(--text); font-size: 0.8rem; }
+.env-val code { background: var(--surface2); padding: 0.1em 0.35em; border-radius: 3px; border: 1px solid var(--border); }
+
+/* === code block === */
+.code-wrap { margin: 1.3rem 0; }
+.code-label { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin-bottom: 0.4rem; }
+pre.code { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0.9rem 1rem; overflow-x: auto; margin: 0; font-family: var(--mono); font-size: 0.79rem; line-height: 1.6; color: var(--text); }
+
+/* === section separator === */
+.section-label { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--dim); margin: 2.4rem 0 0.85rem; padding-top: 2.2rem; border-top: 1px solid var(--border); }
+
+/* === AIEDS === */
+details.aieds { margin-top: 2.8rem; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+details.aieds summary { font-family: var(--mono); font-size: 0.78rem; font-weight: 600; padding: 0.75rem 1rem; cursor: pointer; color: var(--muted); list-style: none; display: flex; align-items: center; gap: 0.5rem; user-select: none; }
+details.aieds summary::-webkit-details-marker { display: none; }
+details.aieds summary::before { content: '\25B6'; font-size: 0.6rem; transition: transform 0.15s; color: var(--dim); }
+details.aieds[open] summary::before { transform: rotate(90deg); }
+.aieds-body { padding: 0 1rem 1rem; font-size: 0.81rem; color: var(--muted); }
+.aieds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.6rem; margin: 0.6rem 0; }
+.aieds-item { display: flex; flex-direction: column; gap: 0.1rem; }
+.aieds-item .key { font-family: var(--mono); font-size: 0.66rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
+.aieds-item .val { font-family: var(--mono); font-size: 0.82rem; color: var(--text); font-weight: 500; }
+
+/* === theme toggle === */
+.theme-toggle { position: fixed; top: 1rem; right: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 0.3rem 0.7rem; font-family: var(--mono); font-size: 0.7rem; cursor: pointer; color: var(--muted); z-index: 100; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* === structural invariance: the twelve-tile grid ===
+   Every level renders the same twelve tiles, in the same order, at the same
+   positions and the same box sizes. Heights come from the grid, never from the
+   content, so switching levels cannot reflow the page and the tab strip above
+   cannot move. A tile whose content overflows scrolls inside itself. === */
+.page { max-width: 1340px; }
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 104px;
+  gap: 12px;
+  align-items: stretch;
+}
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 0.6rem 0.8rem 0.7rem;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.tile-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--dim);
+  margin: 0 0 0.4rem;
+  flex: 0 0 auto;
+}
+.tile-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.tile-body p { margin: 0 0 0.55rem; }
+.tile-body p:last-child { margin-bottom: 0; }
+.tile-body ul, .tile-body ol { margin: 0; padding-left: 1.15em; }
+.tile-body li { margin-bottom: 0.35rem; }
+
+/* Tile placement. Four columns at 1440, two at 834, one at 390. The spans are
+   declared once per tile so every level lands on the same geometry. */
+.t-header-strip      { grid-column: span 4; grid-row: span 2; }
+.t-finding           { grid-column: span 2; grid-row: span 3; }
+.t-verdict-row       { grid-column: span 1; grid-row: span 3; }
+.t-how-it-fits       { grid-column: span 1; grid-row: span 3; }
+.t-environment-card  { grid-column: span 1; grid-row: span 3; }
+.t-checks-table      { grid-column: span 1; grid-row: span 3; }
+.t-evidence-blocks   { grid-column: span 2; grid-row: span 3; }
+.t-discrepancies     { grid-column: span 1; grid-row: span 3; }
+.t-whats-next        { grid-column: span 1; grid-row: span 3; }
+.t-owner-actions     { grid-column: span 1; grid-row: span 3; }
+.t-what-was-not-done { grid-column: span 1; grid-row: span 3; }
+.t-aieds-disclosure  { grid-column: span 4; grid-row: span 3; }
+
+/* header strip tile */
+.hs-eyebrow { font-family: var(--mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--dim); }
+.hs-title { font-family: var(--mono); font-size: 1rem; font-weight: 600; color: var(--text); letter-spacing: -0.02em; margin: 0.15rem 0 0.1rem; }
+.hs-sub { font-size: 0.8rem; color: var(--muted); }
+.hs-meta { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; align-items: center; font-family: var(--mono); font-size: 0.7rem; color: var(--dim); margin-top: 0.3rem; }
+
+/* finding and verdict */
+.finding-stmt { font-family: var(--mono); font-weight: 600; font-size: 0.98rem; line-height: 1.35; letter-spacing: -0.02em; color: var(--text); margin: 0; }
+.verdict-row { display: flex; gap: 0.5rem; align-items: baseline; font-family: var(--mono); font-size: 0.78rem; margin-bottom: 0.45rem; }
+.verdict-row .vr-key { color: var(--dim); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.09em; }
+.verdict-row .vr-val { color: var(--text); font-weight: 600; }
+
+/* evidence: a command and its real result, always as a pair */
+.evidence { margin-bottom: 0.7rem; }
+.evidence:last-child { margin-bottom: 0; }
+.ev-label { font-family: var(--mono); font-size: 0.58rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin-bottom: 0.2rem; }
+pre.ev-code, pre.ev-result { font-family: var(--mono); font-size: 0.72rem; line-height: 1.5; margin: 0 0 0.4rem; padding: 0.5rem 0.6rem; border: 1px solid var(--border); border-radius: 4px; background: var(--surface2); color: var(--text); overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+pre.ev-result { background: var(--pass-s); border-color: color-mix(in srgb, var(--pass) 22%, transparent); }
+
+/* what's next slots: role, why that role, effort, then the command */
+.wn-slot { display: flex; gap: 0.5rem; padding: 0.16rem 0; border-bottom: 1px solid var(--border); }
+.wn-slot:last-of-type { border-bottom: none; }
+.wn-key { font-family: var(--mono); font-size: 0.66rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; min-width: 92px; flex-shrink: 0; }
+.wn-val { font-size: 0.79rem; color: var(--text); }
+.wn-none { font-size: 0.75rem; color: var(--dim); margin-top: 0.4rem; }
+
+/* owner actions */
+.oa-list { list-style: decimal; }
+.oa-why { display: block; margin-bottom: 0.25rem; color: var(--text); }
+
+/* AiEDs tile */
+.t-aieds-disclosure .aieds-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.aieds-lead { font-size: 0.8rem; }
+.aieds-ppi { font-size: 0.78rem; color: var(--dim); }
+
+@media (max-width: 1100px) {
+  .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 124px; }
+  .t-header-strip      { grid-column: span 2; }
+  .t-finding           { grid-column: span 2; }
+  .t-verdict-row       { grid-column: span 1; }
+  .t-evidence-blocks   { grid-column: span 2; }
+  .t-aieds-disclosure  { grid-column: span 2; grid-row: span 3; }
+}
+@media (max-width: 620px) {
+  .tile-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: 132px; }
+  .tile { grid-column: span 1 !important; }
+  .t-header-strip      { grid-row: span 2; }
+  .t-aieds-disclosure  { grid-row: span 4; }
+  .t-aieds-disclosure .aieds-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+
+<button class="theme-toggle" onclick="toggleTheme()">&#9680;</button>
+
+<div class="page">
+
+  <!-- TAB BAR
+       Keep this structure exactly.
+       flex-wrap: nowrap (set in CSS) keeps all six on one line.
+       It sits above the tiles and must not move when a level changes, which
+       is why every pane below is the same height.
+       -->
+  <div class="tab-wrap">
+    <div class="tab-k13">K13 v2.0.0 &middot; six levels, all normative</div>
+    <nav class="tab-bar" role="tablist">
+      <button class="tab-btn" data-level="juice_box" role="tab" onclick="showLevel('juice_box')">
+        <span class="t-icon">&#x1F9C3;</span><span class="t-name">juice box</span><span class="t-grade">K-5</span>
+      </button>
+      <button class="tab-btn" data-level="soda_pop" role="tab" onclick="showLevel('soda_pop')">
+        <span class="t-icon">&#x1F964;</span><span class="t-name">soda pop</span><span class="t-grade">6-8</span>
+      </button>
+      <button class="tab-btn active" data-level="energy_drink" role="tab" onclick="showLevel('energy_drink')">
+        <span class="t-icon">&#x1F9CB;</span><span class="t-name">energy drink</span><span class="t-grade">9-12</span>
+      </button>
+      <button class="tab-btn" data-level="black_coffee" role="tab" onclick="showLevel('black_coffee')">
+        <span class="t-icon">&#9749;</span><span class="t-name">black coffee</span><span class="t-grade">College</span>
+      </button>
+      <button class="tab-btn" data-level="loose_leaf" role="tab" onclick="showLevel('loose_leaf')">
+        <span class="t-icon">&#x1FAD6;</span><span class="t-name">loose leaf</span><span class="t-grade">Masters</span>
+      </button>
+      <button class="tab-btn" data-level="yerba_mate" role="tab" onclick="showLevel('yerba_mate')">
+        <span class="t-icon">&#x1F9C9;</span><span class="t-name">yerba mate</span><span class="t-grade">Doctorate</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- =====================================================
+       JUICE BOX, K-5
+       Normative level 1 of 6.
+       Register: No jargon at all. One idea per sentence.
+       Structure: the twelve tiles below, in this order, at EVERY level.
+       Only the prose changes. Data cells are byte-identical across levels.
+  ===================================================== -->
+  <div id="pane-juice_box" class="level-pane" hidden>
+    <div class="tile-grid">
+      <section class="tile t-header-strip" data-tile="header-strip">
+        <h3 class="tile-label">Report</h3>
+        <div class="tile-body">
+        <div class="hs-eyebrow">K13 Evaluation Report &middot; Lab NN &middot; YYYY-MM-DD</div>
+        <div class="hs-title">FILL: short lab title, 3 to 6 words</div>
+        <div class="hs-sub">FILL: one sentence, what this work investigated</div>
+        <div class="hs-meta">
+          <span class="gate-badge pass">FILL: passed / failed / raise / blocked</span>
+          <span>Model: FILL</span>
+          <span>Runs: FILL</span>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-finding" data-tile="finding">
+        <h3 class="tile-label">Finding</h3>
+        <div class="tile-body">
+        <p class="finding-stmt">FILL: One plain sentence. What happened, not how.</p>
+        </div>
+      </section>
+      <section class="tile t-verdict-row" data-tile="verdict-row">
+        <h3 class="tile-label">Verdict</h3>
+        <div class="tile-body">
+        <div class="verdict-row"><span class="vr-key">gate</span><span class="vr-val">FILL: the exact gate string</span></div>
+        <p>FILL: what the gate word means in plain language, no jargon</p>
+        </div>
+      </section>
+      <section class="tile t-how-it-fits" data-tile="how-it-fits">
+        <h3 class="tile-label">How it fits</h3>
+        <div class="tile-body">
+        <p>FILL: what bigger job this was part of, in everyday words, and what it lets people do now</p>
+        <p>FILL: what preceded this work, and what it unblocks.</p>
+        </div>
+      </section>
+      <section class="tile t-environment-card" data-tile="environment-card">
+        <h3 class="tile-label">Environment</h3>
+        <div class="tile-body">
+        <div class="env-row"><span class="env-key">what was run</span><span class="env-val">FILL: the command or suite</span></div>
+        <div class="env-row"><span class="env-key">where</span><span class="env-val">FILL: host, runner or clone path</span></div>
+        <div class="env-row"><span class="env-key">version</span><span class="env-val">FILL: toolchain version</span></div>
+        <div class="env-row"><span class="env-key">commit</span><span class="env-val"><code>FILL: full sha</code></span></div>
+        <div class="env-row"><span class="env-key">branch</span><span class="env-val">FILL</span></div>
+        <div class="env-row"><span class="env-key">when</span><span class="env-val">FILL: ISO timestamp</span></div>
+        </div>
+      </section>
+      <section class="tile t-checks-table" data-tile="checks-table">
+        <h3 class="tile-label">Checks</h3>
+        <div class="tile-body">
+        <table class="checks">
+          <thead><tr><th>check</th><th>how it was verified</th><th>result</th></tr></thead>
+          <tbody>
+            <tr><td class="name">FILL</td><td>FILL: the command or observation</td><td class="verdict pass">PASS</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict fail">FAIL</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict warn">PARTIAL</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+      <section class="tile t-evidence-blocks" data-tile="evidence-blocks">
+        <h3 class="tile-label">Evidence</h3>
+        <div class="tile-body">
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: the exact command, query or script you ran</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: the real rendered output. Never fabricated. If it is too
+large to show, show a stated subset and say what was cut.</pre>
+        </div>
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: second piece of evidence, or delete this whole block
+from every level at once</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: its real rendered output</pre>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-discrepancies" data-tile="discrepancies">
+        <h3 class="tile-label">Discrepancies</h3>
+        <div class="tile-body">
+        <p>FILL: anything that did not match, said plainly. Write "nothing did not match" if nothing did.</p>
+        </div>
+      </section>
+      <section class="tile t-whats-next" data-tile="whats-next">
+        <h3 class="tile-label">What's next</h3>
+        <div class="tile-body">
+        <p>FILL: what someone could do next, in plain words. Not the owner's job, anyone's.</p>
+        <div class="wn-slot"><span class="wn-key">role</span><span class="wn-val">FILL: the role for the next task, from your published role list</span></div>
+        <div class="wn-slot"><span class="wn-key">why that role</span><span class="wn-val">FILL: one line against that list's stated criteria, so a reader can disagree</span></div>
+        <div class="wn-slot"><span class="wn-key">effort</span><span class="wn-val">FILL: the effort or reasoning level</span></div>
+        <div class="ev-label">Command</div>
+        <pre class="ev-code">FILL: paste-ready, in your own dispatch shape, complete enough
+to run cold (K13 step 7: pull it from your command template
+library, do not write it from memory)</pre>
+        <p class="wn-none">No continuation? Delete the three slots and the command and write
+"No next step, this work is complete.", then say why. Never manufacture a
+continuation to fill this tile. Do NOT name a model here: K13 requires role and
+effort and is vendor-neutral. If you resolve role plus effort to a model from
+your own published mapping, cite the mapping beside it.</p>
+        </div>
+      </section>
+      <section class="tile t-owner-actions" data-tile="owner-actions">
+        <h3 class="tile-label">Owner actions</h3>
+        <div class="tile-body">
+        <ol class="oa-list">
+          <li><span class="oa-why">FILL: the exact thing the owner has to do, named in plain words above the command</span>
+            <pre class="ev-code">FILL: the exact command, ready to paste</pre></li>
+          <li><span class="oa-why">FILL: the second owner action</span>
+            <pre class="ev-code">FILL: the exact command</pre></li>
+        </ol>
+        </div>
+      </section>
+      <section class="tile t-what-was-not-done" data-tile="what-was-not-done">
+        <h3 class="tile-label">What was not done</h3>
+        <div class="tile-body">
+        <p>FILL: what was left out, and why, in one plain sentence</p>
+        </div>
+      </section>
+      <section class="tile t-aieds-disclosure" data-tile="aieds-disclosure">
+        <h3 class="tile-label">AiEDs disclosure</h3>
+        <div class="tile-body">
+        <p class="aieds-lead">AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. FILL: one sentence on model usage and data access.</p>
+        <div class="aieds-grid">
+          <div class="aieds-item"><span class="key">energyKWh</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">gCO2e</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">compute.tokens</span><span class="val">FILL: in plus out</span></div>
+          <div class="aieds-item"><span class="key">confidence</span><span class="val">FILL: low / med / high</span></div>
+          <div class="aieds-item"><span class="key">provenance</span><span class="val">FILL: measured / vendor-published / class-estimated / synthetic / unknown</span></div>
+          <div class="aieds-item"><span class="key">subject.name</span><span class="val">FILL: lab-slug</span></div>
+          <div class="aieds-item"><span class="key">generatedAt</span><span class="val">FILL: YYYY-MM-DD</span></div>
+          <div class="aieds-item"><span class="key">scope</span><span class="val">FILL: device / usage / inference / training</span></div>
+        </div>
+        <p class="aieds-ppi">FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and how it was protected.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       SODA POP, 6-8
+       Normative level 2 of 6.
+       Register: One new term at a time, explained as it appears.
+       Structure: the twelve tiles below, in this order, at EVERY level.
+       Only the prose changes. Data cells are byte-identical across levels.
+  ===================================================== -->
+  <div id="pane-soda_pop" class="level-pane" hidden>
+    <div class="tile-grid">
+      <section class="tile t-header-strip" data-tile="header-strip">
+        <h3 class="tile-label">Report</h3>
+        <div class="tile-body">
+        <div class="hs-eyebrow">K13 Evaluation Report &middot; Lab NN &middot; YYYY-MM-DD</div>
+        <div class="hs-title">FILL: short lab title, 3 to 6 words</div>
+        <div class="hs-sub">FILL: one sentence, what this work investigated</div>
+        <div class="hs-meta">
+          <span class="gate-badge pass">FILL: passed / failed / raise / blocked</span>
+          <span>Model: FILL</span>
+          <span>Runs: FILL</span>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-finding" data-tile="finding">
+        <h3 class="tile-label">Finding</h3>
+        <div class="tile-body">
+        <p class="finding-stmt">FILL: the same outcome at middle-school specificity. Introduce one term, explain it.</p>
+        </div>
+      </section>
+      <section class="tile t-verdict-row" data-tile="verdict-row">
+        <h3 class="tile-label">Verdict</h3>
+        <div class="tile-body">
+        <div class="verdict-row"><span class="vr-key">gate</span><span class="vr-val">FILL: the exact gate string</span></div>
+        <p>FILL: the gate word with one or two terms, each explained inline</p>
+        </div>
+      </section>
+      <section class="tile t-how-it-fits" data-tile="how-it-fits">
+        <h3 class="tile-label">How it fits</h3>
+        <div class="tile-body">
+        <p>FILL: the plan or project this belongs to, what it unblocks, and what came before it</p>
+        <p>FILL: what preceded this work, and what it unblocks.</p>
+        </div>
+      </section>
+      <section class="tile t-environment-card" data-tile="environment-card">
+        <h3 class="tile-label">Environment</h3>
+        <div class="tile-body">
+        <div class="env-row"><span class="env-key">what was run</span><span class="env-val">FILL: the command or suite</span></div>
+        <div class="env-row"><span class="env-key">where</span><span class="env-val">FILL: host, runner or clone path</span></div>
+        <div class="env-row"><span class="env-key">version</span><span class="env-val">FILL: toolchain version</span></div>
+        <div class="env-row"><span class="env-key">commit</span><span class="env-val"><code>FILL: full sha</code></span></div>
+        <div class="env-row"><span class="env-key">branch</span><span class="env-val">FILL</span></div>
+        <div class="env-row"><span class="env-key">when</span><span class="env-val">FILL: ISO timestamp</span></div>
+        </div>
+      </section>
+      <section class="tile t-checks-table" data-tile="checks-table">
+        <h3 class="tile-label">Checks</h3>
+        <div class="tile-body">
+        <table class="checks">
+          <thead><tr><th>check</th><th>how it was verified</th><th>result</th></tr></thead>
+          <tbody>
+            <tr><td class="name">FILL</td><td>FILL: the command or observation</td><td class="verdict pass">PASS</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict fail">FAIL</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict warn">PARTIAL</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+      <section class="tile t-evidence-blocks" data-tile="evidence-blocks">
+        <h3 class="tile-label">Evidence</h3>
+        <div class="tile-body">
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: the exact command, query or script you ran</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: the real rendered output. Never fabricated. If it is too
+large to show, show a stated subset and say what was cut.</pre>
+        </div>
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: second piece of evidence, or delete this whole block
+from every level at once</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: its real rendered output</pre>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-discrepancies" data-tile="discrepancies">
+        <h3 class="tile-label">Discrepancies</h3>
+        <div class="tile-body">
+        <p>FILL: what did not match, with each term explained as it appears</p>
+        </div>
+      </section>
+      <section class="tile t-whats-next" data-tile="whats-next">
+        <h3 class="tile-label">What's next</h3>
+        <div class="tile-body">
+        <p>FILL: concrete next steps a reader could take, with any new term explained</p>
+        <div class="wn-slot"><span class="wn-key">role</span><span class="wn-val">FILL: the role for the next task, from your published role list</span></div>
+        <div class="wn-slot"><span class="wn-key">why that role</span><span class="wn-val">FILL: one line against that list's stated criteria, so a reader can disagree</span></div>
+        <div class="wn-slot"><span class="wn-key">effort</span><span class="wn-val">FILL: the effort or reasoning level</span></div>
+        <div class="ev-label">Command</div>
+        <pre class="ev-code">FILL: paste-ready, in your own dispatch shape, complete enough
+to run cold (K13 step 7: pull it from your command template
+library, do not write it from memory)</pre>
+        <p class="wn-none">No continuation? Delete the three slots and the command and write
+"No next step, this work is complete.", then say why. Never manufacture a
+continuation to fill this tile. Do NOT name a model here: K13 requires role and
+effort and is vendor-neutral. If you resolve role plus effort to a model from
+your own published mapping, cite the mapping beside it.</p>
+        </div>
+      </section>
+      <section class="tile t-owner-actions" data-tile="owner-actions">
+        <h3 class="tile-label">Owner actions</h3>
+        <div class="tile-body">
+        <ol class="oa-list">
+          <li><span class="oa-why">FILL: the owner action, with the one term it needs explained</span>
+            <pre class="ev-code">FILL: the exact command, ready to paste</pre></li>
+          <li><span class="oa-why">FILL: the second owner action</span>
+            <pre class="ev-code">FILL: the exact command</pre></li>
+        </ol>
+        </div>
+      </section>
+      <section class="tile t-what-was-not-done" data-tile="what-was-not-done">
+        <h3 class="tile-label">What was not done</h3>
+        <div class="tile-body">
+        <p>FILL: what was not done and why, with terms introduced as they appear</p>
+        </div>
+      </section>
+      <section class="tile t-aieds-disclosure" data-tile="aieds-disclosure">
+        <h3 class="tile-label">AiEDs disclosure</h3>
+        <div class="tile-body">
+        <p class="aieds-lead">AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. FILL: one sentence on model usage and data access.</p>
+        <div class="aieds-grid">
+          <div class="aieds-item"><span class="key">energyKWh</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">gCO2e</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">compute.tokens</span><span class="val">FILL: in plus out</span></div>
+          <div class="aieds-item"><span class="key">confidence</span><span class="val">FILL: low / med / high</span></div>
+          <div class="aieds-item"><span class="key">provenance</span><span class="val">FILL: measured / vendor-published / class-estimated / synthetic / unknown</span></div>
+          <div class="aieds-item"><span class="key">subject.name</span><span class="val">FILL: lab-slug</span></div>
+          <div class="aieds-item"><span class="key">generatedAt</span><span class="val">FILL: YYYY-MM-DD</span></div>
+          <div class="aieds-item"><span class="key">scope</span><span class="val">FILL: device / usage / inference / training</span></div>
+        </div>
+        <p class="aieds-ppi">FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and how it was protected.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       ENERGY DRINK, 9-12
+       Normative level 3 of 6.
+       Register: Real terms, defined once. The default level.
+       Structure: the twelve tiles below, in this order, at EVERY level.
+       Only the prose changes. Data cells are byte-identical across levels.
+  ===================================================== -->
+  <div id="pane-energy_drink" class="level-pane">
+    <div class="tile-grid">
+      <section class="tile t-header-strip" data-tile="header-strip">
+        <h3 class="tile-label">Report</h3>
+        <div class="tile-body">
+        <div class="hs-eyebrow">K13 Evaluation Report &middot; Lab NN &middot; YYYY-MM-DD</div>
+        <div class="hs-title">FILL: short lab title, 3 to 6 words</div>
+        <div class="hs-sub">FILL: one sentence, what this work investigated</div>
+        <div class="hs-meta">
+          <span class="gate-badge pass">FILL: passed / failed / raise / blocked</span>
+          <span>Model: FILL</span>
+          <span>Runs: FILL</span>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-finding" data-tile="finding">
+        <h3 class="tile-label">Finding</h3>
+        <div class="tile-body">
+        <p class="finding-stmt">FILL: the outcome with technical terms used correctly, defined on first use</p>
+        </div>
+      </section>
+      <section class="tile t-verdict-row" data-tile="verdict-row">
+        <h3 class="tile-label">Verdict</h3>
+        <div class="tile-body">
+        <div class="verdict-row"><span class="vr-key">gate</span><span class="vr-val">FILL: the exact gate string</span></div>
+        <p>FILL: the gate result with full technical framing</p>
+        </div>
+      </section>
+      <section class="tile t-how-it-fits" data-tile="how-it-fits">
+        <h3 class="tile-label">How it fits</h3>
+        <div class="tile-body">
+        <p>FILL: the lane or plan item, what it unblocks downstream, and the work it followed</p>
+        <p>FILL: what preceded this work, and what it unblocks.</p>
+        </div>
+      </section>
+      <section class="tile t-environment-card" data-tile="environment-card">
+        <h3 class="tile-label">Environment</h3>
+        <div class="tile-body">
+        <div class="env-row"><span class="env-key">what was run</span><span class="env-val">FILL: the command or suite</span></div>
+        <div class="env-row"><span class="env-key">where</span><span class="env-val">FILL: host, runner or clone path</span></div>
+        <div class="env-row"><span class="env-key">version</span><span class="env-val">FILL: toolchain version</span></div>
+        <div class="env-row"><span class="env-key">commit</span><span class="env-val"><code>FILL: full sha</code></span></div>
+        <div class="env-row"><span class="env-key">branch</span><span class="env-val">FILL</span></div>
+        <div class="env-row"><span class="env-key">when</span><span class="env-val">FILL: ISO timestamp</span></div>
+        </div>
+      </section>
+      <section class="tile t-checks-table" data-tile="checks-table">
+        <h3 class="tile-label">Checks</h3>
+        <div class="tile-body">
+        <table class="checks">
+          <thead><tr><th>check</th><th>how it was verified</th><th>result</th></tr></thead>
+          <tbody>
+            <tr><td class="name">FILL</td><td>FILL: the command or observation</td><td class="verdict pass">PASS</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict fail">FAIL</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict warn">PARTIAL</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+      <section class="tile t-evidence-blocks" data-tile="evidence-blocks">
+        <h3 class="tile-label">Evidence</h3>
+        <div class="tile-body">
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: the exact command, query or script you ran</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: the real rendered output. Never fabricated. If it is too
+large to show, show a stated subset and say what was cut.</pre>
+        </div>
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: second piece of evidence, or delete this whole block
+from every level at once</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: its real rendered output</pre>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-discrepancies" data-tile="discrepancies">
+        <h3 class="tile-label">Discrepancies</h3>
+        <div class="tile-body">
+        <p>FILL: every discrepancy, named with the real system names</p>
+        </div>
+      </section>
+      <section class="tile t-whats-next" data-tile="whats-next">
+        <h3 class="tile-label">What's next</h3>
+        <div class="tile-body">
+        <p>FILL: concrete continuations: what to build, measure or check next</p>
+        <div class="wn-slot"><span class="wn-key">role</span><span class="wn-val">FILL: the role for the next task, from your published role list</span></div>
+        <div class="wn-slot"><span class="wn-key">why that role</span><span class="wn-val">FILL: one line against that list's stated criteria, so a reader can disagree</span></div>
+        <div class="wn-slot"><span class="wn-key">effort</span><span class="wn-val">FILL: the effort or reasoning level</span></div>
+        <div class="ev-label">Command</div>
+        <pre class="ev-code">FILL: paste-ready, in your own dispatch shape, complete enough
+to run cold (K13 step 7: pull it from your command template
+library, do not write it from memory)</pre>
+        <p class="wn-none">No continuation? Delete the three slots and the command and write
+"No next step, this work is complete.", then say why. Never manufacture a
+continuation to fill this tile. Do NOT name a model here: K13 requires role and
+effort and is vendor-neutral. If you resolve role plus effort to a model from
+your own published mapping, cite the mapping beside it.</p>
+        </div>
+      </section>
+      <section class="tile t-owner-actions" data-tile="owner-actions">
+        <h3 class="tile-label">Owner actions</h3>
+        <div class="tile-body">
+        <ol class="oa-list">
+          <li><span class="oa-why">FILL: the owner action and why only the owner can run it</span>
+            <pre class="ev-code">FILL: the exact command, ready to paste</pre></li>
+          <li><span class="oa-why">FILL: the second owner action</span>
+            <pre class="ev-code">FILL: the exact command</pre></li>
+        </ol>
+        </div>
+      </section>
+      <section class="tile t-what-was-not-done" data-tile="what-was-not-done">
+        <h3 class="tile-label">What was not done</h3>
+        <div class="tile-body">
+        <p>FILL: what was out of scope, and the reason it was out of scope</p>
+        </div>
+      </section>
+      <section class="tile t-aieds-disclosure" data-tile="aieds-disclosure">
+        <h3 class="tile-label">AiEDs disclosure</h3>
+        <div class="tile-body">
+        <p class="aieds-lead">AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. FILL: one sentence on model usage and data access.</p>
+        <div class="aieds-grid">
+          <div class="aieds-item"><span class="key">energyKWh</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">gCO2e</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">compute.tokens</span><span class="val">FILL: in plus out</span></div>
+          <div class="aieds-item"><span class="key">confidence</span><span class="val">FILL: low / med / high</span></div>
+          <div class="aieds-item"><span class="key">provenance</span><span class="val">FILL: measured / vendor-published / class-estimated / synthetic / unknown</span></div>
+          <div class="aieds-item"><span class="key">subject.name</span><span class="val">FILL: lab-slug</span></div>
+          <div class="aieds-item"><span class="key">generatedAt</span><span class="val">FILL: YYYY-MM-DD</span></div>
+          <div class="aieds-item"><span class="key">scope</span><span class="val">FILL: device / usage / inference / training</span></div>
+        </div>
+        <p class="aieds-ppi">FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and how it was protected.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       BLACK COFFEE, College
+       Normative level 4 of 6.
+       Register: Full precision. Look it up yourself.
+       Structure: the twelve tiles below, in this order, at EVERY level.
+       Only the prose changes. Data cells are byte-identical across levels.
+  ===================================================== -->
+  <div id="pane-black_coffee" class="level-pane" hidden>
+    <div class="tile-grid">
+      <section class="tile t-header-strip" data-tile="header-strip">
+        <h3 class="tile-label">Report</h3>
+        <div class="tile-body">
+        <div class="hs-eyebrow">K13 Evaluation Report &middot; Lab NN &middot; YYYY-MM-DD</div>
+        <div class="hs-title">FILL: short lab title, 3 to 6 words</div>
+        <div class="hs-sub">FILL: one sentence, what this work investigated</div>
+        <div class="hs-meta">
+          <span class="gate-badge pass">FILL: passed / failed / raise / blocked</span>
+          <span>Model: FILL</span>
+          <span>Runs: FILL</span>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-finding" data-tile="finding">
+        <h3 class="tile-label">Finding</h3>
+        <div class="tile-body">
+        <p class="finding-stmt">FILL: the precise claim. All specifics present. No softening.</p>
+        </div>
+      </section>
+      <section class="tile t-verdict-row" data-tile="verdict-row">
+        <h3 class="tile-label">Verdict</h3>
+        <div class="tile-body">
+        <div class="verdict-row"><span class="vr-key">gate</span><span class="vr-val">FILL: the exact gate string</span></div>
+        <p>FILL: the gate result with full precision and measured scope</p>
+        </div>
+      </section>
+      <section class="tile t-how-it-fits" data-tile="how-it-fits">
+        <h3 class="tile-label">How it fits</h3>
+        <div class="tile-body">
+        <p>FILL: the exact plan item, the dependency it releases, and the preceding work by id</p>
+        <p>FILL: what preceded this work, and what it unblocks.</p>
+        </div>
+      </section>
+      <section class="tile t-environment-card" data-tile="environment-card">
+        <h3 class="tile-label">Environment</h3>
+        <div class="tile-body">
+        <div class="env-row"><span class="env-key">what was run</span><span class="env-val">FILL: the command or suite</span></div>
+        <div class="env-row"><span class="env-key">where</span><span class="env-val">FILL: host, runner or clone path</span></div>
+        <div class="env-row"><span class="env-key">version</span><span class="env-val">FILL: toolchain version</span></div>
+        <div class="env-row"><span class="env-key">commit</span><span class="env-val"><code>FILL: full sha</code></span></div>
+        <div class="env-row"><span class="env-key">branch</span><span class="env-val">FILL</span></div>
+        <div class="env-row"><span class="env-key">when</span><span class="env-val">FILL: ISO timestamp</span></div>
+        </div>
+      </section>
+      <section class="tile t-checks-table" data-tile="checks-table">
+        <h3 class="tile-label">Checks</h3>
+        <div class="tile-body">
+        <table class="checks">
+          <thead><tr><th>check</th><th>how it was verified</th><th>result</th></tr></thead>
+          <tbody>
+            <tr><td class="name">FILL</td><td>FILL: the command or observation</td><td class="verdict pass">PASS</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict fail">FAIL</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict warn">PARTIAL</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+      <section class="tile t-evidence-blocks" data-tile="evidence-blocks">
+        <h3 class="tile-label">Evidence</h3>
+        <div class="tile-body">
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: the exact command, query or script you ran</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: the real rendered output. Never fabricated. If it is too
+large to show, show a stated subset and say what was cut.</pre>
+        </div>
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: second piece of evidence, or delete this whole block
+from every level at once</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: its real rendered output</pre>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-discrepancies" data-tile="discrepancies">
+        <h3 class="tile-label">Discrepancies</h3>
+        <div class="tile-body">
+        <p>FILL: each discrepancy with its exact magnitude and where it was observed</p>
+        </div>
+      </section>
+      <section class="tile t-whats-next" data-tile="whats-next">
+        <h3 class="tile-label">What's next</h3>
+        <div class="tile-body">
+        <p>FILL: precise continuations, each with the system and parameter it touches</p>
+        <div class="wn-slot"><span class="wn-key">role</span><span class="wn-val">FILL: the role for the next task, from your published role list</span></div>
+        <div class="wn-slot"><span class="wn-key">why that role</span><span class="wn-val">FILL: one line against that list's stated criteria, so a reader can disagree</span></div>
+        <div class="wn-slot"><span class="wn-key">effort</span><span class="wn-val">FILL: the effort or reasoning level</span></div>
+        <div class="ev-label">Command</div>
+        <pre class="ev-code">FILL: paste-ready, in your own dispatch shape, complete enough
+to run cold (K13 step 7: pull it from your command template
+library, do not write it from memory)</pre>
+        <p class="wn-none">No continuation? Delete the three slots and the command and write
+"No next step, this work is complete.", then say why. Never manufacture a
+continuation to fill this tile. Do NOT name a model here: K13 requires role and
+effort and is vendor-neutral. If you resolve role plus effort to a model from
+your own published mapping, cite the mapping beside it.</p>
+        </div>
+      </section>
+      <section class="tile t-owner-actions" data-tile="owner-actions">
+        <h3 class="tile-label">Owner actions</h3>
+        <div class="tile-body">
+        <ol class="oa-list">
+          <li><span class="oa-why">FILL: the owner action, exact system, exact parameter, exact owner</span>
+            <pre class="ev-code">FILL: the exact command, ready to paste</pre></li>
+          <li><span class="oa-why">FILL: the second owner action</span>
+            <pre class="ev-code">FILL: the exact command</pre></li>
+        </ol>
+        </div>
+      </section>
+      <section class="tile t-what-was-not-done" data-tile="what-was-not-done">
+        <h3 class="tile-label">What was not done</h3>
+        <div class="tile-body">
+        <p>FILL: what was explicitly out of scope, and what would bring it into scope</p>
+        </div>
+      </section>
+      <section class="tile t-aieds-disclosure" data-tile="aieds-disclosure">
+        <h3 class="tile-label">AiEDs disclosure</h3>
+        <div class="tile-body">
+        <p class="aieds-lead">AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. FILL: one sentence on model usage and data access.</p>
+        <div class="aieds-grid">
+          <div class="aieds-item"><span class="key">energyKWh</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">gCO2e</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">compute.tokens</span><span class="val">FILL: in plus out</span></div>
+          <div class="aieds-item"><span class="key">confidence</span><span class="val">FILL: low / med / high</span></div>
+          <div class="aieds-item"><span class="key">provenance</span><span class="val">FILL: measured / vendor-published / class-estimated / synthetic / unknown</span></div>
+          <div class="aieds-item"><span class="key">subject.name</span><span class="val">FILL: lab-slug</span></div>
+          <div class="aieds-item"><span class="key">generatedAt</span><span class="val">FILL: YYYY-MM-DD</span></div>
+          <div class="aieds-item"><span class="key">scope</span><span class="val">FILL: device / usage / inference / training</span></div>
+        </div>
+        <p class="aieds-ppi">FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and how it was protected.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       LOOSE LEAF, Masters
+       Normative level 5 of 6.
+       Register: Architecture level. Cross-system scope and confidence bounds.
+       Structure: the twelve tiles below, in this order, at EVERY level.
+       Only the prose changes. Data cells are byte-identical across levels.
+  ===================================================== -->
+  <div id="pane-loose_leaf" class="level-pane" hidden>
+    <div class="tile-grid">
+      <section class="tile t-header-strip" data-tile="header-strip">
+        <h3 class="tile-label">Report</h3>
+        <div class="tile-body">
+        <div class="hs-eyebrow">K13 Evaluation Report &middot; Lab NN &middot; YYYY-MM-DD</div>
+        <div class="hs-title">FILL: short lab title, 3 to 6 words</div>
+        <div class="hs-sub">FILL: one sentence, what this work investigated</div>
+        <div class="hs-meta">
+          <span class="gate-badge pass">FILL: passed / failed / raise / blocked</span>
+          <span>Model: FILL</span>
+          <span>Runs: FILL</span>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-finding" data-tile="finding">
+        <h3 class="tile-label">Finding</h3>
+        <div class="tile-body">
+        <p class="finding-stmt">FILL: the architecture-level claim, with cross-system scope if applicable</p>
+        </div>
+      </section>
+      <section class="tile t-verdict-row" data-tile="verdict-row">
+        <h3 class="tile-label">Verdict</h3>
+        <div class="tile-body">
+        <div class="verdict-row"><span class="vr-key">gate</span><span class="vr-val">FILL: the exact gate string</span></div>
+        <p>FILL: the gate verdict with architectural framing and confidence bounds</p>
+        </div>
+      </section>
+      <section class="tile t-how-it-fits" data-tile="how-it-fits">
+        <h3 class="tile-label">How it fits</h3>
+        <div class="tile-body">
+        <p>FILL: where this sits in the system architecture, what it unblocks across systems</p>
+        <p>FILL: what preceded this work, and what it unblocks.</p>
+        </div>
+      </section>
+      <section class="tile t-environment-card" data-tile="environment-card">
+        <h3 class="tile-label">Environment</h3>
+        <div class="tile-body">
+        <div class="env-row"><span class="env-key">what was run</span><span class="env-val">FILL: the command or suite</span></div>
+        <div class="env-row"><span class="env-key">where</span><span class="env-val">FILL: host, runner or clone path</span></div>
+        <div class="env-row"><span class="env-key">version</span><span class="env-val">FILL: toolchain version</span></div>
+        <div class="env-row"><span class="env-key">commit</span><span class="env-val"><code>FILL: full sha</code></span></div>
+        <div class="env-row"><span class="env-key">branch</span><span class="env-val">FILL</span></div>
+        <div class="env-row"><span class="env-key">when</span><span class="env-val">FILL: ISO timestamp</span></div>
+        </div>
+      </section>
+      <section class="tile t-checks-table" data-tile="checks-table">
+        <h3 class="tile-label">Checks</h3>
+        <div class="tile-body">
+        <table class="checks">
+          <thead><tr><th>check</th><th>how it was verified</th><th>result</th></tr></thead>
+          <tbody>
+            <tr><td class="name">FILL</td><td>FILL: the command or observation</td><td class="verdict pass">PASS</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict fail">FAIL</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict warn">PARTIAL</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+      <section class="tile t-evidence-blocks" data-tile="evidence-blocks">
+        <h3 class="tile-label">Evidence</h3>
+        <div class="tile-body">
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: the exact command, query or script you ran</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: the real rendered output. Never fabricated. If it is too
+large to show, show a stated subset and say what was cut.</pre>
+        </div>
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: second piece of evidence, or delete this whole block
+from every level at once</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: its real rendered output</pre>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-discrepancies" data-tile="discrepancies">
+        <h3 class="tile-label">Discrepancies</h3>
+        <div class="tile-body">
+        <p>FILL: discrepancies framed as architectural consequences, with confidence bounds</p>
+        </div>
+      </section>
+      <section class="tile t-whats-next" data-tile="whats-next">
+        <h3 class="tile-label">What's next</h3>
+        <div class="tile-body">
+        <p>FILL: systemic continuations, each with its architectural rationale</p>
+        <div class="wn-slot"><span class="wn-key">role</span><span class="wn-val">FILL: the role for the next task, from your published role list</span></div>
+        <div class="wn-slot"><span class="wn-key">why that role</span><span class="wn-val">FILL: one line against that list's stated criteria, so a reader can disagree</span></div>
+        <div class="wn-slot"><span class="wn-key">effort</span><span class="wn-val">FILL: the effort or reasoning level</span></div>
+        <div class="ev-label">Command</div>
+        <pre class="ev-code">FILL: paste-ready, in your own dispatch shape, complete enough
+to run cold (K13 step 7: pull it from your command template
+library, do not write it from memory)</pre>
+        <p class="wn-none">No continuation? Delete the three slots and the command and write
+"No next step, this work is complete.", then say why. Never manufacture a
+continuation to fill this tile. Do NOT name a model here: K13 requires role and
+effort and is vendor-neutral. If you resolve role plus effort to a model from
+your own published mapping, cite the mapping beside it.</p>
+        </div>
+      </section>
+      <section class="tile t-owner-actions" data-tile="owner-actions">
+        <h3 class="tile-label">Owner actions</h3>
+        <div class="tile-body">
+        <ol class="oa-list">
+          <li><span class="oa-why">FILL: the owner action and the architectural reason it cannot be automated</span>
+            <pre class="ev-code">FILL: the exact command, ready to paste</pre></li>
+          <li><span class="oa-why">FILL: the second owner action</span>
+            <pre class="ev-code">FILL: the exact command</pre></li>
+        </ol>
+        </div>
+      </section>
+      <section class="tile t-what-was-not-done" data-tile="what-was-not-done">
+        <h3 class="tile-label">What was not done</h3>
+        <div class="tile-body">
+        <p>FILL: the assumptions and edge cases not covered, and what covering them would cost</p>
+        </div>
+      </section>
+      <section class="tile t-aieds-disclosure" data-tile="aieds-disclosure">
+        <h3 class="tile-label">AiEDs disclosure</h3>
+        <div class="tile-body">
+        <p class="aieds-lead">AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. FILL: one sentence on model usage and data access.</p>
+        <div class="aieds-grid">
+          <div class="aieds-item"><span class="key">energyKWh</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">gCO2e</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">compute.tokens</span><span class="val">FILL: in plus out</span></div>
+          <div class="aieds-item"><span class="key">confidence</span><span class="val">FILL: low / med / high</span></div>
+          <div class="aieds-item"><span class="key">provenance</span><span class="val">FILL: measured / vendor-published / class-estimated / synthetic / unknown</span></div>
+          <div class="aieds-item"><span class="key">subject.name</span><span class="val">FILL: lab-slug</span></div>
+          <div class="aieds-item"><span class="key">generatedAt</span><span class="val">FILL: YYYY-MM-DD</span></div>
+          <div class="aieds-item"><span class="key">scope</span><span class="val">FILL: device / usage / inference / training</span></div>
+        </div>
+        <p class="aieds-ppi">FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and how it was protected.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       YERBA MATE, Doctorate
+       Normative level 6 of 6.
+       Register: Formal. Methodology, sample, generalizability, limitations.
+       Structure: the twelve tiles below, in this order, at EVERY level.
+       Only the prose changes. Data cells are byte-identical across levels.
+  ===================================================== -->
+  <div id="pane-yerba_mate" class="level-pane" hidden>
+    <div class="tile-grid">
+      <section class="tile t-header-strip" data-tile="header-strip">
+        <h3 class="tile-label">Report</h3>
+        <div class="tile-body">
+        <div class="hs-eyebrow">K13 Evaluation Report &middot; Lab NN &middot; YYYY-MM-DD</div>
+        <div class="hs-title">FILL: short lab title, 3 to 6 words</div>
+        <div class="hs-sub">FILL: one sentence, what this work investigated</div>
+        <div class="hs-meta">
+          <span class="gate-badge pass">FILL: passed / failed / raise / blocked</span>
+          <span>Model: FILL</span>
+          <span>Runs: FILL</span>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-finding" data-tile="finding">
+        <h3 class="tile-label">Finding</h3>
+        <div class="tile-body">
+        <p class="finding-stmt">FILL: the research-grade claim with explicit confidence scope</p>
+        </div>
+      </section>
+      <section class="tile t-verdict-row" data-tile="verdict-row">
+        <h3 class="tile-label">Verdict</h3>
+        <div class="tile-body">
+        <div class="verdict-row"><span class="vr-key">gate</span><span class="vr-val">FILL: the exact gate string</span></div>
+        <p>FILL: the formal gate result with scope, confidence, and known limits</p>
+        </div>
+      </section>
+      <section class="tile t-how-it-fits" data-tile="how-it-fits">
+        <h3 class="tile-label">How it fits</h3>
+        <div class="tile-body">
+        <p>FILL: the formal relation to the wider programme of work, and what it enables next</p>
+        <p>FILL: what preceded this work, and what it unblocks.</p>
+        </div>
+      </section>
+      <section class="tile t-environment-card" data-tile="environment-card">
+        <h3 class="tile-label">Environment</h3>
+        <div class="tile-body">
+        <div class="env-row"><span class="env-key">what was run</span><span class="env-val">FILL: the command or suite</span></div>
+        <div class="env-row"><span class="env-key">where</span><span class="env-val">FILL: host, runner or clone path</span></div>
+        <div class="env-row"><span class="env-key">version</span><span class="env-val">FILL: toolchain version</span></div>
+        <div class="env-row"><span class="env-key">commit</span><span class="env-val"><code>FILL: full sha</code></span></div>
+        <div class="env-row"><span class="env-key">branch</span><span class="env-val">FILL</span></div>
+        <div class="env-row"><span class="env-key">when</span><span class="env-val">FILL: ISO timestamp</span></div>
+        </div>
+      </section>
+      <section class="tile t-checks-table" data-tile="checks-table">
+        <h3 class="tile-label">Checks</h3>
+        <div class="tile-body">
+        <table class="checks">
+          <thead><tr><th>check</th><th>how it was verified</th><th>result</th></tr></thead>
+          <tbody>
+            <tr><td class="name">FILL</td><td>FILL: the command or observation</td><td class="verdict pass">PASS</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict fail">FAIL</td></tr>
+            <tr><td class="name">FILL</td><td>FILL</td><td class="verdict warn">PARTIAL</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+      <section class="tile t-evidence-blocks" data-tile="evidence-blocks">
+        <h3 class="tile-label">Evidence</h3>
+        <div class="tile-body">
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: the exact command, query or script you ran</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: the real rendered output. Never fabricated. If it is too
+large to show, show a stated subset and say what was cut.</pre>
+        </div>
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">FILL: second piece of evidence, or delete this whole block
+from every level at once</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">FILL: its real rendered output</pre>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-discrepancies" data-tile="discrepancies">
+        <h3 class="tile-label">Discrepancies</h3>
+        <div class="tile-body">
+        <p>FILL: discrepancies with their significance, and what would change the conclusion</p>
+        </div>
+      </section>
+      <section class="tile t-whats-next" data-tile="whats-next">
+        <h3 class="tile-label">What's next</h3>
+        <div class="tile-body">
+        <p>FILL: open questions this work raises but does not close, and hypotheses to test</p>
+        <div class="wn-slot"><span class="wn-key">role</span><span class="wn-val">FILL: the role for the next task, from your published role list</span></div>
+        <div class="wn-slot"><span class="wn-key">why that role</span><span class="wn-val">FILL: one line against that list's stated criteria, so a reader can disagree</span></div>
+        <div class="wn-slot"><span class="wn-key">effort</span><span class="wn-val">FILL: the effort or reasoning level</span></div>
+        <div class="ev-label">Command</div>
+        <pre class="ev-code">FILL: paste-ready, in your own dispatch shape, complete enough
+to run cold (K13 step 7: pull it from your command template
+library, do not write it from memory)</pre>
+        <p class="wn-none">No continuation? Delete the three slots and the command and write
+"No next step, this work is complete.", then say why. Never manufacture a
+continuation to fill this tile. Do NOT name a model here: K13 requires role and
+effort and is vendor-neutral. If you resolve role plus effort to a model from
+your own published mapping, cite the mapping beside it.</p>
+        </div>
+      </section>
+      <section class="tile t-owner-actions" data-tile="owner-actions">
+        <h3 class="tile-label">Owner actions</h3>
+        <div class="tile-body">
+        <ol class="oa-list">
+          <li><span class="oa-why">FILL: the owner action, stated formally, with its preconditions</span>
+            <pre class="ev-code">FILL: the exact command, ready to paste</pre></li>
+          <li><span class="oa-why">FILL: the second owner action</span>
+            <pre class="ev-code">FILL: the exact command</pre></li>
+        </ol>
+        </div>
+      </section>
+      <section class="tile t-what-was-not-done" data-tile="what-was-not-done">
+        <h3 class="tile-label">What was not done</h3>
+        <div class="tile-body">
+        <p>FILL: the limitations of this inspection, the sample, and the limits on generalizability</p>
+        </div>
+      </section>
+      <section class="tile t-aieds-disclosure" data-tile="aieds-disclosure">
+        <h3 class="tile-label">AiEDs disclosure</h3>
+        <div class="tile-body">
+        <p class="aieds-lead">AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. FILL: one sentence on model usage and data access.</p>
+        <div class="aieds-grid">
+          <div class="aieds-item"><span class="key">energyKWh</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">gCO2e</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">compute.tokens</span><span class="val">FILL: in plus out</span></div>
+          <div class="aieds-item"><span class="key">confidence</span><span class="val">FILL: low / med / high</span></div>
+          <div class="aieds-item"><span class="key">provenance</span><span class="val">FILL: measured / vendor-published / class-estimated / synthetic / unknown</span></div>
+          <div class="aieds-item"><span class="key">subject.name</span><span class="val">FILL: lab-slug</span></div>
+          <div class="aieds-item"><span class="key">generatedAt</span><span class="val">FILL: YYYY-MM-DD</span></div>
+          <div class="aieds-item"><span class="key">scope</span><span class="val">FILL: device / usage / inference / training</span></div>
+        </div>
+        <p class="aieds-ppi">FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and how it was protected.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showLevel(id) {
+  document.querySelectorAll('.level-pane').forEach(function(p) { p.hidden = true; });
+  document.querySelectorAll('.tab-btn').forEach(function(t) { t.classList.remove('active'); });
+  var pane = document.getElementById('pane-' + id);
+  if (pane) pane.hidden = false;
+  var btn = document.querySelector('[data-level="' + id + '"]');
+  if (btn) btn.classList.add('active');
+  /* FILL: change 'k13-level-LAB_SLUG' to your lab slug, e.g. 'k13-level-lab16' */
+  try { localStorage.setItem('k13-level-LAB_SLUG', id); } catch(e) {}
+}
+function toggleTheme() {
+  var root = document.documentElement;
+  root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+(function init() {
+  var levels = ['juice_box','soda_pop','energy_drink','black_coffee','loose_leaf','yerba_mate'];
+  var saved = null;
+  /* FILL: same slug as showLevel above */
+  try { saved = localStorage.getItem('k13-level-LAB_SLUG'); } catch(e) {}
+  showLevel(levels.indexOf(saved) >= 0 ? saved : 'energy_drink');
+})();
+</script>
