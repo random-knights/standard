@@ -233,8 +233,12 @@ describe("factor tables come from the published file", () => {
     // This used to be a literal "2.0.0" sitting above tables that implement
     // 1.0.0, so the server stamped records with a version its own numbers did
     // not support. The stamp is now read from the table it labels.
+    // The literal moves deliberately with a ratified methodology version, never
+    // silently: 2.0.0 to 2.1.0 on 2026-09-12, when section 5.1 became the
+    // provenance ladder and 2.4.1 added cached prefill. Neither changed a
+    // number in the tables, which is why 2.1.0 is a minor bump.
     assert.strictEqual(FACTORS.methodologyVersion, METHODOLOGY_VERSION);
-    assert.strictEqual(METHODOLOGY_VERSION, "2.0.0");
+    assert.strictEqual(METHODOLOGY_VERSION, "2.1.0");
     assert.strictEqual(IMPACT_MODEL_VERSION, "v2");
   });
 

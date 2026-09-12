@@ -5,8 +5,8 @@ title: "AiEDs - AI Energy Disclosure Standard"
 # standard, but that is not an option the format offers at the top level,
 # and an invalid file makes GitHub drop the citation panel entirely.
 type: software
-version: 2.0.0
-date-released: 2026-08-08
+version: 2.1.0
+date-released: 2026-09-12
 license: CC-BY-4.0
 license-url: https://creativecommons.org/licenses/by/4.0/
 repository-code: https://github.com/random-knights/standard
