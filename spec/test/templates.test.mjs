@@ -224,9 +224,12 @@ test("the What's next tile asks for a role and an effort, never a model", () => 
     LEVELS.length,
     "temp1ate.md must offer the completion answer at every level",
   );
+  // Counted by splitting on the literal, not by building a regexp out of it:
+  // these strings contain regexp metacharacters and escaping them by hand is
+  // the kind of half-sanitization that is worse than not doing it.
   for (const slot of ["| role |", "| effort |"]) {
     assert.equal(
-      (mdTemplate.match(new RegExp(slot.replace(/\|/g, "\\|"), "g")) || []).length,
+      mdTemplate.split(slot).length - 1,
       LEVELS.length,
       `temp1ate.md is missing the ${slot.replaceAll("|", "").trim()} slot at ` +
         `every level`,
@@ -300,7 +303,7 @@ test("no double hyphen is used as a dash in either template", () => {
   // matched by shape, so a real surrogate cannot hide inside one.
   const EXEMPT = [
     /<!--/g, // HTML comment open
-    /-->/g, // HTML comment close
+    /--!?>/g, // HTML comment close, both the "-->" and "--!>" spellings
     /--[a-z][a-z0-9-]*/g, // CSS custom property, command-line flag
     /^-{3,}$/gm, // markdown horizontal rule
     /^\|[\s|:-]+\|$/gm, // markdown table separator row (any column count)
