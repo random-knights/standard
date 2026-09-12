@@ -1,22 +1,24 @@
 # AiEDs Methodology
 
-> **CURRENT VERSION: 2.0.0. Versions 1.x are SUPERSEDED and MUST NOT be
+> **CURRENT VERSION: 2.1.0. Versions 1.x are SUPERSEDED and MUST NOT be
 > implemented.** 1.x specified a flat 0.30 gCO2e per 1k tokens for every model
-> and derived energy backward from carbon. Both are wrong. Implement 2.0.0 (see
+> and derived energy backward from carbon. Both are wrong. Implement 2.1.0 (see
 > the changelog below and `README.md`). Do not pick up 1.0.0 because it reads
-> like a stable base; it is not.
+> like a stable base; it is not. 2.0.0 records remain valid: 2.1.0 is
+> clarifying, and it changes no number.
 
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 2.0.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
+**Version:** 2.1.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
 **Status:** Ratified
-**Effective:** 2026-07-12
+**Effective:** 2026-09-12
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
 ## CHANGELOG
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 2.1.0   | 2026-09-12 | **MINOR (clarifying). No number changes; 2.0.0 records remain valid.** Section 5.1 becomes the PROVENANCE ladder: `measured`, `vendor-published`, `class-estimated`, `synthetic`, `unknown`, strongest first, matching what the schema's `provenance` text already describes. `synthetic` is new and means the producer KNOWS it generated the input; `unknown` means the source cannot be characterised at all, and recording a generated input as `unknown` understates it (owner ruling, 2026-09-11). The 2.0.0 rungs `estimated`, `modeled`, `provider-derived`, `verified` are retired to a legacy-terms note with a reading mapping. `confidence` is stated to be the producer's overall confidence in the energy figure, defaulting to `low` for any token-proxy method. New section 2.4.1, cached prefill: cache-creation and cache-read tokens are counted as input, the breakdown is published alongside the total when the provider reports it, and charging cache reads at the full input coefficient is named as a conservative bias rather than a measurement. No new coefficient. The schema is NOT edited in this version: its `provenance` enum is closed at four rungs and `compute` has no field for the token breakdown, so both are written up as a 2.2.0 schema proposal and a machine-validated record cannot carry `synthetic` until then. |
 | 2.0.0   | 2026-07-12 | **MAJOR (breaking).** ENERGY-FIRST response surface (section 2.4 v2): energy-first derivation replaces the flat 0.30 gCO2e/1k-token constant and the carbon-first inversion. The SAME input now yields DIFFERENT output (a typical exchange moves 0.375 g -> 0.103 g), so under semver this is a breaking change, NOT the minor 1.2.0 it was briefly cut as (see tagging note). Per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr. |
 | 1.1.0   | 2026-07-11 | Metric hierarchy (section 1.1). Carbon-first response-surface path (section 2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (section 2.5). Response-surface confidence ladder mapping (section 5.1). Reference library (`/lib`). Additive only. |
 | 1.0.0   | 2026-06-29 | Initial ratification. GPU-seconds, FLOP, and token compute paths. Hardware TDP table (11 accelerators). Grid intensity table (14 regions). Three confidence levels. |
@@ -150,7 +152,40 @@ every disclosure already rendered. Changing either constant is a methodology
 change (owner-ratified; section 6). The reference implementation of this path is
 [`/lib`](../lib/) - it byte-mirrors the app's `aieds_disclosure.dart`.
 
-Negative or missing carbon clamps to zero. **Confidence:** `estimated` (section 5.1).
+Negative or missing carbon clamps to zero. **Confidence:** `low`; this path is a
+token proxy (section 5). **Provenance:** the rung the coefficient carries, from
+the section 5.1 ladder. The tier column in the table above IS that ladder; 2.1.0
+renamed it from "confidence tier" to `provenance`, because it grades the
+coefficient and not the energy figure.
+
+### 2.4.1 Cached prefill (2.1.0)
+
+Providers that cache a prompt prefix report the input in parts: plain input
+tokens, cache-creation tokens, and cache-read tokens. All three are INPUT, and
+all three are counted at `whPer1kIn`:
+
+```
+inTok = plainIn + cacheCreationIn + cacheReadIn
+```
+
+Publish the breakdown alongside the total whenever the provider reports it. A
+reader who can see that most of an exchange was a cache read can judge the
+figure; a reader given only a total cannot. The total is unchanged by publishing
+the breakdown, so this costs nothing in comparability.
+
+Charging cache reads at the full input coefficient is a CONSERVATIVE BIAS, not a
+measurement. A cache read almost certainly draws less energy than recomputing
+the prefill it replaces. No provider publishes the ratio, so AiEDs does not
+invent one, and no new coefficient is introduced in 2.1.0. A figure that is
+knowingly high in a stated direction is honest; a figure discounted by a guessed
+ratio is not. When a provider publishes a cache-read energy figure it becomes a
+coefficient with a citation, through the section 6 governance route.
+
+**Schema constraint (2.1.0).** `compute` in the published schema carries
+`tokens`, `gpuSeconds`, `flops` and `hardware`, with `additionalProperties`
+false, so there is no field for the breakdown. A schema-conformant record
+therefore carries the TOTAL in `compute.tokens`, unchanged, and publishes the
+breakdown beside the record until a 2.2.0 schema revision adds fields for it.
 
 ### 2.5 Human Equivalencies (Level 3)
 
@@ -242,19 +277,60 @@ Derived from published A100/H100 inference benchmarks. These are rough order-of-
 
 Fractional confidence (0 to 1) may be substituted for the string enum when a probabilistic derivation is available.
 
-### 5.1 Response-Surface Confidence Ladder
+### 5.1 Provenance Ladder
 
-Response surfaces (the section 2.4 path, the rand0m.ai app, `/lib`) use a four-rung
-ladder; the two enums map as follows:
+`provenance` says where the FACTOR came from. `confidence` (section 5) says how
+the ENERGY figure itself was arrived at. They are different ladders, a record
+may carry both, and neither implies the other: a `measured` factor used with a
+token proxy still gives a `low` confidence energy figure.
 
-| Response-surface rung | Meaning | Estimation-path equivalent |
-|-----------------------|---------|---------------------------|
-| `estimated` | Carbon inverted from a client/provider heuristic. | `low` |
-| `modeled` | Carbon from a documented model (factor tables, measured sample). | `low` to `med` |
-| `provider-derived` | Provider-reported telemetry. Requires an approved evidence phase. | `med` to `high` |
-| `verified` | Independently verified measurement. Requires an approved evidence phase. | `high` |
+The ladder, strongest first:
 
-AiEDs v1 disclosures use `estimated` or `modeled` only.
+| Rung | Meaning |
+|------|---------|
+| `measured` | The factor was benchmarked directly, on the hardware or the surface it describes. |
+| `vendor-published` | The provider published a figure. Cite it; note any split assumptions the figure folds together. |
+| `class-estimated` | Inferred from the model class. No provider figure exists. |
+| `synthetic` | The producer KNOWS it generated the input the factor was derived from: a representative grid, a constant table, a seeded generator. The number is real and reproducible; what it describes was generated rather than observed. |
+| `unknown` | The source cannot be characterised at all. |
+
+`synthetic` and `unknown` are not the same claim and must not be collapsed. A
+producer that generated its own input knows exactly where the number came from,
+which is more than `unknown` says. Recording that as `unknown` understates a
+generated input and loses the one fact a reader most needs: that nothing was
+observed, deliberately, and the producer can say what it made instead. This rung
+was ruled in by the owner on 2026-09-11.
+
+`confidence` in a disclosure is the producer's OVERALL confidence in the energy
+figure, not a per-coefficient grade. It defaults to `low` for any token-proxy
+method, which is every response-surface path in section 2.4. A producer raises
+it above `low` only with a measurement it can point at, never because an
+estimate looks plausible.
+
+**Schema constraint (2.1.0).** The published schema
+(`spec/aieds.schema.json`, unchanged in this version) enumerates `provenance`
+as `measured`, `vendor-published`, `class-estimated`, `unknown`, and the enum is
+closed. A machine-validated record therefore CANNOT carry `synthetic` until a
+2.2.0 schema revision adds it. Until then a producer with a generated input
+stamps the nearest rung the schema does carry and says in prose that the input
+was generated. The rung is normative in this methodology; the schema catches up
+in its own version, by the section 6 governance route.
+
+#### Legacy terms (2.0.0)
+
+2.0.0 named a different four-rung ladder in this section. Those terms are
+retired. Read old records with this mapping:
+
+| 2.0.0 term | 2.1.0 rung |
+|------------|-----------|
+| `estimated` | `class-estimated` |
+| `modeled` | `class-estimated` |
+| `provider-derived` | `vendor-published` |
+| `verified` | `measured` |
+
+The mapping is for READING 2.0.0 records. New disclosures use the 2.1.0 rungs.
+A 2.0.0 record stays valid and does not need rewriting: it was correct under the
+version it stamps.
 
 ---
 

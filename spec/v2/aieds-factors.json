@@ -1,7 +1,7 @@
 {
   "$comment": "Canonical AiEDs factor data. This file is the single source of truth for every coefficient the AiEDs tooling emits. The TypeScript packages read it directly; the Dart package mirrors it as compile-time constants and is gated against a vendored copy by test. Editing a value here is a methodology change: bump methodology.md and its changelog in the same commit (methodology.md section 6).",
   "schemaVersion": 1,
-  "methodologyVersion": "2.0.0",
+  "methodologyVersion": "2.1.0",
   "impactModelVersion": "v2",
   "constants": {
     "matureReferenceTreeCo2eGramsPerYear": {
