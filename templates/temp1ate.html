@@ -1,0 +1,572 @@
+<title>K13 Report: [Lab Name]</title>
+<!-- ============================================================
+     K13 REPORT TEMPLATE, v2.0.0
+     Copy this file. Replace every <!-- FILL: ... --> marker.
+     Licence: this template is Apache 2.0, a reference implementation you may
+     fork without attribution friction. The REQUIREMENT it renders, the
+     ordered section list in K13.md under "The report template", is
+     specification text and is CC BY 4.0. Fork the markup; cite the standard.
+     Rules:
+       - No em dashes (U+2014). Gate fails on one.
+       - No en dashes (U+2013), and no double hyphen used as a dash. Use a comma, a
+         colon, or a new sentence.
+       - Levels are "levels," never "reading levels."
+       - All six levels are NORMATIVE under K13 2.0.0. Every level states the
+         same facts and the same figures. More figures at a higher level is a
+         detail ladder and fails K13 step 13.
+       - Default level is energy drink (K13 step 11), not juice box.
+       - LocalStorage key: change 'k13-level-LAB_SLUG' to your lab slug.
+       - Gate badge: uncomment the correct variant, delete the others.
+       - AiEDs: fill every field. Unknown is a valid value; blank is not.
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* === tokens === */
+:root {
+  --bg:        #f5f7fb;
+  --surface:   #ffffff;
+  --surface2:  #eef1f7;
+  --border:    #dce2ef;
+  --text:      #111827;
+  --muted:     #52596b;
+  --dim:       #8892a4;
+  --accent:    #1d4ed8;
+  --accent-s:  #eff2ff;
+  --pass:      #15803d;
+  --pass-s:    #f0fdf4;
+  --fail:      #b91c1c;
+  --fail-s:    #fef2f2;
+  --warn:      #92400e;
+  --warn-s:    #fffbeb;
+  --trace:     #0d9488;
+  --trace-s:   #f0fdfa;
+  --mono:      'IBM Plex Mono', Consolas, monospace;
+  --sans:      'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --r:         6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117; --surface: #161b22; --surface2: #1c2128; --border: #21262d;
+    --text: #e6edf3; --muted: #8b949e; --dim: #6e7681;
+    --accent: #60a5fa; --accent-s: #0a1f3d;
+    --pass: #3fb950; --pass-s: #051f0d;
+    --fail: #f85149; --fail-s: #2d0806;
+    --warn: #e3b341; --warn-s: #1f1200;
+    --trace: #2dd4bf; --trace-s: #042f2e;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1117; --surface: #161b22; --surface2: #1c2128; --border: #21262d;
+  --text: #e6edf3; --muted: #8b949e; --dim: #6e7681;
+  --accent: #60a5fa; --accent-s: #0a1f3d;
+  --pass: #3fb950; --pass-s: #051f0d;
+  --fail: #f85149; --fail-s: #2d0806;
+  --warn: #e3b341; --warn-s: #1f1200;
+  --trace: #2dd4bf; --trace-s: #042f2e;
+}
+
+/* === reset + base === */
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--mono); font-weight: 600; text-wrap: balance; margin: 0; }
+p { margin: 0 0 0.9em; }
+p:last-child { margin-bottom: 0; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: var(--mono); font-size: 0.87em; }
+
+/* === layout === */
+.page { max-width: 860px; margin: 0 auto; padding: 0 1.25rem 4rem; }
+
+/* === page header === */
+.pg-header { padding: 2.2rem 0 1.4rem; border-bottom: 1px solid var(--border); }
+.pg-header .eyebrow { font-family: var(--mono); font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.09em; color: var(--dim); margin-bottom: 0.5rem; }
+.pg-header h1 { font-size: 1.6rem; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 0.55rem; }
+.pg-header .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.85rem; }
+.meta-row { display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem; font-size: 0.775rem; color: var(--dim); font-family: var(--mono); align-items: center; }
+
+/* gate badge: use the correct modifier class: pass / fail / raise / blocked */
+.gate-badge { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 0.72rem; font-weight: 600; padding: 0.25em 0.7em; border-radius: 999px; letter-spacing: 0.03em; }
+.gate-badge.pass    { background: var(--pass-s);  color: var(--pass);  border: 1px solid color-mix(in srgb, var(--pass)  20%, transparent); }
+.gate-badge.fail    { background: var(--fail-s);  color: var(--fail);  border: 1px solid color-mix(in srgb, var(--fail)  20%, transparent); }
+.gate-badge.raise   { background: var(--warn-s);  color: var(--warn);  border: 1px solid color-mix(in srgb, var(--warn)  20%, transparent); }
+.gate-badge.blocked { background: var(--trace-s); color: var(--trace); border: 1px solid color-mix(in srgb, var(--trace) 20%, transparent); }
+
+/* === tab bar
+     flex-wrap: nowrap enforces one line.
+     overflow-x: auto on .tab-wrap handles narrow screens via horizontal scroll.
+     Do NOT change these to pill/filled tabs: that style causes wrapping (see lab-14).
+     === */
+.tab-wrap { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--border); padding-top: 0.55rem; margin-bottom: 2.2rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tab-k13 { text-align: center; font-size: 0.7rem; color: var(--dim); padding: 0.15rem 0 0.45rem; font-family: var(--mono); white-space: nowrap; }
+.tab-bar { display: flex; justify-content: center; flex-wrap: nowrap; gap: 0; margin-bottom: -1px; }
+.tab-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: 0.35rem 0.8rem 0.55rem; font-family: var(--mono); cursor: pointer; white-space: nowrap; display: flex; flex-direction: column; align-items: center; gap: 0.08rem; transition: color 0.12s, border-color 0.12s; margin-bottom: -1px; color: var(--dim); }
+.tab-btn .t-icon  { font-size: 1.15rem; line-height: 1; }
+.tab-btn .t-name  { font-size: 0.72rem; font-weight: 500; }
+.tab-btn .t-grade { font-size: 0.59rem; font-weight: 400; opacity: 0.7; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* === level panes === */
+.level-pane[hidden] { display: none; }
+.grade-chip { display: inline-flex; align-items: center; gap: 0.35rem; font-family: var(--mono); font-size: 0.68rem; font-weight: 500; padding: 0.2em 0.65em; border-radius: 999px; background: var(--surface2); color: var(--dim); border: 1px solid var(--border); margin-bottom: 0.9rem; }
+.finding-stmt { font-size: 1.1rem; letter-spacing: -0.02em; line-height: 1.3; margin-bottom: 1.3rem; color: var(--text); font-family: var(--mono); font-weight: 600; }
+.pane-body { color: var(--muted); }
+.pane-body p { font-size: 0.925rem; }
+
+/* === callout === */
+.callout { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0.9rem 1.1rem; margin: 1.2rem 0; font-size: 0.875rem; }
+.callout.pass { border-left: 3px solid var(--pass); }
+.callout.fail { border-left: 3px solid var(--fail); }
+.callout.warn { border-left: 3px solid var(--trace); }
+.callout h4 { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.45rem; }
+.callout.pass h4 { color: var(--pass); }
+.callout.fail h4 { color: var(--fail); }
+.callout.warn h4 { color: var(--trace); }
+.callout p { margin: 0; color: var(--text); }
+
+/* === action box === */
+.action-box { background: var(--accent-s); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius: var(--r); padding: 1rem 1.15rem; margin: 1.6rem 0 0; }
+.action-label { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--accent); margin-bottom: 0.5rem; }
+.action-box p { margin: 0; font-size: 0.88rem; color: var(--text); }
+.action-box ol, .action-box ul { margin: 0.35rem 0 0; padding-left: 1.3em; font-size: 0.88rem; color: var(--text); }
+.action-box li { margin-bottom: 0.4rem; }
+.action-box li:last-child { margin-bottom: 0; }
+
+/* visual action grid (juice_box) */
+.action-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.65rem; margin-top: 0.5rem; }
+.action-step { background: color-mix(in srgb, var(--accent) 8%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 15%, transparent); border-radius: var(--r); padding: 0.7rem 0.8rem; }
+.action-step .as-icon { font-size: 1.3rem; margin-bottom: 0.3rem; }
+.action-step .as-text { font-size: 0.82rem; color: var(--text); line-height: 1.4; }
+
+/* === flow diagram === */
+.flow-section-label { font-size: 0.8rem; font-weight: 600; color: var(--muted); margin: 1.6rem 0 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; font-family: var(--mono); }
+.flow-diagram { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; margin: 0 0 1.4rem; }
+.flow-step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0.75rem 0.7rem; text-align: center; flex: 1; min-width: 110px; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.flow-icon { font-size: 1.5rem; line-height: 1; }
+.flow-text { font-size: 0.77rem; color: var(--muted); line-height: 1.3; }
+.flow-text strong { color: var(--text); display: block; font-size: 0.8rem; margin-bottom: 0.1rem; }
+.flow-arrow { font-size: 1.2rem; color: var(--dim); padding: 0 0.2rem; display: flex; align-items: center; flex-shrink: 0; align-self: center; }
+.flow-step.broken { border-color: color-mix(in srgb, var(--fail) 30%, transparent); background: var(--fail-s); }
+.flow-step.ok     { border-color: color-mix(in srgb, var(--pass) 30%, transparent); }
+.flow-step.trace  { border-color: color-mix(in srgb, var(--trace) 30%, transparent); background: var(--trace-s); }
+.flow-arrow.broken { color: var(--fail); }
+
+/* === check / data tables === */
+.check-table-wrap { overflow-x: auto; margin: 1.3rem 0; }
+table.checks { border-collapse: collapse; width: 100%; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+table.checks th { font-family: var(--mono); font-size: 0.65rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--dim); text-align: left; padding: 0.28rem 0.65rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+table.checks td { padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--muted); }
+table.checks tr:last-child td { border-bottom: none; }
+table.checks td.name    { font-family: var(--mono); font-size: 0.78rem; color: var(--text); }
+table.checks td.verdict { font-family: var(--mono); font-weight: 600; white-space: nowrap; }
+table.checks td.verdict.pass { color: var(--pass); }
+table.checks td.verdict.fail { color: var(--fail); }
+table.checks td.verdict.warn { color: var(--warn); }
+.bar-track { width: 90px; height: 5px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; }
+.bar-fill.pass  { background: var(--pass); }
+.bar-fill.fail  { background: var(--fail); }
+.bar-fill.trace { background: var(--trace); }
+
+table.plain { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+table.plain th { font-family: var(--sans); font-size: 0.82rem; font-weight: 600; text-align: left; padding: 0.45rem 0.8rem; background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+table.plain td { padding: 0.5rem 0.8rem; border: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+table.plain td.verdict { font-family: var(--mono); font-weight: 600; white-space: nowrap; }
+table.plain td.verdict.pass { color: var(--pass); }
+table.plain td.verdict.warn { color: var(--trace); }
+
+/* === node graph (black_coffee / loose_leaf) === */
+.node-graph { display: flex; flex-direction: column; gap: 0.35rem; margin: 1.3rem 0; }
+.ng-row { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
+.ng-node { font-family: var(--mono); font-size: 0.73rem; padding: 0.2em 0.6em; border-radius: 4px; border: 1px solid var(--border); background: var(--surface); color: var(--text); white-space: nowrap; }
+.ng-node.entry    { border-color: var(--trace); color: var(--trace); }
+.ng-node.terminal { border-color: var(--pass);  color: var(--pass);  }
+.ng-node.decision { border-color: var(--accent); color: var(--accent); }
+.ng-edge { font-size: 0.72rem; color: var(--muted); }
+.ng-cond { font-family: var(--mono); font-size: 0.68rem; color: var(--dim); padding: 0.15em 0.5em; background: var(--surface2); border-radius: 3px; border: 1px solid var(--border); }
+
+/* === env card === */
+.env-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0.85rem 1rem; margin: 1.4rem 0; font-size: 0.82rem; }
+.env-card .env-title { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin-bottom: 0.55rem; }
+.env-row { display: flex; gap: 0.5rem; padding: 0.18rem 0; border-bottom: 1px solid var(--border); }
+.env-row:last-child { border-bottom: none; }
+.env-key { font-family: var(--mono); font-size: 0.75rem; color: var(--dim); min-width: 160px; flex-shrink: 0; }
+.env-val { color: var(--text); font-size: 0.8rem; }
+.env-val code { background: var(--surface2); padding: 0.1em 0.35em; border-radius: 3px; border: 1px solid var(--border); }
+
+/* === code block === */
+.code-wrap { margin: 1.3rem 0; }
+.code-label { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin-bottom: 0.4rem; }
+pre.code { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 0.9rem 1rem; overflow-x: auto; margin: 0; font-family: var(--mono); font-size: 0.79rem; line-height: 1.6; color: var(--text); }
+
+/* === section separator === */
+.section-label { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--dim); margin: 2.4rem 0 0.85rem; padding-top: 2.2rem; border-top: 1px solid var(--border); }
+
+/* === AIEDS === */
+details.aieds { margin-top: 2.8rem; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+details.aieds summary { font-family: var(--mono); font-size: 0.78rem; font-weight: 600; padding: 0.75rem 1rem; cursor: pointer; color: var(--muted); list-style: none; display: flex; align-items: center; gap: 0.5rem; user-select: none; }
+details.aieds summary::-webkit-details-marker { display: none; }
+details.aieds summary::before { content: '\25B6'; font-size: 0.6rem; transition: transform 0.15s; color: var(--dim); }
+details.aieds[open] summary::before { transform: rotate(90deg); }
+.aieds-body { padding: 0 1rem 1rem; font-size: 0.81rem; color: var(--muted); }
+.aieds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.6rem; margin: 0.6rem 0; }
+.aieds-item { display: flex; flex-direction: column; gap: 0.1rem; }
+.aieds-item .key { font-family: var(--mono); font-size: 0.66rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; }
+.aieds-item .val { font-family: var(--mono); font-size: 0.82rem; color: var(--text); font-weight: 500; }
+
+/* === theme toggle === */
+.theme-toggle { position: fixed; top: 1rem; right: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 0.3rem 0.7rem; font-family: var(--mono); font-size: 0.7rem; cursor: pointer; color: var(--muted); z-index: 100; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<button class="theme-toggle" onclick="toggleTheme()">&#9680;</button>
+
+<div class="page">
+
+  <header class="pg-header">
+    <!-- FILL: eyebrow, format: "K13 Evaluation Report &middot; Lab NN &middot; YYYY-MM-DD" -->
+    <div class="eyebrow">K13 Evaluation Report &middot; Lab NN &middot; YYYY-MM-DD</div>
+    <!-- FILL: h1, short lab title, 3-6 words -->
+    <h1>Lab Title</h1>
+    <!-- FILL: subtitle, one sentence, what the lab investigated and why -->
+    <p class="subtitle">One-sentence description of what this lab investigated and what it found.</p>
+    <div class="meta-row">
+      <!-- FILL: gate badge, uncomment one, delete others -->
+      <!-- <span class="gate-badge pass">passed</span> -->
+      <!-- <span class="gate-badge fail">failed</span> -->
+      <!-- <span class="gate-badge raise">raise</span> -->
+      <!-- <span class="gate-badge blocked">blocked</span> -->
+      <!-- FILL: meta items, add or remove as needed -->
+      <!-- <span>Model: claude-sonnet-5</span> -->
+      <!-- <span>Runs: N</span> -->
+      <!-- <span>Scope: description</span> -->
+    </div>
+  </header>
+
+  <!-- TAB BAR
+       Keep this structure exactly.
+       flex-wrap: nowrap (set in CSS) keeps all six on one line.
+       Do NOT switch to pill/filled buttons: they wrap at narrow widths.
+       -->
+  <div class="tab-wrap">
+    <div class="tab-k13">K13 v2.0.0 &middot; six levels, all normative</div>
+    <nav class="tab-bar" role="tablist">
+      <button class="tab-btn" data-level="juice_box"    role="tab" onclick="showLevel('juice_box')">
+        <span class="t-icon">&#x1F9C3;</span><span class="t-name">juice box</span><span class="t-grade">K-5</span>
+      </button>
+      <button class="tab-btn" data-level="soda_pop"     role="tab" onclick="showLevel('soda_pop')">
+        <span class="t-icon">&#x1F964;</span><span class="t-name">soda pop</span><span class="t-grade">6-8</span>
+      </button>
+      <button class="tab-btn active" data-level="energy_drink" role="tab" onclick="showLevel('energy_drink')">
+        <span class="t-icon">&#x1F9CB;</span><span class="t-name">energy drink</span><span class="t-grade">9-12</span>
+      </button>
+      <button class="tab-btn" data-level="black_coffee" role="tab" onclick="showLevel('black_coffee')">
+        <span class="t-icon">&#9749;</span><span class="t-name">black coffee</span><span class="t-grade">College</span>
+      </button>
+      <button class="tab-btn" data-level="loose_leaf"   role="tab" onclick="showLevel('loose_leaf')">
+        <span class="t-icon">&#x1FAD6;</span><span class="t-name">loose leaf</span><span class="t-grade">Masters</span>
+      </button>
+      <button class="tab-btn" data-level="yerba_mate"   role="tab" onclick="showLevel('yerba_mate')">
+        <span class="t-icon">&#x1F9C9;</span><span class="t-name">yerba mate</span><span class="t-grade">Doctorate</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- =====================================================
+       JUICE BOX, K-5
+       Audience: anyone, any background.
+       Lead with the outcome in one plain sentence.
+       No jargon. One idea per sentence. Use visuals (flow-diagram, action-steps).
+  ===================================================== -->
+  <section id="pane-juice_box" class="level-pane" role="tabpanel" hidden>
+    <div class="grade-chip">&#x1F9C3; K-5</div>
+    <!-- FILL: finding-stmt, one plain sentence, outcome first, no jargon -->
+    <h2 class="finding-stmt">FILL: One plain sentence. What happened, not how.</h2>
+
+    <div class="callout pass">
+      <h4>Gate result</h4>
+      <!-- FILL: gate explanation in plain words -->
+      <p>FILL: What the gate result means in plain language.</p>
+    </div>
+
+    <div class="pane-body">
+      <!-- FILL: 2-3 short paragraphs. No jargon. One idea per sentence. -->
+      <p>FILL: First paragraph. What the system does, in everyday terms.</p>
+      <p>FILL: Second paragraph. What went wrong or right, and why it matters.</p>
+    </div>
+
+    <!-- Optional: flow diagram showing the process -->
+    <!--
+    <div class="flow-section-label">What is supposed to happen</div>
+    <div class="flow-diagram">
+      <div class="flow-step ok">
+        <div class="flow-icon">&#x1F4CA;</div>
+        <div class="flow-text"><strong>Step name</strong>Description.</div>
+      </div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step broken">
+        <div class="flow-icon">&#x1F4EC;</div>
+        <div class="flow-text"><strong>Broken step</strong>This never happened.</div>
+      </div>
+    </div>
+    -->
+
+    <div class="action-box">
+      <div class="action-label">What happens next</div>
+      <!-- FILL: action-steps grid for juice_box, or a plain list for other levels -->
+      <div class="action-steps">
+        <div class="action-step">
+          <div class="as-icon">&#x1F50D;</div>
+          <div class="as-text">FILL: First action step.</div>
+        </div>
+        <div class="action-step">
+          <div class="as-icon">&#x2705;</div>
+          <div class="as-text">FILL: Second action step.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       SODA POP, 6-8
+       Audience: general, some familiarity with the domain.
+       Introduce one new term at a time. Explain it as it appears.
+  ===================================================== -->
+  <section id="pane-soda_pop" class="level-pane" role="tabpanel" hidden>
+    <div class="grade-chip">&#x1F964; 6-8</div>
+    <!-- FILL: finding-stmt, same outcome, slightly more specific language -->
+    <h2 class="finding-stmt">FILL: Outcome sentence at middle-school specificity.</h2>
+
+    <div class="callout pass">
+      <h4>Gate result</h4>
+      <p>FILL: Gate explanation with one or two technical terms, each explained inline.</p>
+    </div>
+
+    <div class="pane-body">
+      <p>FILL: What the system does, with one technical term introduced and explained.</p>
+      <p>FILL: What the finding means, in terms of the people or organizations affected.</p>
+    </div>
+
+    <div class="action-box">
+      <div class="action-label">What happens next</div>
+      <ol>
+        <li>FILL: First action item. Name the exact person or role who takes it.</li>
+        <li>FILL: Second action item.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       ENERGY DRINK, 9-12
+       Audience: technically aware, not yet professional.
+       Real terms, defined once. Default level when no preference is set.
+  ===================================================== -->
+  <section id="pane-energy_drink" class="level-pane" role="tabpanel">
+    <div class="grade-chip">&#x1F9CB; 9-12</div>
+    <h2 class="finding-stmt">FILL: Outcome sentence with technical terms, defined on first use.</h2>
+
+    <div class="callout pass">
+      <h4>Gate result</h4>
+      <p>FILL: Gate result with full technical framing. Terms used without inline definition.</p>
+    </div>
+
+    <div class="pane-body">
+      <p>FILL: Technical narrative. Real column names, system names, metric values. All claims verified.</p>
+      <p>FILL: What the finding implies for the system. Any caveats or scope limits.</p>
+    </div>
+
+    <!-- Optional: check table -->
+    <!--
+    <div class="check-table-wrap">
+      <table class="checks">
+        <thead><tr><th>Check</th><th>Result</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="name">check name</td><td class="verdict pass">PASS</td><td>FILL</td></tr>
+          <tr><td class="name">check name</td><td class="verdict fail">FAIL</td><td>FILL</td></tr>
+        </tbody>
+      </table>
+    </div>
+    -->
+
+    <div class="action-box">
+      <div class="action-label">Next steps</div>
+      <ol>
+        <li>FILL: Exact action, exact owner.</li>
+        <li>FILL: Second action.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       BLACK COFFEE, College
+       Audience: domain professionals.
+       Full precision. No definitions: look it up yourself.
+  ===================================================== -->
+  <section id="pane-black_coffee" class="level-pane" role="tabpanel" hidden>
+    <div class="grade-chip">&#9749; College</div>
+    <h2 class="finding-stmt">FILL: Precise claim. All specifics present. No softening.</h2>
+
+    <div class="callout pass">
+      <h4>Gate result</h4>
+      <p>FILL: Gate result with full precision and measured scope.</p>
+    </div>
+
+    <div class="pane-body">
+      <p>FILL: Full technical account. Exact table names, column names, query shapes, row counts. Every figure verified.</p>
+      <p>FILL: Methodology. What was checked, how, and what was explicitly out of scope.</p>
+    </div>
+
+    <!-- Optional: code block -->
+    <!--
+    <div class="code-wrap">
+      <div class="code-label">Verification query</div>
+      <pre class="code">SELECT ...
+FROM ...
+WHERE ...;</pre>
+    </div>
+    -->
+
+    <div class="action-box">
+      <div class="action-label">Recommended actions</div>
+      <ol>
+        <li>FILL: Precise action. Exact system, exact parameter, exact owner.</li>
+        <li>FILL: Second action.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       LOOSE LEAF, Masters
+       Normative level 5 of 6. Domain expertise assumed.
+       Architecture, methodology, and cross-system implications.
+  ===================================================== -->
+  <section id="pane-loose_leaf" class="level-pane" role="tabpanel" hidden>
+    <div class="grade-chip">&#x1FAD6; Masters</div>
+    <h2 class="finding-stmt">FILL: Architecture-level claim. Cross-system scope if applicable.</h2>
+
+    <div class="callout pass">
+      <h4>Gate result</h4>
+      <p>FILL: Gate verdict with architectural framing.</p>
+    </div>
+
+    <div class="pane-body">
+      <p>FILL: Architectural and methodological account. Assumptions, edge cases, confidence bounds.</p>
+      <p>FILL: Relationship to other findings, other labs, or other systems. Cross-cutting concerns.</p>
+    </div>
+
+    <!-- Optional: node graph for system relationships -->
+    <!--
+    <div class="node-graph">
+      <div class="ng-row">
+        <div class="ng-node entry">EntryNode</div>
+        <div class="ng-edge">&#8594;</div>
+        <div class="ng-node decision">Decision</div>
+        <div class="ng-edge">&#8594;</div>
+        <div class="ng-node terminal">Terminal</div>
+      </div>
+    </div>
+    -->
+
+    <div class="action-box">
+      <div class="action-label">Recommended actions</div>
+      <ol>
+        <li>FILL: Systemic action with architectural rationale.</li>
+        <li>FILL: Second action.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       YERBA MATE, Doctorate
+       Normative level 6 of 6. Research and specification level.
+       Limitations, open questions, and formal precision.
+  ===================================================== -->
+  <section id="pane-yerba_mate" class="level-pane" role="tabpanel" hidden>
+    <div class="grade-chip">&#x1F9C9; Doctorate</div>
+    <h2 class="finding-stmt">FILL: Research-grade claim with explicit confidence scope.</h2>
+
+    <div class="callout pass">
+      <h4>Gate result</h4>
+      <p>FILL: Formal gate result with scope, confidence, and known limits.</p>
+    </div>
+
+    <div class="pane-body">
+      <p>FILL: Formal account. Methodology, sample, confidence interval, generalizability.</p>
+      <p>FILL: Open questions this lab raises but does not close. Hypotheses for follow-on work.</p>
+      <p>FILL: Known limitations of this inspection. What would change the conclusion.</p>
+    </div>
+
+    <div class="action-box">
+      <div class="action-label">Open questions and recommended actions</div>
+      <ol>
+        <li>FILL: Research action or verification step with hypothesis.</li>
+        <li>FILL: Second item.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- AiEDs DISCLOSURE
+       Every field name below is a field name in spec/aieds.schema.json.
+       Fill every field. "unknown" is valid; blank is not.
+       generatedAt: ISO date YYYY-MM-DD
+       subject.name: lab slug, e.g. "12-write-draft-trace"
+       confidence: how the ENERGY figure was arrived at.
+                   "low" / "med" / "high", or a number 0 to 1.
+                   Any token proxy is "low".
+       provenance: where the FACTOR came from, strongest first.
+                   "measured" / "vendor-published" / "class-estimated" /
+                   "synthetic" / "unknown". These are two different ladders
+                   and neither implies the other.
+                   "synthetic" is a methodology 2.1.0 prose rung: the producer
+                   KNOWS it generated the input. The published schema enum does
+                   not carry it yet (a 2.2.0 proposal), so a machine-validated
+                   record stamps the nearest rung it does carry and says in
+                   prose that the input was generated.
+       scope: "device" / "usage" / "inference" / "training"
+       -->
+  <details class="aieds">
+    <summary>AiEDs disclosure</summary>
+    <div class="aieds-body">
+      <p>AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. <!-- FILL: one sentence on model usage and data access. --></p>
+      <div class="aieds-grid">
+        <div class="aieds-item"><span class="key">energyKWh</span><span class="val"><!-- FILL --></span></div>
+        <div class="aieds-item"><span class="key">gCO2e</span><span class="val"><!-- FILL --></span></div>
+        <div class="aieds-item"><span class="key">compute.tokens</span><span class="val"><!-- FILL: total tokens, input plus output --></span></div>
+        <div class="aieds-item"><span class="key">confidence</span><span class="val"><!-- FILL: low / med / high --></span></div>
+        <div class="aieds-item"><span class="key">provenance</span><span class="val"><!-- FILL: measured / vendor-published / class-estimated / synthetic / unknown --></span></div>
+        <div class="aieds-item"><span class="key">subject.name</span><span class="val"><!-- FILL: lab-slug --></span></div>
+        <div class="aieds-item"><span class="key">generatedAt</span><span class="val"><!-- FILL: YYYY-MM-DD --></span></div>
+        <div class="aieds-item"><span class="key">scope</span><span class="val"><!-- FILL: device / usage / inference / training --></span></div>
+      </div>
+      <p><!-- FILL: PPI statement. e.g. "No member PPI accessed." or specify what was used and how it was protected. --></p>
+    </div>
+  </details>
+
+</div>
+
+<script>
+function showLevel(id) {
+  document.querySelectorAll('.level-pane').forEach(function(p) { p.hidden = true; });
+  document.querySelectorAll('.tab-btn').forEach(function(t) { t.classList.remove('active'); });
+  var pane = document.getElementById('pane-' + id);
+  if (pane) pane.hidden = false;
+  var btn = document.querySelector('[data-level="' + id + '"]');
+  if (btn) btn.classList.add('active');
+  /* FILL: change 'k13-level-LAB_SLUG' to your lab slug, e.g. 'k13-level-lab16' */
+  try { localStorage.setItem('k13-level-LAB_SLUG', id); } catch(e) {}
+}
+function toggleTheme() {
+  var root = document.documentElement;
+  root.setAttribute('data-theme', root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+(function init() {
+  var levels = ['juice_box','soda_pop','energy_drink','black_coffee','loose_leaf','yerba_mate'];
+  var saved = null;
+  /* FILL: same slug as showLevel above */
+  try { saved = localStorage.getItem('k13-level-LAB_SLUG'); } catch(e) {}
+  showLevel(levels.indexOf(saved) >= 0 ? saved : 'energy_drink');
+})();
+</script>

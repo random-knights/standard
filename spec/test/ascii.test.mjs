@@ -17,7 +17,10 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const SKIP_DIRS = new Set([".git", "node_modules", "dist", ".firebase"]);
-const TEXT = /\.(json|ts|md|mjs|yml|yaml)$/;
+// .html joined this list with the K13 2.0.0 reference templates. Before that
+// there was no HTML in the tree, so the gate had never needed to read any, and
+// templates/temp1ate.html would have shipped unchecked.
+const TEXT = /\.(json|ts|md|mjs|yml|yaml|html)$/;
 // Extension-less text files, named explicitly rather than matched by "no dot":
 // a broad no-extension rule would also try to read a future binary asset as
 // text. LICENSE and LICENSE-DOCS slipped past the extension-based rule above

@@ -38,13 +38,13 @@ either without asking. Both live in this repository.
 | Standard | Version | License | Canonical text | Read it |
 |---|---|---|---|---|
 | **AiEDs - AI Energy Disclosure Standard** | methodology 2.0.0 | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai) |
-| **K13 - AI Response Standard** | 1.1.0 | CC BY 4.0 | [K13.md](K13.md) | [randomknights.xyz/k13](https://randomknights.xyz/k13/) |
+| **K13 - AI Response Standard** | 2.0.0 | CC BY 4.0 prose, Apache 2.0 reference templates | [K13.md](K13.md) with `templates/` | [randomknights.xyz/k13](https://randomknights.xyz/k13/) |
 
 ## K13 - AI Response Standard
 
 Thirteen steps, run in order, every time. Every time does not mean every step
 takes real work: on short replies the steps collapse to a second each and the
-four passes come out identical. That is the standard being met, not skipped.
+six passes come out identical. That is the standard being met, not skipped.
 
 Steps 9 to 12 are one ladder. A reader picks a level and the answer is
 **written at that level, never rewritten from another one.** All levels state
@@ -57,11 +57,13 @@ answer is wrong.
 | &#129380; soda pop | 6-8 | 10 |
 | &#129483; energy drink | 9-12 | 11, default |
 | &#9749; black coffee | College | 12 |
+| &#129750; loose leaf | Masters | 12.1 |
+| &#129481; yerba mate | Doctorate | 12.2 |
 
-Two expert levels are RESERVED above black coffee: &#129750; `loose leaf`
-(Masters) and &#129481; `yerba mate` (Doctorate). They are not reading levels,
-they assume a different reader, so they carry no step number and do not change
-the count.
+All six levels are NORMATIVE as of 2.0.0. Loose leaf and yerba mate were
+reserved names in 1.1.0 and are required now, which is why 2.0.0 is a breaking
+version: a four-level 1.1.0 report does not conform to it. They are numbered
+inside the step 12 drafting block, so the standard is still thirteen steps.
 
 Level three is named "energy drink" and carries the bubble tea glyph. That
 mismatch is an intentional owner decision. Do not reconcile one to the other.
@@ -98,7 +100,7 @@ This is the whole claim, so it is worth reading all four rather than one.
 Every version says the feed stopped on 12 July and that the map now shows an
 average. Same fact, same date, four readers.
 
-The interactive version, including the two reserved levels, is at
+The interactive version, including the loose leaf and yerba mate levels, is at
 [randomknights.xyz/k13/demo](https://randomknights.xyz/k13/demo/).
 [Get started](https://randomknights.xyz/k13/get-started/) covers adopting it
 in your own pipeline.
@@ -261,7 +263,8 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Examples | `spec/examples/` | CC BY 4.0 | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script |
 | Reference library | `lib/` | Apache 2.0 | Energy-first disclosures: per-model coefficients + confidence tiers + citations (mirrors the rand0m.ai app; contract-tested) |
 | MCP server | `mcp/` | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose |
-| K13 | `K13.md` | CC BY 4.0 | K13 - AI Response Standard, 1.1.0. The canonical text. |
+| K13 | `K13.md` | CC BY 4.0 | K13 - AI Response Standard, 2.0.0. The canonical text. |
+| K13 report templates | `templates/` | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement. |
 
 ## Roadmap
 
@@ -296,7 +299,7 @@ used.
 > Random Knights, LLC (2026). AiEDs - AI Energy Disclosure Standard,
 > version 2.0.0. CC BY 4.0. https://standard.rand0m.ai
 
-> Random Knights, LLC (2026). K13 - AI Response Standard, version 1.1.0.
+> Random Knights, LLC (2026). K13 - AI Response Standard, version 2.0.0.
 > CC BY 4.0. https://github.com/random-knights/standard
 
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
@@ -322,5 +325,12 @@ CC BY 4.0.
 | `spec/examples/` | [CC BY 4.0](LICENSE-DOCS) |
 | `spec/v2/aieds-factors.json` | [CC BY 4.0](LICENSE-DOCS) |
 | `K13.md` | [CC BY 4.0](LICENSE-DOCS) |
+| `templates/` | [Apache 2.0](LICENSE) |
+
+The K13 report templates are the clearest case of that split. `templates/` is a
+reference implementation, so it is Apache 2.0 and forkable without attribution
+friction. The REQUIREMENT those files render, the ordered section list in
+K13.md under "The report template", is specification text and stays CC BY 4.0.
+Fork the markup freely; cite the standard.
 
 See [LICENSE](LICENSE) and [LICENSE-DOCS](LICENSE-DOCS) for full terms.

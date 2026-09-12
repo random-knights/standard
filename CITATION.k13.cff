@@ -6,8 +6,8 @@ title: "K13 - AI Response Standard"
 # same choice CITATION.cff makes for AiEDs. GitHub reads only CITATION.cff, so
 # this file is for humans and for tools pointed at it directly.
 type: software
-version: 1.1.0
-date-released: 2026-09-09
+version: 2.0.0
+date-released: 2026-09-11
 license: CC-BY-4.0
 license-url: https://creativecommons.org/licenses/by/4.0/
 repository-code: https://github.com/random-knights/standard
@@ -15,7 +15,8 @@ url: https://randomknights.xyz/k13/
 abstract: >-
   Thirteen ordered steps for writing an AI response: verify state, record the
   cost, lead with the outcome, flag every roadblock, name the owner action,
-  and write at a stated reading level. Model-agnostic. The canonical text is
+  and write at a stated reading level, at all six normative levels.
+  Model-agnostic. The canonical text is
   K13.md in this repository.
 keywords:
   - AI response standard
