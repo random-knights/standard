@@ -617,9 +617,10 @@ Anyone can run it against any implementation's document, with no account and no
 access to any producer's source data:
 
 ```
-npx --yes github:random-knights/standard                       # the live document
-npx --yes github:random-knights/standard ./health-score.json   # a local copy
-npx --yes github:random-knights/standard --strict              # see below
+CHECKER=https://codeload.github.com/random-knights/standard/tar.gz/main
+npx --yes $CHECKER                       # the live document
+npx --yes $CHECKER ./health-score.json   # a local copy
+npx --yes $CHECKER --strict              # see below
 ```
 
 or from a clone, with `node eplus/v1/conformance/out/cli.js <document>`.

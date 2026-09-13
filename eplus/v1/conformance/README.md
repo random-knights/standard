@@ -11,16 +11,22 @@ disagrees, what it should have been, and which rule was broken.
 ## Run it in under a minute
 
 ```
-npx --yes github:random-knights/standard
+npx --yes https://codeload.github.com/random-knights/standard/tar.gz/main
 ```
 
 That checks the reference implementation's live document. To check a different
 one, local or remote:
 
 ```
-npx --yes github:random-knights/standard ./my-health-score.json
-npx --yes github:random-knights/standard https://example.test/health-score.json
+npx --yes https://codeload.github.com/random-knights/standard/tar.gz/main ./my-health-score.json
+npx --yes https://codeload.github.com/random-knights/standard/tar.gz/main https://example.test/health-score.json
 ```
+
+A tarball URL rather than `github:random-knights/standard` on purpose: the
+`github:` shorthand is resolved by npm through `git clone`, so it needs a git
+binary and credentials that reach GitHub. The tarball URL is fetched by npm's
+own HTTP client, needs neither, and is verified against a sha512 recorded in
+your lockfile.
 
 Or from a clone, with no network at all except fetching the document:
 
@@ -42,7 +48,7 @@ as a warning into a failure. See "Warnings" below.
 ## Use it as a library
 
 ```
-npm install github:random-knights/standard
+npm install https://codeload.github.com/random-knights/standard/tar.gz/main
 ```
 
 ```js
