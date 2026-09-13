@@ -1,0 +1,39 @@
+{
+  "name": "@random-knights/eplus-conformance",
+  "version": "1.0.0",
+  "description": "The E+ (Earth Health Score) conformance test: recompute every number and every liveness claim in a published earth.healthscore.v1 document from the document alone",
+  "license": "Apache-2.0",
+  "main": "eplus/v1/conformance/out/index.js",
+  "types": "eplus/v1/conformance/out/index.d.ts",
+  "bin": {
+    "eplus-conformance": "eplus/v1/conformance/out/cli.js"
+  },
+  "files": [
+    "eplus/v1/conformance/out",
+    "eplus/v1/conformance/README.md",
+    "eplus/v1/methodology.md"
+  ],
+  "scripts": {
+    "build": "tsc -p eplus/v1/conformance",
+    "test": "node --test eplus/v1/conformance/test/conformance.test.mjs eplus/v1/conformance/test/built-output-is-current.test.mjs"
+  },
+  "keywords": [
+    "eplus",
+    "earth-health-score",
+    "conformance",
+    "provenance",
+    "standard"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/random-knights/standard.git"
+  },
+  "homepage": "https://github.com/random-knights/standard/tree/main/eplus/v1/conformance",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
