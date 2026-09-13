@@ -110,6 +110,37 @@ const K13 = {
   ],
 };
 
+// E+ has no schema yet, so like K13 its directory is a fixed path and its
+// version is read out of the document's own header line. The document is
+// served byte-identical; the version string on the index page is the one
+// the text declares, never a flag set beside it.
+const EPLUS_DIR = "eplus/v1";
+const eplusText = readFileSync(
+  join(repoRoot, "eplus", "v1", "methodology.md"),
+  "utf8",
+);
+const eplusVersionMatch = eplusText.match(/\*\*Version:\*\*\s*([\d.]+)/);
+if (!eplusVersionMatch) {
+  throw new Error("Could not read the E+ version out of eplus/v1/methodology.md.");
+}
+const eplusStatusMatch = eplusText.match(/\*\*Status:\*\*\s*([^\n]+)/);
+const EPLUS = {
+  name: "E+",
+  fullName: "E+ Earth Health Score",
+  version: eplusVersionMatch[1],
+  status: eplusStatusMatch ? eplusStatusMatch[1].trim() : "",
+  dir: EPLUS_DIR,
+  xyzHref: `${XYZ}/eplus/`,
+  artifacts: [
+    {
+      label: "methodology",
+      href: `${HOST}/${EPLUS_DIR}/methodology.md`,
+      license: "CC BY 4.0",
+      licenseHref: "/LICENSE-DOCS",
+    },
+  ],
+};
+
 const AIEDS = {
   name: "AiEDs",
   fullName: "AI Energy Disclosure Standard",
@@ -288,6 +319,23 @@ ${rows}
     </section>`;
 }
 
+function eplusSection() {
+  const rows = EPLUS.artifacts.map(artifactRow).join("\n");
+  // The status line is the document's own, so a draft never renders as
+  // ratified on this page before it is ratified in the text.
+  const status = EPLUS.status
+    ? `      <p class="pending-note">${escapeHtml(EPLUS.status)}.</p>\n`
+    : "";
+  return `    <section class="standard">
+      <h2>${escapeHtml(EPLUS.fullName)}</h2>
+      <p class="version">methodology ${escapeHtml(EPLUS.version)}</p>
+${status}      <ul class="artifact-list">
+${rows}
+      </ul>
+      <a class="read-link" href="${escapeHtml(EPLUS.xyzHref)}">read the standard on randomknights.xyz -&gt;</a>
+    </section>`;
+}
+
 function k13Section() {
   const allPresent = K13.files.every((f) => f.present);
   const rows = K13.files
@@ -347,6 +395,7 @@ function renderIndexHtml() {
 </p>
 ${aiedsSection()}
 ${k13Section()}
+${eplusSection()}
 </main>
 <footer class="family-footer">
   <a class="family-link-xyz" href="${XYZ}/">&#7450;k.xyz</a>
@@ -377,6 +426,10 @@ export function expectedFiles() {
     [
       join(aiedsDir, "aieds-factors.json"),
       readFileSync(join(repoRoot, "spec", "v2", "aieds-factors.json")),
+    ],
+    [
+      join(EPLUS_DIR, "methodology.md"),
+      readFileSync(join(repoRoot, "eplus", "v1", "methodology.md")),
     ],
     ["LICENSE", readFileSync(join(repoRoot, "LICENSE"))],
     ["LICENSE-DOCS", readFileSync(join(repoRoot, "LICENSE-DOCS"))],
@@ -413,4 +466,7 @@ if (invokedDirectly) {
     ? "published"
     : `pending (${K13.files.filter((f) => !f.present).map((f) => f.label).join(", ")} not present)`;
   console.log(`K13 artifacts at /${K13.dir}/: ${k13Status}`);
+  console.log(
+    `E+ methodology ${EPLUS.version} at /${EPLUS.dir}/ (${EPLUS.status || "no status line"})`,
+  );
 }
