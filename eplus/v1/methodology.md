@@ -21,7 +21,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
-| 1.0.0   | 2026-09-13 | **DRAFT. First assembled text.** Nine domains and weights as frozen by ADR 0008 and amended by ADR 0012; every normalizer including the v0.7 protected-area saturation and humility ceiling; the coverage-normalized region mean and the v0.8 exposure-weighted headline; the five-rung provenance ladder with the rule that a document MUST NOT declare live for a synthetic or carried-forward input; the non-averageable breach panel under owner decision D2; conformance requirements for documents and implementations; governance. Open questions are listed in section 10 and none of them is answered here. |
+| 1.0.0   | 2026-09-13 | **DRAFT. First assembled text.** Nine domains and weights as frozen by ADR 0008 and amended by ADR 0012; every normalizer including the v0.7 protected-area saturation and humility ceiling; the coverage-normalized region mean and the v0.8 exposure-weighted headline; the five-rung provenance ladder with the rule that a document MUST NOT declare live for a synthetic or carried-forward input; the non-averageable breach panel under owner decision D2; conformance requirements for documents and implementations; governance. Owner decisions D4 to D7 (2026-09-13) applied in the same draft: `meta.eplusVersion` is a conformance requirement (D4); the `air`, `ocean` and `biodiversity` basis relabel to `contextual-proxy` is decided and waits on its ADR (D5); the conformance checker will be published from this repository as its single canonical home (D6); the `global` pseudo-region defect is dated with a resolution plan (D7). The six remaining open questions are listed in section 10 and none of them is answered here. |
 
 ## Implementation changelog (public)
 
@@ -144,9 +144,13 @@ aerosol optical depth), `ocean` (SST anomaly is a climate proxy, the control
 variables are atmospheric CO2 and radiative forcing) and `biodiversity`
 (richness is not extinction rate or HANPP). Only `land-cover` and
 `ocean-acidification` use the accepted control variable. This is why the
-breach panel (section 6) admits two domains and names the exclusions. Whether
-the three labels are corrected is open question OQ-5; correcting them is a
-methodology change under section 9.
+breach panel (section 6) admits two domains and names the exclusions. The
+three labels are DECIDED to become `contextual-proxy` (owner decision D5,
+2026-09-13). The relabel is a methodology change under section 9, so it needs
+an Accepted ADR before the default changes, and it ships in the same lane as
+the breach panel because both change what a client renders. Until that lane
+lands, an implementation MAY still publish `boundary` for the three, and a
+document that does so is read against this section. See section 10.
 
 ---
 
@@ -332,7 +336,8 @@ over the regions the document publishes that carry at least one sub-score.
 0 to 100 (fallback 1). The `global` pseudo-region is a member of its own rollup;
 0.8 states this in `meta.derivation.exposureNote` rather than changing it,
 because changing it would move the number for a second, unrelated reason in the
-same release (open question OQ-7).
+same release. This is a dated defect with a resolution plan, not an open
+question: see section 10, OQ-7.
 
 Per-domain global chips are `round1( sum(normalized x exposure) / sum(exposure) )`
 per domain; the rolled-up provenance is the WEAKEST rung among contributors and
@@ -512,6 +517,13 @@ A conforming E+ document contains, at minimum:
 1. `meta.schema`, `meta.methodologyVersion`, `meta.generatedAt`, and a
    `meta.disclosure` that carries the derivability correction sentence and the
    missing-data sentence of section 4.2 verbatim in substance.
+1a. `meta.eplusVersion`: a semver string naming the version of THIS STANDARD
+   the document conforms to. First value `1.0.0`. It is distinct from
+   `meta.methodologyVersion`, which remains the IMPLEMENTATION version (0.4
+   through 0.8 to date) and is a different thing: a consumer needs to know
+   which rules a document was written against without inferring it from the
+   producer's release history (owner decision D4, 2026-09-13). A document
+   without `meta.eplusVersion` does not conform to 1.0.0.
 2. `meta.weights` for every domain, `meta.domainBasis`, `meta.domainScience`
    (control variable, units, safe, high risk, normalization, citation, basis
    per domain), and `meta.derivation.rawWeightSum`.
@@ -582,9 +594,27 @@ unreadable; default target the live document), both landed in ruok at
 `fd452b71` (PR 443, 2026-09-12), with `earthScoreConformance.test.ts` running
 fail-first fixtures in the functions suite. Check 7 (the provenance rejection)
 is not yet in that checker; it is the standard-level test B-3 names, and it is
-the conformance half of lane 4. Whether the checker is mirrored into this
-repository so a third party can run it without the private ruok checkout is
-OQ-9.
+the conformance half of lane 4.
+
+**The checker will be published from this repository (owner decision D6,
+2026-09-13), and NOT as a mirror.** Two copies of one rule is the drift
+condition this workspace keeps paying for. Of the two mechanisms the decision
+allows, this document proposes (a): `eplus/v1/` in this repository becomes the
+CANONICAL home of `earthScoreConformance.ts` and `verifyScoreDoc.ts`, and ruok
+CONSUMES it as a dependency pinned to a commit of this public repository (a
+git-URL dependency in `functions/package.json`, bumped deliberately), with the
+fail-first fixtures staying in ruok where the producer lives. Reason: the
+checker has zero imports and reads only the document, so it has no reason to
+live beside the producer; a git pin is one line and needs no npm publish
+token, so no owner secret enters the loop; and the pin makes every checker
+change an explicit, dated event in the producer's history, which is exactly
+what a conformance test of a standard should be. Mechanism (b), a hash-gated
+copy, was not chosen because this repository is public and ruok is private,
+so the gate could only run on the ruok side, and a gate that reports drift
+still leaves two copies to drift between runs. The files are NOT copied in
+this draft; publication is its own lane, after the breach panel, because the
+checker gains the provenance rejection and the panel invariants in that
+work.
 
 ```
 cd functions && npm run build
@@ -637,8 +667,9 @@ not compute does not.
 4. **Two version series, not one.** This document carries the E+ STANDARD
    version (semver, 1.0.0 here). The reference implementation stamps its own
    `methodologyVersion` (0.4 through 0.8 to date) in every document. The
-   implementation series predates the standard and is not renumbered; how a
-   document names the standard version it conforms to is OQ-1.
+   implementation series predates the standard and is not renumbered. A
+   document names the standard version it conforms to in `meta.eplusVersion`
+   (section 7.1, item 1a; owner decision D4).
 5. Implementation 0.8 has no ADR of its own. It landed the same day the rule in
    item 1 was written. ADR 0012 records the bump so the series has no gap, but
    recording is not ratifying: 0.8 still owes its own ADR. Owner action.
@@ -647,15 +678,41 @@ not compute does not.
 
 ---
 
-## 10. Open Questions
+## 10. Decided, Dated and Open Questions
 
-Each of these is undecided. This document does not answer them and an
-implementation MUST NOT read a default into them.
+Three lists, kept apart on purpose. DECIDED items have an owner decision and a
+recorded home for the work. DATED items are known defects with a resolution
+plan and a release they belong to. OPEN items are undecided: this document does
+not answer them and an implementation MUST NOT read a default into them. An
+item moves between lists only by a dated owner decision recorded here.
 
-- **OQ-1 Standard version stamp.** How a published document names the E+
-  standard version it conforms to, beside its implementation
-  `methodologyVersion`. Proposed for discussion: a `meta.eplusVersion` field.
-  Not specified here.
+### Decided (owner decisions D4 to D6, 2026-09-13)
+
+- **OQ-1 Standard version stamp. DECIDED (D4).** A published document carries
+  `meta.eplusVersion`, first value `1.0.0`, beside `meta.methodologyVersion`.
+  Normative in section 7.1, item 1a.
+- **OQ-5 Basis labels. DECIDED (D5).** `air`, `ocean` and `biodiversity` are
+  relabelled `contextual-proxy`. Needs an Accepted ADR under section 9 before
+  the default changes, and ships in the same lane as the breach panel because
+  both change client rendering. Section 2 records the interim reading.
+- **OQ-9 Publishing the checker. DECIDED (D6).** The conformance checker is
+  published from this repository as its single canonical home, consumed by
+  ruok as a pinned dependency; not mirrored. Mechanism and reason in section
+  7.3. Its own lane, after the breach panel.
+
+### Dated (owner decision D7, 2026-09-13)
+
+- **OQ-7 The `global` pseudo-region. DATED, not answered.** `global` stays
+  both a published region and a member of the headline rollup for now (audit
+  RISK-1). It is resolved in its OWN release, after the breach panel lands,
+  with its own changelog line stating that the headline moves from 59.20 to
+  57.87 on the 2026-09-11 document and why. Reason: D1 requires that one
+  release moves the headline for one reason, and the breach panel release
+  already has one. A reader of this section sees a known defect with a plan,
+  not an unanswered question.
+
+### Open
+
 - **OQ-2 Fire percentile finalization.** The window rules of section 3.6 are
   the selected design; the exact field names, the warm-up flag and the
   scheduler are lane B2's to define once the owner seed run (about 5110 GETs,
@@ -669,19 +726,11 @@ implementation MUST NOT read a default into them.
   Planetary Health Check 2025, whose boundary is 2.86 with a 2.75 high-risk
   line. Which edition the normalizer anchors to is a constant change under
   section 9 and is not decided here.
-- **OQ-5 Basis labels.** Whether `air`, `ocean` and `biodiversity` keep the
-  `boundary` label while the panel excludes them, or are relabelled
-  `contextual-proxy`. Relabelling changes what every client renders and needs
-  an Accepted ADR.
 - **OQ-6 Normalizer anchors without a framework source.** The 30 percent
   land-cover floor, the 50-detection fire full scale, the 200 AQI and 250
   umol/m2 full scales, the 2 / 4 deg C SST scales and the categorical glacier
   values are implementation constants with no framework citation (consensus
   C7). They are stated here as what is computed, not as endorsed thresholds.
-- **OQ-7 The `global` pseudo-region.** It is both a published region and a
-  member of the headline rollup (audit RISK-1). Excluding it moves the number
-  (57.87 against 59.20 on the 2026-09-11 document). Not changed in 0.8 so that
-  one release moves the headline for one reason.
 - **OQ-8 Breach panel decisions.** The ten owner questions of the panel
   proposal: whether the zone of uncertainty counts as a breach (with a
   separate high-risk sub-count); the ocean-acidification threshold edition;
@@ -693,9 +742,6 @@ implementation MUST NOT read a default into them.
   a null threshold or are sourced first; and whether the breach count enters
   the daily history. Nothing in section 6 presumes an answer beyond the five
   conditions the owner has already given.
-- **OQ-9 Publishing the checker.** Whether `earthScoreConformance.ts` and
-  `verifyScoreDoc.ts` are mirrored into this repository under `eplus/v1/` so a
-  third party can run the conformance test without the private ruok checkout.
 - **OQ-10 The uncertainty interval.** No published number carries one. The
   audits' PM predictions named this; no decision exists.
 
