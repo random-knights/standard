@@ -21,7 +21,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
-| 1.0.0   | 2026-09-13 | **DRAFT. First assembled text.** Nine domains and weights as frozen by ADR 0008 and amended by ADR 0012; every normalizer including the v0.7 protected-area saturation and humility ceiling; the coverage-normalized region mean and the v0.8 exposure-weighted headline; the five-rung provenance ladder with the rule that a document MUST NOT declare live for a synthetic or carried-forward input; the non-averageable breach panel under owner decision D2; conformance requirements for documents and implementations; governance. Owner decisions D4 to D7 (2026-09-13) applied in the same draft: `meta.eplusVersion` is a conformance requirement (D4); the `air`, `ocean` and `biodiversity` basis relabel to `contextual-proxy` is decided and waits on its ADR (D5); the conformance checker will be published from this repository as its single canonical home (D6); the `global` pseudo-region defect is dated with a resolution plan (D7). The six remaining open questions are listed in section 10 and none of them is answered here. |
+| 1.0.0   | 2026-09-13 | **DRAFT. First assembled text.** Nine domains and weights as frozen by ADR 0008 and amended by ADR 0012; every normalizer including the v0.7 protected-area saturation and humility ceiling; the coverage-normalized region mean and the v0.8 exposure-weighted headline; the five-rung provenance ladder with the rule that a document MUST NOT declare live for a synthetic or carried-forward input; the non-averageable breach panel under owner decision D2; conformance requirements for documents and implementations; governance. Owner decisions D4 to D7 (2026-09-13) applied in the same draft: `meta.eplusVersion` is a conformance requirement (D4); the `air`, `ocean` and `biodiversity` basis relabel to `contextual-proxy` is decided and waits on its ADR (D5); the conformance checker is published from this repository as its single canonical home at `eplus/v1/conformance/`, runnable by a third party with no producer checkout, and the reference implementation consumes it pinned to a commit rather than keeping a copy (D6); the `global` pseudo-region defect is dated with a resolution plan (D7). The six remaining open questions are listed in section 10 and none of them is answered here. |
 
 ## Implementation changelog (public)
 
@@ -572,6 +572,13 @@ constant and no network call other than fetching the document:
    regional values for that domain.
 7. `meta.isLive` is false whenever any weight-carrying domain fails section
    5.3, and a document that claims live for a `synthetic` input is REJECTED.
+   The rejection names the domain and the clause it fails. `meta.notLiveDomains`
+   and every per-domain `fresh` flag are recomputed the same way, and every
+   sub-score repeats the provenance its domain declares (section 5.2), so a
+   reader of one number cannot be told something the provenance block
+   contradicts. This check is implemented in the reference checker as of
+   2026-09-13; the earlier note here that it was "not yet in that checker" is
+   superseded by section 7.3.
 8. A tampered document (any published number altered) is REJECTED.
 
 The checker MUST read weights from `meta.weights`, never from the producer's
@@ -585,42 +592,64 @@ PASS is a comment.
 
 ### 7.3 The reference conformance test
 
-Owner decision D1 condition 2: the reproducibility script ships in the repo,
-runs against the published JSON alone, and becomes the conformance test when
-E+ is standardized. It exists: `functions/src/earthScoreConformance.ts` (zero
-imports; checks 1 to 6 and 8 above) and its command line
-`functions/src/scripts/verifyScoreDoc.ts` (exit 0 conformant, 1 not, 2
-unreadable; default target the live document), both landed in ruok at
-`fd452b71` (PR 443, 2026-09-12), with `earthScoreConformance.test.ts` running
-fail-first fixtures in the functions suite. Check 7 (the provenance rejection)
-is not yet in that checker; it is the standard-level test B-3 names, and it is
-the conformance half of lane 4.
+Owner decision D1 condition 2: the reproducibility script ships, runs against
+the published JSON alone, and becomes the conformance test when E+ is
+standardized. Owner decision D6 (2026-09-13) settled where it lives: THIS
+REPOSITORY IS ITS SINGLE CANONICAL HOME, and it is NOT mirrored anywhere.
 
-**The checker will be published from this repository (owner decision D6,
-2026-09-13), and NOT as a mirror.** Two copies of one rule is the drift
-condition this workspace keeps paying for. Of the two mechanisms the decision
-allows, this document proposes (a): `eplus/v1/` in this repository becomes the
-CANONICAL home of `earthScoreConformance.ts` and `verifyScoreDoc.ts`, and ruok
-CONSUMES it as a dependency pinned to a commit of this public repository (a
-git-URL dependency in `functions/package.json`, bumped deliberately), with the
-fail-first fixtures staying in ruok where the producer lives. Reason: the
-checker has zero imports and reads only the document, so it has no reason to
-live beside the producer; a git pin is one line and needs no npm publish
-token, so no owner secret enters the loop; and the pin makes every checker
-change an explicit, dated event in the producer's history, which is exactly
-what a conformance test of a standard should be. Mechanism (b), a hash-gated
-copy, was not chosen because this repository is public and ruok is private,
-so the gate could only run on the ruok side, and a gate that reports drift
-still leaves two copies to drift between runs. The files are NOT copied in
-this draft; publication is its own lane, after the breach panel, because the
-checker gains the provenance rejection and the panel invariants in that
-work.
+It lives at `eplus/v1/conformance/` beside this document:
 
 ```
-cd functions && npm run build
-node lib/scripts/verifyScoreDoc.js                       # the live document
-node lib/scripts/verifyScoreDoc.js ./health-score.json   # a local copy
+eplus/v1/conformance/src/index.ts   the checker (zero imports; checks 1 to 8
+                                    above, plus 1a as a warning)
+eplus/v1/conformance/src/cli.ts     the command line (exit 0 conformant, 1 not,
+                                    2 unreadable; default target the reference
+                                    implementation's live document)
+eplus/v1/conformance/out/           the compiled JavaScript, committed, so that
+                                    installing the package never runs a compiler
+eplus/v1/conformance/test/          the checker's own suite, plus a gate that
+                                    refuses any committed output that is not a
+                                    byte-identical rebuild of the source
+eplus/v1/conformance/README.md      run instructions for a third party
 ```
+
+Anyone can run it against any implementation's document, with no account and no
+access to any producer's source data:
+
+```
+npx --yes github:random-knights/standard                       # the live document
+npx --yes github:random-knights/standard ./health-score.json   # a local copy
+npx --yes github:random-knights/standard --strict              # see below
+```
+
+or from a clone, with `node eplus/v1/conformance/out/cli.js <document>`.
+
+CHECK 1a IS A WARNING, NOT A FAILURE, BY DEFAULT. `meta.eplusVersion` is
+normative (section 7.1 item 1a) and the reference implementation does not emit
+it yet. Making it fatal would mean the published checker could not ship until
+the producer caught up; dropping it would mean this document and the checker
+said different things. So the checker prints the gap on every run, exits 0 on
+warnings alone, and promotes every warning to a failure under `--strict`. The
+strict run is the gate that proves 1.0.0 conformance, and it is not green for
+the reference implementation today.
+
+THE PRODUCER CONSUMES THIS PACKAGE; IT DOES NOT COPY IT. The reference
+implementation (the private `ruok` repository) declares
+`@random-knights/eplus-conformance` in `functions/package.json` pinned to a
+commit of this repository, and its own suite imports the checker from that
+dependency. The fail-first fixtures stay with the producer: byte-for-byte
+copies of the real 2026-09-10 (63.4 published, 58.95 rollup) and 2026-09-11
+(63.8 published, 59.2 rollup) documents, where the checker must fail and name
+the headline, and a 0.8 document built by the producer, where it must pass.
+Those are evidence about that implementation, so they belong beside it; the
+checker's own suite here uses hand-built minimal documents whose arithmetic is
+written out as literals.
+
+Mechanism (b) of decision D6, a hash-gated copy, was not chosen because this
+repository is public and the producer's is private, so the gate could only run
+on the private side, and a gate that reports drift still leaves two copies to
+drift between runs. Two copies of one rule is the drift condition this
+workspace keeps paying for.
 
 ### 7.4 What conformance does NOT certify
 

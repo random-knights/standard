@@ -79,7 +79,32 @@ jobs:
       - name: Unit tests
         run: cd lib && npm test
 
-  # Aggregating gate: one check that is green only when all three jobs above
+  conformance:
+    name: Build + test E+ conformance checker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install root deps
+        run: npm install
+
+      - name: Build (TypeScript)
+        run: npm run build
+
+      # The suite includes a gate that rebuilds src/ into a temporary directory
+      # and refuses any committed out/ that is not byte-identical to it. The
+      # compiled output is committed on purpose, so that a consumer installing
+      # this package never runs a compiler; this is what stops it drifting.
+      - name: Unit tests
+        run: npm test
+
+  # Aggregating gate: one check that is green only when all four jobs above
   # pass. Named "CI Gate" so the org ci-gate-required ruleset can pin a single
   # context for this repo. Does no work of its own; it only depends on the jobs.
   ci-gate:
@@ -87,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    needs: [spec, mcp, lib]
+    needs: [spec, mcp, lib, conformance]
     steps:
       - name: All required jobs passed
-        run: echo "spec, mcp, and lib all passed."
+        run: echo "spec, mcp, lib and conformance all passed."
