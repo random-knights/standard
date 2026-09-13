@@ -81,6 +81,31 @@ test("the index page lists AiEDs as live and K13.md as published", () => {
   );
 });
 
+test("the index page lists E+ at the version and status its own text declares", () => {
+  // Same honesty gate as K13: the served copy is byte-identical to the repo
+  // file, the version on the page is parsed from the document header, and a
+  // draft is labelled as a draft until the text itself says otherwise.
+  const indexKey = [...files.keys()].find((k) => k === "index.html");
+  const html = files.get(indexKey).toString("utf8");
+  const source = readFileSync(resolve(repoRoot, "eplus/v1/methodology.md"), "utf8");
+  const version = source.match(/\*\*Version:\*\*\s*([\d.]+)/)[1];
+  const status = source.match(/\*\*Status:\*\*\s*([^\n]+)/)[1].trim();
+
+  assert.match(html, /E\+ Earth Health Score/);
+  assert.match(html, /standard\.rand0m\.ai\/eplus\/v1\/methodology\.md/);
+  assert.ok(html.includes(`methodology ${version}`), `index must show E+ ${version}`);
+  assert.ok(html.includes(status), `index must carry the E+ status line: ${status}`);
+
+  const eplusKey = [...files.keys()].find(
+    (k) => k.replaceAll("\\", "/") === "eplus/v1/methodology.md",
+  );
+  assert.ok(eplusKey, "no output file for eplus/v1/methodology.md");
+  assert.ok(
+    files.get(eplusKey).equals(readFileSync(resolve(repoRoot, "eplus/v1/methodology.md"))),
+    "eplus/v1/methodology.md differs from its source; the build must copy bytes verbatim",
+  );
+});
+
 test("the index page still says the K13 level registry is not yet published", () => {
   // canon/k13-levels.json has not moved in. The page must say so rather than
   // link to a path that 404s; this flips deliberately when the registry lands.

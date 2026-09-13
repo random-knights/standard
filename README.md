@@ -7,8 +7,9 @@
 <h3 align="center" style="color:#ff4124">Random Knights Standards</h3>
 
   <p align="center">
-    Two open standards from Random Knights. K13 is how we write. AiEDs is how
-    we report modeled energy and carbon from AI work.
+    Open standards from Random Knights. K13 is how we write. AiEDs is how
+    we report modeled energy and carbon from AI work. E+ is how we score
+    planetary health, and it is a draft.
     <br />
     <a href="https://randomknights.xyz"><strong>Read them on the docs site &raquo;</strong></a>
     <br />
@@ -16,6 +17,8 @@
     <a href="https://randomknights.xyz/k13/">K13</a>
     &#183;
     <a href="https://randomknights.xyz/aieds/">AiEDs</a>
+    &#183;
+    <a href="eplus/v1/methodology.md">E+</a>
     &#183;
     <a href="https://standard.rand0m.ai">Artifacts</a>
     &#183;
@@ -32,13 +35,27 @@
   </p>
 </div>
 
-Both are published and free to read. Both are CC BY 4.0, so you can adopt
-either without asking. Both live in this repository.
+K13 and AiEDs are published and free to read. Both are CC BY 4.0, so you can
+adopt either without asking. E+ is a DRAFT: its text is here so it can be read
+and checked, and it is not ratified. All three live in this repository.
 
 | Standard | Version | License | Canonical text | Read it |
 |---|---|---|---|---|
 | **AiEDs - AI Energy Disclosure Standard** | methodology 2.1.0 | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai) |
 | **K13 - AI Response Standard** | 2.0.0 | CC BY 4.0 prose, Apache 2.0 reference templates | [K13.md](K13.md) with `templates/` | [randomknights.xyz/k13](https://randomknights.xyz/k13/) |
+| **E+ - Earth Health Score Methodology** | 1.0.0 DRAFT, not ratified | CC BY 4.0 prose | [eplus/v1/methodology.md](eplus/v1/methodology.md) | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md) once deployed |
+
+## E+ - Earth Health Score Methodology (draft)
+
+A 0 to 100 planetary health index from nine environmental domains. The draft
+specifies the weights and normalizers the reference implementation computes,
+the coverage-normalized region mean and the exposure-weighted headline, a
+provenance ladder under which a document must not claim live for a synthetic
+input, a non-averageable breach panel with cited thresholds, and what a
+conforming document and a conforming implementation must be able to prove.
+It invents nothing: every constant traces to a ratified ADR, the producer
+source, the four independent audits of 2026-09-10, or a recorded owner
+decision, and the undecided items are listed as open questions.
 
 ## K13 - AI Response Standard
 
@@ -274,6 +291,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | MCP server | `mcp/` | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose |
 | K13 | `K13.md` | CC BY 4.0 | K13 - AI Response Standard, 2.0.0. The canonical text. |
 | K13 report templates | `templates/` | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement. |
+| E+ | `eplus/v1/methodology.md` | CC BY 4.0 | E+ - Earth Health Score Methodology, 1.0.0 DRAFT. The canonical text, including the public implementation changelog. |
 
 ## Roadmap
 
@@ -311,11 +329,19 @@ used.
 > Random Knights, LLC (2026). K13 - AI Response Standard, version 2.0.0.
 > CC BY 4.0. https://github.com/random-knights/standard
 
+E+ is a draft and has no citable ratified version yet. Cite the draft only as
+a draft:
+
+> Random Knights, LLC (2026). E+ - Earth Health Score Methodology, version
+> 1.0.0 (draft, not ratified). CC BY 4.0.
+> https://github.com/random-knights/standard
+
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
 Machine-readable metadata: [CITATION.cff](CITATION.cff) describes AiEDs and
 is the file GitHub reads to offer APA and BibTeX exports from the sidebar;
-[CITATION.k13.cff](CITATION.k13.cff) describes K13 in the same format.
+[CITATION.k13.cff](CITATION.k13.cff) describes K13 in the same format;
+[CITATION.eplus.cff](CITATION.eplus.cff) describes the E+ draft.
 
 ## License
 
@@ -335,6 +361,7 @@ CC BY 4.0.
 | `spec/v2/aieds-factors.json` | [CC BY 4.0](LICENSE-DOCS) |
 | `K13.md` | [CC BY 4.0](LICENSE-DOCS) |
 | `templates/` | [Apache 2.0](LICENSE) |
+| `eplus/v1/methodology.md` | [CC BY 4.0](LICENSE-DOCS) |
 
 The K13 report templates are the clearest case of that split. `templates/` is a
 reference implementation, so it is Apache 2.0 and forkable without attribution

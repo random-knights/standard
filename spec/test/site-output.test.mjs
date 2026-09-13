@@ -43,6 +43,7 @@ const PROMISED = [
   [`${aiedsDir}/aieds-factors.json`, "spec/v2/aieds-factors.json"],
   [`${aiedsDir}/methodology.md`, "spec/methodology.md"],
   ["k13/v1/K13.md", "K13.md"],
+  ["eplus/v1/methodology.md", "eplus/v1/methodology.md"],
   ["LICENSE", "LICENSE"],
   ["LICENSE-DOCS", "LICENSE-DOCS"],
 ];

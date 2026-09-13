@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you implement or adopt E+, cite the version you implemented."
+title: "E+ - Earth Health Score Methodology"
+# CFF 1.2.0 allows only 'dataset' or 'software' at the top level. E+ is a
+# standard; 'software' is the closest option the format offers, and it is the
+# same choice CITATION.cff makes for AiEDs. GitHub reads only CITATION.cff, so
+# this file is for humans and for tools pointed at it directly.
+type: software
+version: 1.0.0
+license: CC-BY-4.0
+license-url: https://creativecommons.org/licenses/by/4.0/
+repository-code: https://github.com/random-knights/standard
+url: https://standard.rand0m.ai/eplus/v1/methodology.md
+abstract: >-
+  A 0 to 100 planetary health index built from nine environmental domains:
+  weights, normalizers, the coverage-normalized region mean, the
+  exposure-weighted headline, a five-rung provenance ladder that forbids
+  claiming live for a synthetic input, a non-averageable breach panel with
+  cited thresholds, and the conformance test that recomputes every published
+  number from the published document alone. Version 1.0.0 is a DRAFT awaiting
+  owner ratification; the canonical text is eplus/v1/methodology.md in this
+  repository.
+keywords:
+  - Earth health score
+  - planetary boundaries
+  - open standard
+authors:
+  - name: "Random Knights, LLC"
+    orcid: "https://orcid.org/0009-0006-5066-1693"
+    city: Roswell
+    region: Georgia
+    country: US
+    website: https://randomknights.xyz
+contact:
+  - name: "Random Knights, LLC"
+    email: knights@rand0m.ai
