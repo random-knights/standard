@@ -1,6 +1,6 @@
 {
   "name": "@random-knights/aieds-mcp",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "AiEDs v1 MCP server - AI Energy Disclosure Standard tools for agents and providers",
   "type": "module",
   "main": "dist/index.js",

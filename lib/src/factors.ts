@@ -11,15 +11,81 @@
 // the package root, and the spec directory is one level above that.
 import { readFileSync } from "node:fs";
 
-export type AiedsConfidenceTier =
+/**
+ * Where a FACTOR came from: methodology 2.1.0 section 5.1, strongest first.
+ *
+ * Renamed from `AiedsConfidenceTier` in lib 2.1.0. It was never a confidence:
+ * `confidence` grades how the ENERGY figure was arrived at, and this grades the
+ * coefficient. Emitting one under the other's name made a disclosure say
+ * "vendor-published confidence", which is not a thing the schema accepts or a
+ * reader can act on.
+ *
+ * `synthetic` is in the ladder but this library never emits it. See
+ * {@link SCHEMA_PROVENANCE_VALUES}.
+ */
+export type AiedsProvenance =
   | "measured"
   | "vendor-published"
   | "class-estimated"
+  | "synthetic"
   | "unknown";
 
 /**
- * Per-model-class energy profile. Every entry carries a confidence tier and a
+ * @deprecated lib 2.1.0 renamed this to {@link AiedsProvenance}. Kept as an
+ * alias so a type-level import does not break; it will go in the next major.
+ */
+export type AiedsConfidenceTier = AiedsProvenance;
+
+/**
+ * The producer's confidence in the ENERGY figure (methodology section 5).
+ * A fractional 0 to 1 value may be substituted for the string enum.
+ */
+export type AiedsConfidence = "low" | "med" | "high" | number;
+
+/**
+ * The provenance rungs the PUBLISHED SCHEMA enumerates today. This is a strict
+ * subset of the methodology 2.1.0 ladder: `spec/aieds.schema.json` has a closed
+ * enum without `synthetic`, so a record stamping it is rejected by any
+ * validator. Adding it is the 2.2.0 schema proposal written up in PR 37.
+ *
+ * The schema is not edited from this package, and this library never emits a
+ * value the published schema would reject.
+ */
+export const SCHEMA_PROVENANCE_VALUES = [
+  "measured",
+  "vendor-published",
+  "class-estimated",
+  "unknown",
+] as const;
+
+export type AiedsSchemaProvenance = (typeof SCHEMA_PROVENANCE_VALUES)[number];
+
+/**
+ * Narrows a methodology 2.1.0 provenance rung to one the published schema
+ * accepts.
+ *
+ * `synthetic` maps to `unknown`. That loses information, and it is the honest
+ * loss: the alternative is emitting a value every validator rejects. Methodology
+ * 2.1.0 says as much in section 5.1, and tells a producer with a generated input
+ * to stamp the nearest rung the schema carries and say in prose that the input
+ * was generated. When the 2.2.0 schema adds `synthetic` (proposal in PR 37),
+ * this function becomes the identity and the mapping goes.
+ */
+export function provenanceForSchema(
+  provenance: AiedsProvenance,
+): AiedsSchemaProvenance {
+  return provenance === "synthetic" ? "unknown" : provenance;
+}
+
+/**
+ * Per-model-class energy profile. Every entry carries a provenance rung and a
  * REQUIRED citation. A number without provenance does not belong in the table.
+ *
+ * The published table `spec/v2/aieds-factors.json` still names this key
+ * `confidence`, which is what it was called before methodology 2.1.0 renamed
+ * the ladder. Renaming a key in the published data file is a data change and
+ * belongs in its own lane; this library reads the key the file has and EMITS
+ * the name the standard uses.
  */
 export interface ModelEnergyProfile {
   /** Lowercased model-id prefixes this profile covers. */
@@ -30,7 +96,8 @@ export interface ModelEnergyProfile {
   readonly whPer1kOut: number;
   /** Datacenter overhead multiplier; 1.0 when the basis figure is all-in. */
   readonly pue: number;
-  readonly confidence: AiedsConfidenceTier;
+  /** The provenance rung, read from the published table's `confidence` key. */
+  readonly confidence: AiedsProvenance;
   readonly citation: string;
 }
 
@@ -55,7 +122,7 @@ interface FactorFile {
   };
   readonly responseSurface: {
     readonly splitAssumption: string;
-    readonly confidenceTiers: readonly AiedsConfidenceTier[];
+    readonly confidenceTiers: readonly AiedsProvenance[];
     readonly profiles: readonly ModelEnergyProfile[];
     readonly unknownProfile: ModelEnergyProfile;
   };
