@@ -287,6 +287,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Schema | `spec/aieds.schema.json` | Apache 2.0 | JSON Schema 2020-12 for one disclosure |
 | Methodology | `spec/methodology.md` | CC BY 4.0 | 2.1.0: energy-first path + per-model coefficients + factor tables + the provenance ladder |
 | Coefficient tables | `spec/v2/aieds-factors.json` | CC BY 4.0 | The published factor data every surface reads |
+| Measurements | `spec/measurements/` | CC BY 4.0 | Measurement harnesses, method documents and raw power samples. EVIDENCE, not coefficients: nothing here is in a factor table unless a factor table cites it. |
 | Examples | `spec/examples/` | CC BY 4.0 | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script |
 | Reference library | `lib/` | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested) |
 | MCP server | `mcp/` | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose |
