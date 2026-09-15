@@ -1,0 +1,162 @@
+# When a standard version moves, open a pull request in every repo that renders
+# the STANDARD version table.
+#
+# WHY THE FAN-OUT LIVES HERE. The event is "a version in THIS repo changed", so
+# the work belongs where the event is. It also has to live somewhere that may
+# hold a credential, and the org .github repo may not: its AGENTS.md says no
+# workflow there takes a secret. So .github holds the script and the no-secret
+# drift check, and this repo holds the half that writes.
+#
+# WHY A GITHUB APP AND NOT THE BUILT-IN TOKEN. GITHUB_TOKEN cannot write to
+# another repository at all, and a pull request opened with it does not trigger
+# workflows, so the required "CI Gate" check would never run and the pull
+# request could never merge. An App installation token does both. It is minted
+# per run and expires within the hour; the only stored secret is the App private
+# key.
+#
+# UNTIL THE APP EXISTS THIS WORKFLOW IS INERT BY DESIGN. With no secret set it
+# reports what it would have done and succeeds, rather than failing a release.
+# Automation that goes red on a missing credential trains people to ignore red.
+#
+# IT NEVER MERGES. It opens pull requests and stops.
+
+name: Standard versions fan-out
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Report what would change without opening pull requests
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  fanout:
+    name: Fan out the version table
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the standard
+        uses: actions/checkout@v4
+
+      - name: Check out the sync script
+        uses: actions/checkout@v4
+        with:
+          repository: random-knights/.github
+          path: .standard-sync
+          sparse-checkout: scripts
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # The versions file is gated by spec/test/standard-versions.test.mjs, so
+      # by the time it is on main it already agrees with the documents. This
+      # regenerates it anyway: a fan-out that publishes a stale number to five
+      # repos is worse than one that does not run.
+      - name: Re-derive the versions file and refuse if it drifted
+        run: |
+          set -euo pipefail
+          node scripts/emit-standard-versions.mjs
+          git diff --exit-code -- spec/v2/standard-versions.json
+
+      - name: Is the App configured
+        id: app
+        env:
+          APP_ID: ${{ secrets.RK_SYNC_APP_ID }}
+        run: |
+          if [ -n "${APP_ID:-}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::RK_SYNC_APP_ID is not set, so no pull requests will be opened. See docs/STANDARD-VERSION-SYNC.md."
+          fi
+
+      - name: Mint an installation token
+        if: steps.app.outputs.configured == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RK_SYNC_APP_ID }}
+          private-key: ${{ secrets.RK_SYNC_APP_PRIVATE_KEY }}
+          owner: random-knights
+          repositories: |
+            .github
+            abc
+            r1-01
+            xyz-earth
+
+      - name: Open a pull request in each consumer
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          CONFIGURED: ${{ steps.app.outputs.configured }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          set -euo pipefail
+          VERSIONS="$PWD/spec/v2/standard-versions.json"
+          SYNC="$PWD/.standard-sync/scripts/sync-standard-versions.mjs"
+          BRANCH=chore/standard-versions
+
+          # repo:readme pairs. .github renders the table on the org profile
+          # page, not on its own README.
+          TARGETS="\.github:profile/README.md abc:README.md r1-01:README.md xyz-earth:README.md"
+
+          for entry in $TARGETS; do
+            repo="${entry%%:*}"
+            readme="${entry#*:}"
+            echo "::group::$repo"
+            work="$(mktemp -d)"
+            if [ "$CONFIGURED" != "true" ]; then
+              echo "App not configured; would have checked $repo ($readme)."
+              echo "::endgroup::"
+              continue
+            fi
+            git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/random-knights/${repo}.git" "$work"
+            if ! node "$SYNC" --write --source "$VERSIONS" "$work/$readme"; then
+              echo "::error::$repo: $readme could not be rewritten (missing markers?)"
+              echo "::endgroup::"
+              continue
+            fi
+            cd "$work"
+            if git diff --quiet -- "$readme"; then
+              echo "$repo: already in sync"
+              cd - >/dev/null
+              echo "::endgroup::"
+              continue
+            fi
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "$repo: WOULD open a pull request:"
+              git --no-pager diff -- "$readme"
+              cd - >/dev/null
+              echo "::endgroup::"
+              continue
+            fi
+            git config user.name "rk-standard-sync[bot]"
+            git config user.email "rk-standard-sync[bot]@users.noreply.github.com"
+            git checkout -b "$BRANCH"
+            git add -- "$readme"
+            git commit -F - <<'MSG'
+          chore(readme): sync the STANDARD version table
+
+          Regenerated from the versions published by random-knights/standard,
+          which derives them from the canonical documents and gates them. This
+          commit carries no judgement of its own.
+
+          Opened by rk-standard-sync[bot]. Nobody hand-edited this table.
+          MSG
+            git push --force-with-lease origin "$BRANCH"
+            if ! gh pr view "$BRANCH" --repo "random-knights/$repo" --json number >/dev/null 2>&1; then
+              gh pr create --repo "random-knights/$repo" \
+                --head "$BRANCH" \
+                --title "chore(readme): sync the STANDARD version table" \
+                --body "A standard version moved. This regenerates the STANDARD block in $readme from the versions published at https://standard.rand0m.ai/versions.json. The bot does not merge; review and merge when you are happy."
+            fi
+            cd - >/dev/null
+            echo "::endgroup::"
+          done

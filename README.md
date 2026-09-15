@@ -51,7 +51,7 @@ planetary health, and it is a draft.
   - Maximum Effort
   - Rand0m AI Standard : E+ w/ AiEDs & K13
   - Randomly & Knightly . Engineering
-  - < add tools here >
+  - Node.js &middot; TypeScript &middot; JSON Schema 2020-12 &middot; nvidia-smi &middot; Ollama
 
 <div align="center">
 
