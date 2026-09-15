@@ -70,9 +70,16 @@ There is no staging. The spec IS the artifact.
 
 The machine-artifact host is Firebase Hosting (project `randomknights-xyz`,
 hosting target `standard`, site `standard-rand0m-ai`; `firebase.json` and
-`.firebaserc` are in this repo). It has no staging tier and nothing deploys
-it automatically. Deploy from a clean checkout of `main`, owner identity
-only:
+`.firebaserc` are in this repo). Staging deploys automatically on merge to
+main: `.github/workflows/80-staging-deploy.yml` builds the site, runs the
+same `site-output.test.mjs` gate this section describes below, deploys it
+to `abc-standard-rand0m-ai` in the `randomknights-abc` project, and proves
+the served bytes match before the run is called green. It is reachable at
+`https://abc-standard-rand0m-ai.web.app` and at the custom hostname
+`https://stg.standard.rand0m.ai`.
+
+Production remains a separate, owner-only deploy. Deploy from a clean
+checkout of `main`, owner identity only:
 
 ```
 node scripts/build-site.mjs
