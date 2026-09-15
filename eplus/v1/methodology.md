@@ -444,8 +444,15 @@ not exist.
 
 Owner decision D2 (2026-09-12): the headline stays a compensatory mean, and a
 NON-AVERAGEABLE breach panel is published beside it. The five conditions below
-are normative. The panel is NOT BUILT in the reference implementation at the
-time of this draft; its build is gated on this section being read and ratified.
+are normative. The panel is BUILT: the conformance checker beside this document
+carries the derived requirements below as check 9, and the reference
+implementation publishes the block under ADR 0018, "Publish a non-averageable
+breach panel, and relabel three domains as contextual proxies", which also
+carries owner decision D5, the relabel of `air`, `ocean` and `biodiversity`
+from basis `boundary` to `contextual-proxy`. A document that
+publishes no panel is reported as a warning rather than a failure, because
+every document published before the panel existed is in that state; a document
+that publishes one is checked against every requirement below.
 
 1. **The panel is part of the PUBLISHED DOCUMENT**, not only a score card. A
    consumer reading the JSON gets the breach count and the per-boundary state

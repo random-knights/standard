@@ -24,9 +24,21 @@
  *     provenance block, by the rules of methodology section 5.3
  *
  * It implements checks 1 to 8 of E+ methodology section 7.2, plus the
- * `meta.eplusVersion` requirement of section 7.1 item 1a, which is reported as
- * a WARNING by default and as a finding under `{ strict: true }`. See the
+ * `meta.eplusVersion` requirement of section 7.1 item 1a and check 9, the
+ * section 6 BREACH PANEL. Both of those are reported as a WARNING when the
+ * document omits them entirely, and as findings under `{ strict: true }`; a
+ * panel that IS published is checked as a finding in every mode. See the
  * README beside this file for why.
+ *
+ * Check 9 is the one that makes the panel worth publishing. Section 6 requires
+ * that an entry's state be computed from the published control VALUE against
+ * the published THRESHOLD and never from a domain's normalized health, so this
+ * recomputes the state and the transgressed flag from the value and the
+ * threshold in the document. A producer that read a domain's health instead
+ * passes every other check here and fails this one: that is consensus finding
+ * C5 (ocean acidification publishing health 94.5 while its own control value
+ * 2.7 is past every published version of its boundary) turned into arithmetic
+ * a third party can run.
  *
  * WHY IT EXISTS. Four independent audits (2026-09-10, consensus finding C2)
  * showed the published headline could not be derived from the published
@@ -97,6 +109,15 @@ export interface ConformanceResult {
     isLiveRecomputed: boolean | null;
     /** The not-live weight-carrying domains, recomputed from the document. */
     notLiveDomainsRecomputed: string[];
+    /**
+     * Section 6, the breach panel. `null` when the document publishes no
+     * `boundaries` block at all, which is reported as a warning rather than a
+     * finding: see check 9.
+     */
+    boundaryPanelSize: number | null;
+    breachCountPublished: number | null;
+    /** The count of panel entries with `transgressed: true`, recomputed here. */
+    breachCountRecomputed: number | null;
     findings: ConformanceFinding[];
     warnings: ConformanceWarning[];
 }

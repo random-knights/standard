@@ -24,9 +24,21 @@
  *     provenance block, by the rules of methodology section 5.3
  *
  * It implements checks 1 to 8 of E+ methodology section 7.2, plus the
- * `meta.eplusVersion` requirement of section 7.1 item 1a, which is reported as
- * a WARNING by default and as a finding under `{ strict: true }`. See the
+ * `meta.eplusVersion` requirement of section 7.1 item 1a and check 9, the
+ * section 6 BREACH PANEL. Both of those are reported as a WARNING when the
+ * document omits them entirely, and as findings under `{ strict: true }`; a
+ * panel that IS published is checked as a finding in every mode. See the
  * README beside this file for why.
+ *
+ * Check 9 is the one that makes the panel worth publishing. Section 6 requires
+ * that an entry's state be computed from the published control VALUE against
+ * the published THRESHOLD and never from a domain's normalized health, so this
+ * recomputes the state and the transgressed flag from the value and the
+ * threshold in the document. A producer that read a domain's health instead
+ * passes every other check here and fails this one: that is consensus finding
+ * C5 (ocean acidification publishing health 94.5 while its own control value
+ * 2.7 is past every published version of its boundary) turned into arithmetic
+ * a third party can run.
  *
  * WHY IT EXISTS. Four independent audits (2026-09-10, consensus finding C2)
  * showed the published headline could not be derived from the published
@@ -101,6 +113,15 @@ export interface ConformanceResult {
   isLiveRecomputed: boolean | null;
   /** The not-live weight-carrying domains, recomputed from the document. */
   notLiveDomainsRecomputed: string[];
+  /**
+   * Section 6, the breach panel. `null` when the document publishes no
+   * `boundaries` block at all, which is reported as a warning rather than a
+   * finding: see check 9.
+   */
+  boundaryPanelSize: number | null;
+  breachCountPublished: number | null;
+  /** The count of panel entries with `transgressed: true`, recomputed here. */
+  breachCountRecomputed: number | null;
   findings: ConformanceFinding[];
   warnings: ConformanceWarning[];
 }
@@ -228,6 +249,132 @@ function readDomainProvenance(
 }
 
 /**
+ * Section 6: the nine planetary boundaries, in the order the methodology lists
+ * them. A conforming panel carries all nine on every refresh, so this list is
+ * the membership test as well as the count. Framework names, not producer
+ * domain ids: the panel is a list of BOUNDARIES, not a list of anyone's
+ * domains.
+ */
+const NINE_BOUNDARY_IDS: readonly string[] = [
+  "climate-change",
+  "biosphere-integrity",
+  "land-system-change",
+  "freshwater-change",
+  "biogeochemical-flows",
+  "ocean-acidification",
+  "atmospheric-aerosol-loading",
+  "stratospheric-ozone-depletion",
+  "novel-entities",
+];
+
+/** The four states of section 6. Nothing else is a state. */
+const SAFE = "Safe operating space";
+const UNCERTAIN = "Zone of uncertainty";
+const BEYOND = "Beyond the boundary";
+const UNKNOWN = "unknown";
+const PANEL_STATES: readonly string[] = [SAFE, UNCERTAIN, BEYOND, UNKNOWN];
+
+/**
+ * Section 6, condition 3: the domains whose indicator is NOT the accepted
+ * control variable of the boundary they have been read against, so no panel
+ * entry may take its value from one of them. `air`, `ocean` and `biodiversity`
+ * are named in the methodology; the four contextual proxies are excluded by
+ * the same rule.
+ */
+const NON_CONTROL_DOMAINS = new Set([
+  "air",
+  "ocean",
+  "biodiversity",
+  "fire",
+  "cryosphere",
+  "conservation",
+  "human",
+]);
+
+/** The two provenance rungs that do not force `provisional` (section 6). */
+const NON_PROVISIONAL_RUNGS = new Set(["measured", "vendor-published"]);
+
+interface PanelEntry {
+  index: number;
+  id: string | null;
+  state: string | null;
+  transgressed: boolean | null;
+  hasTransgressedKey: boolean;
+  controlVariableCitation: string | null;
+  thresholdBoundary: number | null;
+  thresholdHighRisk: number | null;
+  thresholdDirection: string | null;
+  thresholdCitation: string | null;
+  hasValue: boolean;
+  controlValue: number | null;
+  valueDomainId: string | null;
+  valueProvenance: string | null;
+  provisional: boolean | null;
+  evaluationNote: string | null;
+}
+
+function readPanel(raw: unknown): PanelEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((e, index) => {
+    const o = (e ?? {}) as Record<string, unknown>;
+    const threshold = (o.threshold ?? {}) as Record<string, unknown>;
+    const valueRaw = o.value;
+    const hasValue =
+      valueRaw !== null && valueRaw !== undefined && typeof valueRaw === "object";
+    const value = (hasValue ? valueRaw : {}) as Record<string, unknown>;
+    return {
+      index,
+      id: str(o.id),
+      state: str(o.state),
+      transgressed: bool(o.transgressed),
+      hasTransgressedKey:
+        o.transgressed !== null && o.transgressed !== undefined,
+      controlVariableCitation: str(o.controlVariableCitation),
+      thresholdBoundary: num(threshold.boundary),
+      thresholdHighRisk: num(threshold.highRisk),
+      thresholdDirection: str(threshold.direction),
+      thresholdCitation: str(threshold.citation),
+      hasValue,
+      controlValue: hasValue ? num(value.controlValue) : null,
+      valueDomainId: hasValue ? str(value.domainId) : null,
+      valueProvenance: hasValue ? str(value.provenance) : null,
+      provisional: hasValue ? bool(value.provisional) : null,
+      evaluationNote: str(o.evaluationNote),
+    };
+  });
+}
+
+/**
+ * Section 6: the state a conforming panel entry must publish, computed from
+ * the control VALUE against the published THRESHOLD and from nothing else.
+ *
+ * `benefit` means higher is safer (aragonite saturation, forest remaining), so
+ * the high-risk line sits BELOW the boundary. `burden` means higher is riskier
+ * (CO2 ppm, phosphorus applied), so it sits above. Being exactly ON the
+ * boundary value is not past it.
+ *
+ * A threshold with no high-risk line cannot place a value BEYOND one, so a
+ * transgression there reads as the zone of uncertainty. That is the
+ * conservative reading and it keeps a sourced absence from becoming an
+ * invented severity.
+ */
+function stateFromValue(
+  value: number,
+  boundary: number,
+  highRisk: number | null,
+  direction: string | null,
+): { state: string; transgressed: boolean } | null {
+  if (direction !== "benefit" && direction !== "burden") return null;
+  const past =
+    direction === "benefit" ? value < boundary : value > boundary;
+  if (!past) return { state: SAFE, transgressed: false };
+  if (highRisk === null) return { state: UNCERTAIN, transgressed: true };
+  const beyond =
+    direction === "benefit" ? value < highRisk : value > highRisk;
+  return { state: beyond ? BEYOND : UNCERTAIN, transgressed: true };
+}
+
+/**
  * Recompute every published number and every liveness claim in [raw] from
  * [raw] alone.
  *
@@ -317,6 +464,9 @@ export function verifyPublishedScoreDoc(
       isLivePublished: bool(meta.isLive),
       isLiveRecomputed: null,
       notLiveDomainsRecomputed: [],
+      boundaryPanelSize: null,
+      breachCountPublished: null,
+      breachCountRecomputed: null,
       findings,
       warnings,
     };
@@ -748,6 +898,322 @@ export function verifyPublishedScoreDoc(
     for (const s of globalSubScores) checkSub("global.subScores", s);
   }
 
+  // -- check 9: the breach panel (section 6) ---------------------------------
+  // The panel is normative, and no reference document published it before this
+  // check existed, so its ABSENCE is a warning (like section 7.1 item 1a) and
+  // everything about a panel that IS published is a finding. A document cannot
+  // publish a panel and then be graded leniently on it.
+  //
+  // The headline is not checked against the panel here, and deliberately: check
+  // 4 already recomputes `global.score` as the exposure-weighted mean of the
+  // published regions, so a `breachCount` that had leaked into the headline
+  // would fail check 4. That is what "enters no average" means in a document.
+  const boundariesRaw = (doc.boundaries ?? null) as Record<
+    string,
+    unknown
+  > | null;
+  let boundaryPanelSize: number | null = null;
+  let breachCountPublished: number | null = null;
+  let breachCountRecomputed: number | null = null;
+  if (boundariesRaw === null) {
+    warn(
+      "boundaries",
+      null,
+      "an earth.boundaries.v1 panel",
+      "the document publishes no breach panel (section 6). The headline is a " +
+        "compensatory mean, so without the panel a transgressed boundary can " +
+        "be offset by domains that are not transgressed and the document says " +
+        "nothing about it. This is a warning by default and a finding under " +
+        "strict mode.",
+    );
+  } else {
+    const panel = readPanel(boundariesRaw.panel);
+    boundaryPanelSize = panel.length;
+    breachCountPublished = num(boundariesRaw.breachCount);
+
+    // 9a: all nine boundaries, every refresh. Condition 4: a missing boundary
+    // and a safe boundary must not look alike, so absence is the failure.
+    const published = new Set(
+      panel.map((e) => e.id).filter((id): id is string => id !== null),
+    );
+    const missing = NINE_BOUNDARY_IDS.filter((id) => !published.has(id));
+    if (panel.length !== NINE_BOUNDARY_IDS.length || missing.length > 0) {
+      fail(
+        "boundaries.panel",
+        panel.length,
+        NINE_BOUNDARY_IDS.length,
+        missing.length === 0
+          ? "the panel does not carry exactly the nine planetary boundaries " +
+              "(section 6, derived requirement 1)"
+          : "the panel omits " +
+              missing.join(", ") +
+              ". A boundary that cannot be evaluated is published with state " +
+              "unknown, never omitted (section 6, condition 4)",
+      );
+    }
+    checked += 1;
+
+    let recomputedBreaches = 0;
+    let recomputedUnknown = 0;
+    const recomputedBreachedIds: string[] = [];
+    for (const e of panel) {
+      const where = `boundaries.panel[${e.index}]${
+        e.id === null ? "" : "." + e.id
+      }`;
+      if (e.id === null) {
+        fail(where, null, null, "panel entry has no id (section 6)");
+        continue;
+      }
+
+      // 9b: every entry cites its control variable, and any entry carrying a
+      // numeric boundary cites that too (section 6, condition 2).
+      if (e.controlVariableCitation === null || e.controlVariableCitation === "") {
+        fail(
+          `${where}.controlVariableCitation`,
+          "(absent)",
+          "a citation",
+          "no boundary appears in the panel without a citation for its " +
+            "control variable (section 6, condition 2)",
+        );
+      }
+      if (
+        e.thresholdBoundary !== null &&
+        (e.thresholdCitation === null || e.thresholdCitation === "")
+      ) {
+        fail(
+          `${where}.threshold.citation`,
+          "(absent)",
+          "a citation",
+          "an entry publishing a numeric threshold cites the source for it " +
+            "(section 6, condition 2)",
+        );
+      }
+      checked += 1;
+
+      // 9c: the state vocabulary is closed.
+      if (e.state === null || !PANEL_STATES.includes(e.state)) {
+        fail(
+          `${where}.state`,
+          e.state,
+          PANEL_STATES.join(" | "),
+          "state is not one of the four states of section 6",
+        );
+      }
+
+      // 9d: unknown if and only if the value and transgressed are both absent.
+      const valueAbsent = !e.hasValue || e.controlValue === null;
+      const transgressedAbsent = !e.hasTransgressedKey || e.transgressed === null;
+      const unknownByData = valueAbsent && transgressedAbsent;
+      if ((e.state === UNKNOWN) !== unknownByData) {
+        fail(
+          `${where}.state`,
+          e.state,
+          unknownByData ? UNKNOWN : "a computed state",
+          "state is unknown if and only if the value and transgressed are " +
+            "both absent (section 6, derived requirement 4). This entry says " +
+            (e.state === UNKNOWN
+              ? "unknown while publishing a value or a transgressed flag"
+              : "it evaluated the boundary while publishing neither"),
+        );
+      }
+      if (e.state === UNKNOWN) {
+        recomputedUnknown += 1;
+        if (e.evaluationNote === null || e.evaluationNote === "") {
+          fail(
+            `${where}.evaluationNote`,
+            "(absent)",
+            "a reason",
+            "an unknown entry says why it could not be evaluated, so that an " +
+              "unknown boundary is not read as a safe one (section 6, " +
+              "condition 4)",
+          );
+        }
+        continue;
+      }
+
+      // 9e: no entry takes its value from a domain whose indicator is not the
+      // accepted control variable (section 6, condition 3).
+      if (e.valueDomainId !== null && NON_CONTROL_DOMAINS.has(e.valueDomainId)) {
+        fail(
+          `${where}.value.domainId`,
+          e.valueDomainId,
+          "a domain whose indicator IS this boundary's control variable",
+          "only a domain whose indicator is the accepted control variable may " +
+            "evaluate a boundary; proxy domains are excluded and say so " +
+            "(section 6, condition 3)",
+        );
+      }
+
+      // 9f: THE ONE THAT MATTERS. State is recomputed from the published
+      // control value against the published threshold. A producer that derived
+      // the state from a domain's normalized health passes every other check
+      // here and fails this one, which is consensus finding C5 as arithmetic.
+      if (e.controlValue !== null && e.thresholdBoundary !== null) {
+        const expect = stateFromValue(
+          e.controlValue,
+          e.thresholdBoundary,
+          e.thresholdHighRisk,
+          e.thresholdDirection,
+        );
+        if (expect === null) {
+          fail(
+            `${where}.threshold.direction`,
+            e.thresholdDirection,
+            "benefit | burden",
+            "the threshold does not say which side of the boundary is safer, " +
+              "so the state cannot be recomputed from the value",
+          );
+        } else {
+          checked += 2;
+          if (e.state !== expect.state) {
+            fail(
+              `${where}.state`,
+              e.state,
+              expect.state,
+              "state is computed from the published control VALUE against the " +
+                "published THRESHOLD, never from a domain's normalized health " +
+                "(section 6, derived requirement 2)",
+            );
+          }
+          if (e.transgressed !== expect.transgressed) {
+            fail(
+              `${where}.transgressed`,
+              e.transgressed,
+              expect.transgressed,
+              "transgressed does not follow from the published value and " +
+                "threshold (section 6, derived requirement 2)",
+            );
+          }
+        }
+      }
+
+      // 9g: a provisional input still produces a state, and says it is one
+      // (section 6, the provenance and provisional requirement).
+      if (e.hasValue && e.controlValue !== null) {
+        if (e.valueProvenance === null || e.valueProvenance === "") {
+          fail(
+            `${where}.value.provenance`,
+            "(absent)",
+            "a provenance rung",
+            "an evaluated entry carries the provenance of the input it was " +
+              "evaluated from (section 6)",
+          );
+        } else if (!NON_PROVISIONAL_RUNGS.has(e.valueProvenance)) {
+          if (e.provisional !== true) {
+            fail(
+              `${where}.value.provisional`,
+              e.provisional,
+              true,
+              "an entry evaluated from a " +
+                e.valueProvenance +
+                " input is marked provisional (section 6). It still produces " +
+                "a state; forcing it to unknown would empty the panel",
+            );
+          }
+        }
+      }
+
+      if (e.transgressed === true) {
+        recomputedBreaches += 1;
+        recomputedBreachedIds.push(e.id);
+      }
+    }
+    breachCountRecomputed = recomputedBreaches;
+
+    // 9h: the counts. breachCount is the count of transgressed entries and
+    // nothing else, and the denominator is published beside it so the number
+    // cannot read as a claim about the whole framework.
+    if (breachCountPublished === null) {
+      fail(
+        "boundaries.breachCount",
+        null,
+        recomputedBreaches,
+        "the panel publishes no breachCount (section 6)",
+      );
+    } else {
+      checked += 1;
+      if (!same(breachCountPublished, recomputedBreaches)) {
+        // The framework's own count is context published in its own object and
+        // is never our measurement, so a breachCount that IS that number gets
+        // the specific message rather than the general one.
+        const framework = (boundariesRaw.framework ?? null) as Record<
+          string,
+          unknown
+        > | null;
+        const reportedBreached =
+          framework === null ? null : num(framework.reportedBreached);
+        const tookTheFrameworkCount =
+          reportedBreached !== null &&
+          same(breachCountPublished, reportedBreached);
+        fail(
+          "boundaries.breachCount",
+          breachCountPublished,
+          recomputedBreaches,
+          tookTheFrameworkCount
+            ? "breachCount equals the framework's own reported count rather " +
+                "than the count of this document's transgressed entries. The " +
+                "framework count is context published in its own object and " +
+                "is never summed into ours (section 6)"
+            : "breachCount is the count of panel entries with transgressed " +
+                "true, and nothing else is ever added to it: not a weighted " +
+                "sum, not a mean, and not the framework's own count of " +
+                "transgressed boundaries worldwide (section 6, derived " +
+                "requirement 3)",
+        );
+      }
+    }
+    const unknownCount = num(boundariesRaw.unknownCount);
+    const evaluatedCount = num(boundariesRaw.evaluatedCount);
+    const totalBoundaries = num(boundariesRaw.totalBoundaries);
+    if (unknownCount !== null && !same(unknownCount, recomputedUnknown)) {
+      fail(
+        "boundaries.unknownCount",
+        unknownCount,
+        recomputedUnknown,
+        "unknownCount is the count of entries with state unknown",
+      );
+    }
+    if (
+      evaluatedCount !== null &&
+      !same(evaluatedCount, panel.length - recomputedUnknown)
+    ) {
+      fail(
+        "boundaries.evaluatedCount",
+        evaluatedCount,
+        panel.length - recomputedUnknown,
+        "evaluatedCount is the count of entries that are not unknown, which " +
+          "is the honest denominator of breachCount",
+      );
+    }
+    if (
+      totalBoundaries !== null &&
+      evaluatedCount !== null &&
+      unknownCount !== null &&
+      !same(evaluatedCount + unknownCount, totalBoundaries)
+    ) {
+      fail(
+        "boundaries.totalBoundaries",
+        totalBoundaries,
+        evaluatedCount + unknownCount,
+        "evaluatedCount plus unknownCount equals totalBoundaries, or a " +
+          "boundary has gone missing from the panel (section 6, condition 4)",
+      );
+    }
+    const breachedIds = strList(boundariesRaw.breachedIds);
+    if (breachedIds !== null) {
+      const a = [...breachedIds].sort().join(",");
+      const b = [...recomputedBreachedIds].sort().join(",");
+      if (a !== b) {
+        fail(
+          "boundaries.breachedIds",
+          a === "" ? "(empty)" : a,
+          b === "" ? "(empty)" : b,
+          "breachedIds is not the set of entries with transgressed true",
+        );
+      }
+    }
+  }
+
   const ring = (meta.globalRingDiagnostic ?? null) as Record<
     string,
     unknown
@@ -768,6 +1234,9 @@ export function verifyPublishedScoreDoc(
     isLivePublished,
     isLiveRecomputed,
     notLiveDomainsRecomputed,
+    boundaryPanelSize,
+    breachCountPublished,
+    breachCountRecomputed,
     findings,
     warnings,
   };
@@ -811,6 +1280,13 @@ export function formatConformanceReport(result: ConformanceResult): string {
       (result.notLiveDomainsRecomputed.length === 0
         ? ""
         : ` (not live: ${result.notLiveDomainsRecomputed.join(", ")})`),
+  );
+  lines.push(
+    result.boundaryPanelSize === null
+      ? "breach panel not published (section 6)"
+      : `breach panel ${result.boundaryPanelSize} entries, breaches published ` +
+          `${shown(result.breachCountPublished)}, recomputed ` +
+          `${shown(result.breachCountRecomputed)}`,
   );
   lines.push(`${result.checked} published value(s) recomputed`);
   for (const f of result.findings) {
