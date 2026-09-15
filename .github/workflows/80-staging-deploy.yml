@@ -1,0 +1,126 @@
+name: 80-staging-deploy
+
+# Merging to main IS deploying to staging. This builds the exact
+# .firebase/standard-site tree the same way spec/test/site-output.test.mjs
+# proves it, records a sha256 manifest of it, deploys that tree to the
+# staging site in randomknights-abc, and then PROVES the site is serving
+# those exact bytes.
+#
+# Staging deploys into randomknights-abc. Production deploys into
+# randomknights-xyz and stays an owner action by hand, per CONTRIBUTING.md:
+# there is no production release workflow here on purpose.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: standard-staging-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  STAGING_URL: https://abc-standard-rand0m-ai.web.app
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Install spec deps
+        run: cd spec && npm install
+      - name: Build the site
+        run: node scripts/build-site.mjs
+      - name: Gate the built tree (byte-identical to repo sources, nothing missing, no CR bytes)
+        run: cd spec && npm test
+      - name: Create byte manifest
+        run: |
+          cd .firebase/standard-site
+          find . -type f -print0 | sort -z | xargs -0 sha256sum > ../../public.sha256
+          cd ../..
+          sha256sum -c public.sha256
+      - uses: actions/upload-artifact@v5
+        with:
+          name: standard-site
+          path: |
+            .firebase/standard-site/
+            public.sha256
+          retention-days: 30
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - uses: actions/download-artifact@v6
+        with:
+          name: standard-site
+      - name: Verify downloaded artifact
+        run: |
+          cd .firebase/standard-site
+          sha256sum -c ../../public.sha256
+      - name: Deploy exact artifact to staging
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_RANDOMKNIGHTS_ABC }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "FIREBASE_SERVICE_ACCOUNT_RANDOMKNIGHTS_ABC is not available to this repository."
+            exit 1
+          fi
+          echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx -y firebase-tools@14 deploy --only hosting:staging --project randomknights-abc --non-interactive
+      - name: Prove staging bytes
+        env:
+          BASE_URL: ${{ env.STAGING_URL }}
+          DEPLOY_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { createHash } from 'node:crypto';
+          import { readFileSync } from 'node:fs';
+          const manifest = readFileSync('public.sha256', 'utf8').trim().split('\n');
+          const failures = [];
+          for (const line of manifest) {
+            const match = line.match(/^([0-9a-f]{64})\s+\.\/(.+)$/);
+            if (!match) throw new Error(`Invalid manifest line: ${line}`);
+            const [, expected, file] = match;
+            // cleanUrls is on, trailingSlash is off: the one index.html (at the
+            // root) serves at /; every other artifact serves at its own path
+            // verbatim, because build-site.mjs never emits a nested index.html.
+            const path = file === 'index.html' ? '/' : `/${file}`;
+            const url = `${process.env.BASE_URL}${path}?sha=${process.env.DEPLOY_SHA}`;
+            const response = await fetch(url, {
+              headers: { 'accept-encoding': 'identity' },
+              redirect: 'follow',
+            });
+            const bytes = Buffer.from(await response.arrayBuffer());
+            const actual = createHash('sha256').update(bytes).digest('hex');
+            const cacheControl = response.headers.get('cache-control') || '';
+            const contentType = response.headers.get('content-type') || '';
+            const cacheOk = file.endsWith('.schema.json') || /\.(json|md)$/.test(file)
+              ? cacheControl.includes('public') && cacheControl.includes('max-age=3600')
+              : /\.(html|css|js)$/.test(file)
+                ? cacheControl.includes('public') && cacheControl.includes('max-age=600')
+                : true;
+            const contentTypeOk = file.endsWith('.schema.json')
+              ? contentType.includes('application/schema+json')
+              : true;
+            const robotsOk = (response.headers.get('x-robots-tag') || '').includes('noindex');
+            if (response.status !== 200 || actual !== expected || !cacheOk || !contentTypeOk || !robotsOk) {
+              failures.push(`${file}: status=${response.status} expected=${expected} actual=${actual} cache=${cacheControl} content-type=${contentType} robots=${response.headers.get('x-robots-tag')}`);
+            }
+          }
+          if (failures.length) throw new Error(failures.join('\n'));
+          console.log(`staging byte proof passed for ${manifest.length} files`);
+          NODE
