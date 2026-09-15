@@ -105,7 +105,7 @@ jobs:
 
           # repo:readme pairs. .github renders the table on the org profile
           # page, not on its own README.
-          TARGETS="\.github:profile/README.md abc:README.md r1-01:README.md xyz-earth:README.md"
+          TARGETS=".github:profile/README.md abc:README.md r1-01:README.md xyz-earth:README.md"
 
           for entry in $TARGETS; do
             repo="${entry%%:*}"
