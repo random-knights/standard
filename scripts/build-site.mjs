@@ -93,9 +93,23 @@ const K13_DIR = "k13/v1";
 const k13MdPresent = existsSync(join(repoRoot, "K13.md"));
 const k13LevelsPresent = existsSync(join(repoRoot, "canon", "k13-levels.json"));
 
+// K13's version is READ OUT OF K13.md, exactly as E+ reads its own and AiEDs
+// reads the methodology document. It used to be the literal "1.1.0" typed
+// here, and it went stale the moment K13 was ratified at 2.0.0: the published
+// index page announced a superseded major version of a standard whose own
+// canonical text, CITATION.k13.cff, the README template and four repo READMEs
+// all said 2.0.0. Nothing compared the literal to the document, so nothing
+// caught it. A version is a FACT about a document, never a flag beside it.
+const k13VersionMatch = readFileSync(join(repoRoot, "K13.md"), "utf8").match(
+  /\*\*Version:\*\*\s*([\d.]+)/,
+);
+if (!k13VersionMatch) {
+  throw new Error("Could not read the K13 version out of K13.md.");
+}
+
 const K13 = {
   name: "K13",
-  version: "1.1.0",
+  version: k13VersionMatch[1],
   dir: K13_DIR,
   license: "CC BY 4.0",
   licenseHref: "/LICENSE-DOCS",
@@ -433,6 +447,14 @@ export function expectedFiles() {
     ],
     ["LICENSE", readFileSync(join(repoRoot, "LICENSE"))],
     ["LICENSE-DOCS", readFileSync(join(repoRoot, "LICENSE-DOCS"))],
+    // Served at the site ROOT, not under a versioned standard directory, on
+    // purpose: it is the one artifact that answers "what version is each
+    // standard right now" across all three, so it cannot live inside any one
+    // of them. Consumers pin to https://standard.rand0m.ai/versions.json.
+    [
+      "versions.json",
+      readFileSync(join(repoRoot, "spec", "v2", "standard-versions.json")),
+    ],
   ]);
   if (k13MdPresent) {
     files.set(join(K13_DIR, "K13.md"), readFileSync(join(repoRoot, "K13.md")));
