@@ -1,17 +1,21 @@
 <a name="readme-top"></a>
 
-<!-- HEADER -->
+<!-- HEANDER PNG -->
 <div align="center">
-  <img alt="Random Knights standards: K13 and AiEDs" src="assets/readme-header.png?v=20260907">
+  <picture>
+    <img alt="Random Knights < repo name here >" src="assets/standard.png">
+  </picture>
 
-<h3 align="center" style="color:#ff4124">Random Knights Standards</h3>
+<!-- HERO -->
+<h3 align="center" style="color:#ff4124">Random Knights | Standard</h3>
 
   <p align="center">
-    Open standards from Random Knights. K13 is how we write. AiEDs is how
-    we report modeled energy and carbon from AI work. E+ is how we score
-    planetary health, and it is a draft.
+    🏫 <a href="https://rand0m.ai">rand0m.ai</a> 2025-2030 🛸 roswell, ga 🍑 <a href="https://randomknights.xyz">ᴚk.xyz</a> + <a href="https://randomknights.llc">ᴚk.llc</a> + <a href="https://randomknights.org">ᴚk.org</a> 🏰
     <br />
-    <a href="https://randomknights.xyz"><strong>Read them on the docs site &raquo;</strong></a>
+    🌝 <a href="https://randomly.engineering">randomly.engineering</a> & <a href="https://knightly.engineering">knightly.engineering</a> 🌚
+    <br />
+    <br />
+    <a href="https://randomknights.xyz"><strong>Read our docs site &raquo;</strong></a>
     <br />
     <br />
     <a href="https://randomknights.xyz/k13/">K13</a>
@@ -27,25 +31,47 @@
     <a href="https://github.com/random-knights/standard/issues">Request Feature</a>
     <br />
     <br />
-    &#127979; 2025-2030 &#128760; roswell, ga &#127825;
-    <a href="https://randomknights.xyz">&#7450;k.xyz</a> +
-    <a href="https://randomknights.llc">&#7450;k.llc</a> +
-    <a href="https://randomknights.org">&#7450;k.org</a> &#127984;
-    <a href="https://rand0m.ai">rand0m.ai</a>
   </p>
+</div>
+
+<!-- HERO GIF -->
+<p align="center">
+  <img alt="Random Knights < repo name here >" src="assets/standard.gif">
+</p>
+
+<!-- TITLE -->
+
+## <span style="color:#FAAFA5"><u> **STANDARD** </u></span>
+
+Open standard from Random Knights. K13 is how we write. AiEDs is how
+we report modeled energy and carbon from AI work. E+ is how we score
+planetary health, and it is a draft.
+
+- Built with:
+  - Maximum Effort
+  - Rand0m AI Standard : E+ w/ AiEDs & K13
+  - Randomly & Knightly . Engineering
+  - < add tools here >
+
+<div align="center">
+
+[![ForScience][ForScience]][ForScience-url] [![ForDevs][ForDevs]][ForDevs-url] [![ForQAs][ForQAs]][ForQAs-url]
+
 </div>
 
 K13 and AiEDs are published and free to read. Both are CC BY 4.0, so you can
 adopt either without asking. E+ is a DRAFT: its text is here so it can be read
 and checked, and it is not ratified. All three live in this repository.
 
-| Standard | Version | License | Canonical text | Read it |
-|---|---|---|---|---|
-| **AiEDs - AI Energy Disclosure Standard** | methodology 2.1.0 | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai) |
-| **K13 - AI Response Standard** | 2.0.0 | CC BY 4.0 prose, Apache 2.0 reference templates | [K13.md](K13.md) with `templates/` | [randomknights.xyz/k13](https://randomknights.xyz/k13/) |
-| **E+ - Earth Health Score Methodology** | 1.0.0 DRAFT, not ratified | CC BY 4.0 prose | [eplus/v1/methodology.md](eplus/v1/methodology.md) | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md) once deployed |
+| Standard                                  | Version                   | License                                              | Canonical text                                                          | Read it                                                                                                        |
+| ----------------------------------------- | ------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **AiEDs - AI Energy Disclosure Standard** | methodology 2.1.0         | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai)                                                               |
+| **K13 - AI Response Standard**            | 2.0.0                     | CC BY 4.0 prose, Apache 2.0 reference templates      | [K13.md](K13.md) with `templates/`                                      | [randomknights.xyz/k13](https://randomknights.xyz/k13/)                                                        |
+| **E+ - Earth Health Score Methodology**   | 1.0.0 DRAFT, not ratified | CC BY 4.0 prose                                      | [eplus/v1/methodology.md](eplus/v1/methodology.md)                      | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md) once deployed |
 
-## E+ - Earth Health Score Methodology (draft)
+<!-- E+ -->
+
+## <span style="color:#ff4124"><u>**E+**</u></span> Earth Health Score Methodology (draft)
 
 A 0 to 100 planetary health index from nine environmental domains. The draft
 specifies the weights and normalizers the reference implementation computes,
@@ -57,7 +83,9 @@ It invents nothing: every constant traces to a ratified ADR, the producer
 source, the four independent audits of 2026-09-10, or a recorded owner
 decision, and the undecided items are listed as open questions.
 
-## K13 - AI Response Standard
+<!-- K13 -->
+
+## <span style="color:#ff4124"><u>**K13**</u></span> AI Response Standard
 
 Thirteen steps, run in order, every time. Every time does not mean every step
 takes real work: on short replies the steps collapse to a second each and the
@@ -68,14 +96,14 @@ Steps 9 to 12 are one ladder. A reader picks a level and the answer is
 the same facts and the same figures. If two levels disagree on a number, the
 answer is wrong.
 
-| Level | Grades | Step |
-|---|---|---|
-| &#129475; juice box | K-5 | 9 |
-| &#129380; soda pop | 6-8 | 10 |
-| &#129483; energy drink | 9-12 | 11, default |
-| &#9749; black coffee | College | 12 |
-| &#129750; loose leaf | Masters | 12.1 |
-| &#129481; yerba mate | Doctorate | 12.2 |
+| Level                  | Grades    | Step        |
+| ---------------------- | --------- | ----------- |
+| &#129475; juice box    | K-5       | 9           |
+| &#129380; soda pop     | 6-8       | 10          |
+| &#129483; energy drink | 9-12      | 11, default |
+| &#9749; black coffee   | College   | 12          |
+| &#129750; loose leaf   | Masters   | 12.1        |
+| &#129481; yerba mate   | Doctorate | 12.2        |
 
 All six levels are NORMATIVE as of 2.0.0. Loose leaf and yerba mate were
 reserved names in 1.1.0 and are required now, which is why 2.0.0 is a breaking
@@ -122,12 +150,15 @@ The interactive version, including the loose leaf and yerba mate levels, is at
 [Get started](https://randomknights.xyz/k13/get-started/) covers adopting it
 in your own pipeline.
 
-## AiEDs - AI Energy Disclosure Standard
+<!-- AiEDs -->
+
+## <span style="color:#ff4124"><u>**AiEDs**</u></span> AI Energy Disclosure Standard
 
 An open schema and toolset for self-attested energy and carbon footprint
 disclosures for AI models, agents, and apps.
 
 AiEDs surfaces:
+
 - **`/spec`** - the JSON Schema (`aieds.schema.json`) + methodology (`methodology.md`) + conformance examples.
 - **`/lib`** - the reference library (TypeScript/Node): **tokens + model in; energy-first disclosure out** (energy modeled from per-model coefficients, carbon derived from energy), byte-mirroring the rand0m.ai app so app and standard agree to the number.
 - **`/mcp`** - a keyless MCP server (TypeScript/Node) exposing three tools: `aieds_estimate`, `aieds_factors`, `aieds_disclose`.
@@ -161,8 +192,10 @@ carbon in):
 import { disclosureFromResponse } from "@random-knights/aieds-reference";
 
 const d = disclosureFromResponse({
-  provider: "GoogleAI", model: "gemini-2.0-flash",
-  inputTokens: 412, outputTokens: 890,
+  provider: "GoogleAI",
+  model: "gemini-2.0-flash",
+  inputTokens: 412,
+  outputTokens: 890,
   costUsd: 0.0031,
 });
 // Real output (run examples/request-to-disclosure.mjs to reproduce):
@@ -206,7 +239,9 @@ import { readFileSync } from "node:fs";
 
 const ajv = new Ajv2020({ strict: false });
 addFormats(ajv);
-const validate = ajv.compile(JSON.parse(readFileSync("spec/aieds.schema.json", "utf-8")));
+const validate = ajv.compile(
+  JSON.parse(readFileSync("spec/aieds.schema.json", "utf-8")),
+);
 
 if (!validate(myRecord)) console.error(validate.errors);
 ```
@@ -243,7 +278,7 @@ cd mcp && npm install && npm run build && npm test
 node mcp/dist/index.js
 ```
 
-## What AiEDs is
+### What AiEDs is
 
 Energy and carbon transparency for AI is fragmented: model cards use ad-hoc fields, EU AI Act compliance requires documented energy figures, and agent frameworks have no standard way to surface per-session footprint.
 
@@ -253,25 +288,27 @@ AiEDs provides:
 2. **A methodology** (`methodology.md`) with versioned factor tables (hardware TDP, grid intensity, token proxies) and a governance rule: no silent drift (owner-ratified changes, CHANGELOG).
 3. **An MCP server** that any agent can wire in to get `aieds_estimate` / `aieds_factors` / `aieds_disclose` over stdio - keyless, deterministic, zero network calls.
 
-## Why 2.0.0 (energy-first) beats 1.x
+### Why 2.0.0 (energy-first) beats 1.x
 
 1.x used a single flat constant - **0.30 gCO2e per 1k tokens for every model** - and derived energy backward from carbon. That is what 2.0.0 abolishes. The response-surface path (methodology 2.4, implemented in `/lib`) replaces it with:
 
-- **Per-model energy coefficients, not one constant.** Each model class has its own `whPer1kIn` / `whPer1kOut` (output tokens cost ~4x input: decode is sequential, prefill is parallel). Gemini `0.12 / 0.48`, GPT/o* `0.17 / 0.68`, Claude `0.145 / 0.58` Wh per 1k tokens, plus a per-provider PUE.
+- **Per-model energy coefficients, not one constant.** Each model class has its own `whPer1kIn` / `whPer1kOut` (output tokens cost ~4x input: decode is sequential, prefill is parallel). Gemini `0.12 / 0.48`, GPT/o\* `0.17 / 0.68`, Claude `0.145 / 0.58` Wh per 1k tokens, plus a per-provider PUE.
 - **Confidence tiers on every coefficient**, surfaced in the disclosure, never hidden:
 
-  | tier | meaning |
-  | --- | --- |
-  | `measured` | we benchmarked it |
+  | tier               | meaning                                                          |
+  | ------------------ | ---------------------------------------------------------------- |
+  | `measured`         | we benchmarked it                                                |
   | `vendor-published` | the provider published a figure (cited; split assumptions noted) |
-  | `class-estimated` | inferred from model class; no provider figure exists |
-  | `unknown` | nothing sourceable; frontier-class fallback, labeled `unknown` |
+  | `class-estimated`  | inferred from model class; no provider figure exists             |
+  | `unknown`          | nothing sourceable; frontier-class fallback, labeled `unknown`   |
 
 - **A sourced citation per coefficient** (the honesty contract: a number without provenance does not belong in the table). Gemini cites Google Aug 2025 (arXiv:2508.15734); GPT cites the OpenAI Jun 2025 blog figure; Claude states plainly it is a class estimate (no Anthropic figure as of 2026-01); an unlisted model returns the frontier-class fallback labeled `unknown` rather than a confident guess.
 
 Concretely: the same 412-in / 890-out exchange that 1.x would have blurred into one flat number now discloses `0.47664 Wh` energy-first with a `vendor-published` tier and a citation for Gemini, versus `0.691128 Wh` labeled `unknown` for a model not in the table - the reader can see both the number and how much to trust it.
 
-## Architecture (ADR 0010)
+<!-- ARCHITECTURE -->
+
+## <span style="color:#555555"><u>**ARCHITECTURE**</u></span> (ADR 0010)
 
 AiEDs is specified in an owner-ratified architecture decision record. The key design choices:
 
@@ -280,24 +317,29 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 - **Agent-native** - the MCP tool interface means an agent can disclose its own session footprint inline, not as a post-hoc batch job.
 - **Keyless** - the schema and MCP server require no API keys, no auth, no secrets.
 
-## Surfaces
+<!-- SURFACES -->
 
-| Surface | Path | License | Description |
-|---------|------|---------|-------------|
-| Schema | `spec/aieds.schema.json` | Apache 2.0 | JSON Schema 2020-12 for one disclosure |
-| Methodology | `spec/methodology.md` | CC BY 4.0 | 2.1.0: energy-first path + per-model coefficients + factor tables + the provenance ladder |
-| Coefficient tables | `spec/v2/aieds-factors.json` | CC BY 4.0 | The published factor data every surface reads |
-| Measurements | `spec/measurements/` | CC BY 4.0 | Measurement harnesses, method documents and raw power samples. EVIDENCE, not coefficients: nothing here is in a factor table unless a factor table cites it. |
-| Examples | `spec/examples/` | CC BY 4.0 | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script |
-| Reference library | `lib/` | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested) |
-| MCP server | `mcp/` | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose |
-| K13 | `K13.md` | CC BY 4.0 | K13 - AI Response Standard, 2.0.0. The canonical text. |
-| K13 report templates | `templates/` | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement. |
-| E+ | `eplus/v1/methodology.md` | CC BY 4.0 | E+ - Earth Health Score Methodology, 1.0.0 DRAFT. The canonical text, including the public implementation changelog. |
+## <span style="color:#555555"><u> **SURFACES** </u></span>
 
-## Roadmap
+| Surface              | Path                         | License    | Description                                                                                                                                                  |
+| -------------------- | ---------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Schema               | `spec/aieds.schema.json`     | Apache 2.0 | JSON Schema 2020-12 for one disclosure                                                                                                                       |
+| Methodology          | `spec/methodology.md`        | CC BY 4.0  | 2.1.0: energy-first path + per-model coefficients + factor tables + the provenance ladder                                                                    |
+| Coefficient tables   | `spec/v2/aieds-factors.json` | CC BY 4.0  | The published factor data every surface reads                                                                                                                |
+| Measurements         | `spec/measurements/`         | CC BY 4.0  | Measurement harnesses, method documents and raw power samples. EVIDENCE, not coefficients: nothing here is in a factor table unless a factor table cites it. |
+| Examples             | `spec/examples/`             | CC BY 4.0  | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script                                                               |
+| Reference library    | `lib/`                       | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested)                                       |
+| MCP server           | `mcp/`                       | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose                                                                                                           |
+| K13                  | `K13.md`                     | CC BY 4.0  | K13 - AI Response Standard, 2.0.0. The canonical text.                                                                                                       |
+| K13 report templates | `templates/`                 | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement.                                                 |
+| E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth Health Score Methodology, 1.0.0 DRAFT. The canonical text, including the public implementation changelog.                                         |
+
+<!-- ROADMAP -->
+
+## <span style="color:#555555"><u> **ROADMAP** </u></span>
 
 ### Shipped (this repo)
+
 - [x] `aieds.schema.json` (JSON Schema draft 2020-12)
 - [x] `methodology.md` 2.1.0 (energy-first; per-model coefficients + the provenance ladder + citations) with factor tables + governance
 - [x] 7 conformance examples (4 valid, 3 superseded-1.x rejection cases) + validate script
@@ -306,19 +348,24 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 - [x] CI: schema validation + build + unit tests
 
 ### Deferred
+
 - [ ] Read API / SDK for ingesting disclosures from external producers
 - [ ] `.well-known/aieds.json` auto-discovery endpoint
 - [ ] npm publish `@random-knights/aieds-mcp`
 - [ ] Scope 3 embodied carbon (hardware manufacture)
 - [ ] Real-time grid intensity (carbon-aware scheduling)
 
-## Operating this repo
+<!-- OPERATING -->
+
+## <span style="color:#555555"><u> **OPERATING** </u></span>
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) - contributors and agents: what belongs
   where, versioning and governance, the keyless rule, and how to deploy the
   site.
 
-## Cite
+<!-- CITATION -->
+
+## <span style="color:#555555"><u> **CITATION** </u></span>
 
 Cite the version you implemented or adopted. AiEDs versions are not
 interchangeable: 1.x derived energy backward from carbon and 2.0.0 models
@@ -345,7 +392,9 @@ is the file GitHub reads to offer APA and BibTeX exports from the sidebar;
 [CITATION.k13.cff](CITATION.k13.cff) describes K13 in the same format;
 [CITATION.eplus.cff](CITATION.eplus.cff) describes the E+ draft.
 
-## License
+<!-- LICENSE -->
+
+## <span style="color:#555555"><u> **LICENSE** </u></span>
 
 Two licenses, split by what a path IS, not by which directory it sits in.
 Code and the schema (so implementers can vendor them without attribution
@@ -353,17 +402,17 @@ friction) are Apache 2.0. Text and data that document or parameterize the
 standard (so attribution survives forks and citation stays intact) are
 CC BY 4.0.
 
-| Path | License |
-|------|---------|
-| `lib/` | [Apache 2.0](LICENSE) |
-| `mcp/` | [Apache 2.0](LICENSE) |
-| `spec/aieds.schema.json` | [Apache 2.0](LICENSE) |
-| `spec/methodology.md` | [CC BY 4.0](LICENSE-DOCS) |
-| `spec/examples/` | [CC BY 4.0](LICENSE-DOCS) |
+| Path                         | License                   |
+| ---------------------------- | ------------------------- |
+| `lib/`                       | [Apache 2.0](LICENSE)     |
+| `mcp/`                       | [Apache 2.0](LICENSE)     |
+| `spec/aieds.schema.json`     | [Apache 2.0](LICENSE)     |
+| `spec/methodology.md`        | [CC BY 4.0](LICENSE-DOCS) |
+| `spec/examples/`             | [CC BY 4.0](LICENSE-DOCS) |
 | `spec/v2/aieds-factors.json` | [CC BY 4.0](LICENSE-DOCS) |
-| `K13.md` | [CC BY 4.0](LICENSE-DOCS) |
-| `templates/` | [Apache 2.0](LICENSE) |
-| `eplus/v1/methodology.md` | [CC BY 4.0](LICENSE-DOCS) |
+| `K13.md`                     | [CC BY 4.0](LICENSE-DOCS) |
+| `templates/`                 | [Apache 2.0](LICENSE)     |
+| `eplus/v1/methodology.md`    | [CC BY 4.0](LICENSE-DOCS) |
 
 The K13 report templates are the clearest case of that split. `templates/` is a
 reference implementation, so it is Apache 2.0 and forkable without attribution
@@ -372,3 +421,270 @@ K13.md under "The report template", is specification text and stays CC BY 4.0.
 Fork the markup freely; cite the standard.
 
 See [LICENSE](LICENSE) and [LICENSE-DOCS](LICENSE-DOCS) for full terms.
+
+<!----------- BADGES ----------->
+
+<!-- TECHNOLOGY -->
+
+## <span style="color:#555555"><u> **TECHNOLOGY** </u></span>
+
+<!-- ### **Workspace**
+
+[![Windows][Windows]][Windows-url]
+[![Nvidia][Nvidia]][Nvidia-url]
+[![Ryzen][Ryzen]][Ryzen-url] -->
+
+### **CLI**
+
+[![GitBash][GitBash]][GitBash-url]
+[![Herdr][Herdr]][Herdr-url]
+[![Powershell][Powershell]][Powershell-url]
+
+### **IDE**
+
+[![VSCode][VSCode]][VSCode-url]
+
+### **Source Control**
+
+[![GitHub][GitHub]][GitHub-url]
+[![Git][Git]][Git-url]
+
+### **Database**
+
+[![HiveDB][HiveDB]][HiveDB-url]
+[![MongoDB][MongoDB]][MongoDB-url]
+[![PostgreSQL][PostgreSQL]][PostgreSQL-url]
+
+### **Tools**
+
+[![AdobeAudition][AdobeAudition]][AdobeAudition-url]
+[![AdobePodcast][AdobePodcast]][AdobePodcast-url]
+[![TeenageEngineeringMic][TeenageEngineeringMic]][TeenageEngineeringMic-url]
+[![NothingHeadphones][NothingHeadphones]][NothingHeadphones-url]
+[![RaspberryPi][RaspberryPi]][RaspberryPi-url]
+
+### **Development**
+
+[![Node.js][Node.js]][Node-url]
+[![Python][Python]][Python-url]
+[![JavaScript][JavaScript]][JavaScript-url]
+[![TypeScript][TypeScript]][TypeScript-url]
+[![Flutter][Flutter]][Flutter-url]
+[![Dart][Dart]][Dart-url]
+
+### **Testing**
+
+[![Chai.js][Chai.js]][Chai-url]
+[![Cucumber][Cucumber]][Cucumber-url]
+[![Cypress.js][Cypress.js]][Cypress-url]
+[![Jest][Jest]][Jest-url]
+[![Lighthouse][Lighthouse]][Lighthouse-url]
+[![Mocha.js][Mocha.js]][Mocha-url]
+[![Swagger.js][Swagger.js]][Swagger-url]
+[![TestLibrary][TestLibrary]][TestLibrary-url]
+
+### **AI**
+
+[![OpenAI][OpenAI]][OpenAI-url]
+[![Gemini][Gemini]][Gemini-url]
+[![Claude][Claude]][Claude-url]
+[![RabbitTech][RabbitTech]][RabbitTech-url]
+[![Perplexity][Perplexity]][Perplexity-url]
+[![Rand0mAI][Rand0mAI]][Rand0mAI-url]
+[![HuggingFace][HuggingFace]][HuggingFace-url]
+[![Ollama][Ollama]][Ollama-url]
+
+### **Design**
+
+[![AdobeIllustrator][AdobeIllustrator]][Illustrator-url]
+[![Canva][Canva]][Canva-url]
+[![Figma][Figma]][Figma-url]
+
+### **Pipelines**
+
+[![GoogleCloud][GoogleCloud]][GoogleCloud-url]
+[![GitHubActions][GitHubActions]][GitHubActions-url]
+[![Firebase][Firebase]][Firebase-url]
+[![Jira][Jira]][Jira-url]
+[![Slack][Slack]][Slack-url]
+
+### **Research & Funding**
+
+<div align="center">
+
+[![ORCiD][ORCiD]][ORCiD-url]
+[![OpenCollective][OpenCollective]][OpenCollective-url]
+
+</div>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<div align="center">
+  🏰🛏️🌚ɯ0puɐɹ  kn1ghts🌝🛋️🏫
+</div>
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+<!-- DAY PALETTE GRADIENT PATCH -->
+<!-- #ff4124 #faafa5 #fadfdb #b1fec8 -->
+<!-- NIGHT PALETTE GRADIENT PATCH -->
+<!-- #723848 #ad7a88 #e5bec8 #6fcf8c -->
+
+[contributors-shield]: https://img.shields.io/github/contributors/repo_name.svg?style=for-the-badge
+[contributors-url]: https://github.com/random-knights/random-graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/repo_name.svg?style=for-the-badge
+[forks-url]: https://github.com/random-knights/random-network/members
+[stars-shield]: https://img.shields.io/github/stars/repo_name.svg?style=for-the-badge
+[stars-url]: https://github.com/random-knights/stargazers
+[issues-shield]: https://img.shields.io/github/issues/repo_name.svg?style=for-the-badge
+[issues-url]: https://github.com/random-knights/random-issues
+[license-shield]: https://img.shields.io/github/license/repo_name.svg?style=for-the-badge
+[license-url]: https://github.com/random-knights/random/blob/master/LICENSE.txt
+[linkedin-shield]: https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white
+[linkedin-url]: https://linkedin.com/company/random-knights
+
+<!-- WORKSPACE (C1: ff4124) -->
+
+[Nvidia]: https://img.shields.io/badge/NVIDIA-RTX3060-ff4124?style=for-the-badge&logo=nvidia&logoColor=white
+[Nvidia-url]: https://www.nvidia.com/en-us/
+[Ryzen]: https://img.shields.io/badge/AMD-Ryzen_7_5800H-ff4124?style=for-the-badge&logo=amd&logoColor=white
+[Ryzen-url]: https://www.amd.com/en/processors/ryzen
+[Windows]: https://img.shields.io/badge/Windows-Lenovo_Legion-ff4124?style=for-the-badge&logo=windows&logoColor=white
+[Windows-url]: https://www.lenovo.com/us/en/
+[Macbook]: https://img.shields.io/badge/Apple-MacBook_Pro_2022-000000?style=for-the-badge&logo=apple&logoColor=white
+[Macbook-url]: https://www.apple.com/macbook-pro/
+
+<!-- CLI (C1: 8855ff) -->
+
+[GitBash]: https://img.shields.io/badge/GitBash-8855ff?style=for-the-badge&logo=git&logoColor=white
+[GitBash-url]: https://git-scm.com/
+[Herdr]: https://img.shields.io/badge/Herdr-8855ff?style=for-the-badge&logo=herdr&logoColor=white
+[Herdr-url]: https://herdr.dev/
+[Powershell]: https://img.shields.io/badge/Powershell-8855ff?style=for-the-badge&logo=power-shell&logoColor=white
+[Powershell-url]: https://apps.microsoft.com/detail/9mz1snwt0n5d?hl=en-US&gl=US
+
+<!-- IDE (C1: ff4124) -->
+
+[VSCode]: https://img.shields.io/badge/Visual_Studio_Code-ff4124?style=for-the-badge&logo=visualstudiocode&logoColor=white
+[VSCode-url]: https://code.visualstudio.com/
+
+<!-- SOURCE CONTROL (C2: faafa5) -->
+
+[GitHub]: https://img.shields.io/badge/GitHub-faafa5?style=for-the-badge&logo=github&logoColor=white
+[GitHub-url]: https://github.com/
+[Git]: https://img.shields.io/badge/Git-faafa5?style=for-the-badge&logo=git&logoColor=white
+[Git-url]: https://git-scm.com/
+
+<!-- DATABASE (C2: faafa5) -->
+
+[MongoDB]: https://img.shields.io/badge/MongoDB-faafa5?style=for-the-badge&logo=mongodb&logoColor=white
+[MongoDB-url]: https://www.mongodb.com/
+[PostgreSQL]: https://img.shields.io/badge/PostgreSQL-faafa5?style=for-the-badge&logo=postgresql&logoColor=white
+[PostgreSQL-url]: https://www.postgresql.org/
+[HiveDB]: https://img.shields.io/badge/Hive-faafa5?style=for-the-badge&logo=apachehive&logoColor=white
+[HiveDB-url]: https://pub.dev/packages/hive
+
+<!-- TOOLS (C2: ad7a88) -->
+
+[AdobeAudition]: https://img.shields.io/badge/Adobe_Audition-ad7a88?style=for-the-badge&logo=adobeaudition&logoColor=white
+[AdobeAudition-url]: https://www.adobe.com/products/audition.html
+[AdobePodcast]: https://img.shields.io/badge/Adobe_Podcast-ad7a88?style=for-the-badge&logo=adobe&logoColor=white
+[AdobePodcast-url]: https://podcast.adobe.com/
+[TeenageEngineeringMic]: https://img.shields.io/badge/Teenage_Engineering-CM--15_Mic-ad7a88?style=for-the-badge&logoColor=white
+[TeenageEngineeringMic-url]: https://teenage.engineering/products/cm-15
+[NothingHeadphones]: https://img.shields.io/badge/Nothing-Headphone_(1)-ad7a88?style=for-the-badge&logoColor=white
+[NothingHeadphones-url]: https://nothing.tech/products/headphone-1
+[RaspberryPi]: https://img.shields.io/badge/Raspberry_Pi-ad7a88?style=for-the-badge&logo=raspberrypi&logoColor=white
+[RaspberryPi-url]: https://www.raspberrypi.com/
+
+<!-- DEVELOPMENT BADGES -->
+
+[ForDevs]: https://forthebadge.com/images/badges/built-by-developers.svg
+[ForDevs-url]: https://forthebadge.com
+[ForQAs]: https://forthebadge.com/api/badges/generate?panels=2&primaryLabel=TESTED+BY&secondaryLabel=ENGINEERS&primaryBGColor=%23ff4124&secondaryBGColor=%23faafa5&primaryTextColor=%23FFFFFF&primaryFontSize=12&primaryFontWeight=600&primaryLetterSpacing=2&primaryFontFamily=Roboto&primaryTextTransform=uppercase&secondaryTextColor=%23FFFFFF&secondaryFontSize=12&secondaryFontWeight=900&secondaryLetterSpacing=2&secondaryFontFamily=Montserrat&secondaryTextTransform=uppercase&secondaryIcon=testinglibrary&secondaryIconColor=%23FFFFFF&secondaryIconSize=16&secondaryIconPosition=right
+[ForQAs-url]: https://forthebadge.com
+[ForScience]: https://forthebadge.com/images/badges/built-with-science.svg
+[ForScience-url]: https://forthebadge.com
+[JavaScript]: https://img.shields.io/badge/JavaScript-e5bec8?style=for-the-badge&logo=javascript&logoColor=white
+[JavaScript-url]: https://www.javascript.com/
+[Node.js]: https://img.shields.io/badge/Node.js-e5bec8?style=for-the-badge&logo=node.js&logoColor=white
+[Node-url]: https://nodejs.org/
+[Python]: https://img.shields.io/badge/Python-e5bec8?style=for-the-badge&logo=python&logoColor=white
+[Python-url]: https://www.python.org/
+[TypeScript]: https://img.shields.io/badge/TypeScript-e5bec8?style=for-the-badge&logo=typescript&logoColor=white
+[TypeScript-url]: https://www.typescriptlang.org/
+[Flutter]: https://img.shields.io/badge/Flutter-e5bec8?style=for-the-badge&logo=flutter&logoColor=white
+[Flutter-url]: https://flutter.dev/
+[Dart]: https://img.shields.io/badge/Dart-e5bec8?style=for-the-badge&logo=dart&logoColor=white
+[Dart-url]: https://dart.dev/
+
+<!-- TESTING (C3: fadfdb) -->
+
+[Chai.js]: https://img.shields.io/badge/Chai-fadfdb?style=for-the-badge&logo=chai&logoColor=white
+[Chai-url]: https://www.chaijs.com/
+[Cucumber]: https://img.shields.io/badge/Cucumber-fadfdb?style=for-the-badge&logo=cucumber&logoColor=white
+[Cucumber-url]: https://cucumber.io/
+[Cypress.js]: https://img.shields.io/badge/Cypress-fadfdb?style=for-the-badge&logo=cypress&logoColor=white
+[Cypress-url]: https://www.cypress.io/
+[Jest]: https://img.shields.io/badge/Jest-fadfdb?style=for-the-badge&logo=jest&logoColor=white
+[Jest-url]: https://jestjs.io/
+[Lighthouse]: https://img.shields.io/badge/Lighthouse-fadfdb?style=for-the-badge&logo=lighthouse&logoColor=white
+[Lighthouse-url]: https://developer.chrome.com/docs/lighthouse/
+[Mocha.js]: https://img.shields.io/badge/Mocha-fadfdb?style=for-the-badge&logo=mocha&logoColor=white
+[Mocha-url]: https://mochajs.org/
+[Swagger.js]: https://img.shields.io/badge/Swagger-fadfdb?style=for-the-badge&logo=swagger&logoColor=white
+[Swagger-url]: https://swagger.io/
+[TestLibrary]: https://img.shields.io/badge/Testing_Library-fadfdb?style=for-the-badge&logo=testing-library&logoColor=white
+[TestLibrary-url]: https://testing-library.com/
+
+<!-- DESIGN (C4: b1fec8) -->
+
+[AdobeIllustrator]: https://img.shields.io/badge/Adobe_Illustrator-b1fec8?style=for-the-badge&logo=adobeillustrator&logoColor=black
+[Illustrator-url]: https://www.adobe.com/products/illustrator.html
+[Canva]: https://img.shields.io/badge/Canva-b1fec8?style=for-the-badge&logo=canva&logoColor=white
+[Canva-url]: https://www.canva.com/
+[Figma]: https://img.shields.io/badge/Figma-b1fec8?style=for-the-badge&logo=figma&logoColor=white
+[Figma-url]: https://www.figma.com/
+[Framer]: https://img.shields.io/badge/Framer-b1fec8?style=for-the-badge&logo=framer&logoColor=blue
+[Framer-url]: https://www.framer.com/
+
+<!-- PIPELINE (C4: 6fcf8c) -->
+
+[Slack]: https://img.shields.io/badge/Slack-6fcf8c?style=for-the-badge&logo=slack&logoColor=orange
+[Slack-url]: https://www.slack.com/
+[CypressCloud]: https://img.shields.io/badge/Cypress_Cloud-6fcf8c?style=for-the-badge&logo=cypress&logoColor=orange
+[CypressCloud-url]: https://www.cypress.io/
+[Firebase]: https://img.shields.io/badge/Firebase-6fcf8c?style=for-the-badge&logo=firebase&logoColor=orange
+[Firebase-url]: https://firebase.google.com/
+[GitHubActions]: https://img.shields.io/badge/GitHub_Actions-6fcf8c?style=for-the-badge&logo=github-actions&logoColor=orange
+[GitHubActions-url]: https://github.com/features/actions
+[GoogleCloud]: https://img.shields.io/badge/Google_Cloud-6fcf8c?style=for-the-badge&logo=google-cloud&logoColor=orange
+[GoogleCloud-url]: https://cloud.google.com
+[Jira]: https://img.shields.io/badge/Jira-6fcf8c?style=for-the-badge&logo=jira&logoColor=orange
+[Jira-url]: https://www.atlassian.com/software/jira
+
+<!-- AI (C4: b1fec8) -->
+
+[OpenAI]: https://img.shields.io/badge/OpenAI-b1fec8?style=for-the-badge&logo=openaigym&logoColor=white
+[OpenAI-url]: https://openai.com/
+[Gemini]: https://img.shields.io/badge/Gemini-b1fec8?style=for-the-badge&logo=google&logoColor=white
+[Gemini-url]: https://gemini.google.com/
+[Claude]: https://img.shields.io/badge/Claude-b1fec8?style=for-the-badge&logo=anthropic&logoColor=white
+[Claude-url]: https://www.anthropic.com/
+[RabbitTech]: https://img.shields.io/badge/Rabbit.Tech-FF4124?style=for-the-badge
+[RabbitTech-url]: https://www.rabbit.tech/
+[Perplexity]: https://img.shields.io/badge/Perplexity-b1fec8?style=for-the-badge&logo=perplexity&logoColor=white
+[Perplexity-url]: https://www.perplexity.ai/
+[Rand0mAI]: https://img.shields.io/badge/Rand0m.AI-FF4124?style=for-the-badge
+[Rand0mAI-url]: https://rand0m.ai/
+[HuggingFace]: https://img.shields.io/badge/HuggingFace-b1fec8?style=for-the-badge&logo=huggingface&logoColor=white
+[HuggingFace-url]: https://www.huggingface.co/
+[Ollama]: https://img.shields.io/badge/Ollama-b1fec8?style=for-the-badge&logo=ollama&logoColor=white
+[Ollama-url]: https://www.ollama.com/
+
+<!-- AI (C4: b1fec8) -->
+
+[OpenCollective]: https://img.shields.io/badge/OpenCollective-edc303?style=for-the-badge&logo=opencollective&logoColor=white
+[OpenCollective-url]: https://opencollective.com/random-knights
+[ORCiD]: https://img.shields.io/badge/ORCiD-edc303?style=for-the-badge&logo=orcid&logoColor=white
+[ORCiD-url]: https://orcid.org/0009-0006-5066-1693
