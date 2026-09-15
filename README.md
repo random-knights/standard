@@ -96,6 +96,8 @@ Steps 9 to 12 are one ladder. A reader picks a level and the answer is
 the same facts and the same figures. If two levels disagree on a number, the
 answer is wrong.
 
+<div align="center">
+  
 | Level                  | Grades    | Step        |
 | ---------------------- | --------- | ----------- |
 | &#129475; juice box    | K-5       | 9           |
@@ -104,6 +106,8 @@ answer is wrong.
 | &#9749; black coffee   | College   | 12          |
 | &#129750; loose leaf   | Masters   | 12.1        |
 | &#129481; yerba mate   | Doctorate | 12.2        |
+
+</div> 
 
 All six levels are NORMATIVE as of 2.0.0. Loose leaf and yerba mate were
 reserved names in 1.1.0 and are required now, which is why 2.0.0 is a breaking
@@ -297,6 +301,8 @@ AiEDs provides:
 - **Per-model energy coefficients, not one constant.** Each model class has its own `whPer1kIn` / `whPer1kOut` (output tokens cost ~4x input: decode is sequential, prefill is parallel). Gemini `0.12 / 0.48`, GPT/o\* `0.17 / 0.68`, Claude `0.145 / 0.58` Wh per 1k tokens, plus a per-provider PUE.
 - **Confidence tiers on every coefficient**, surfaced in the disclosure, never hidden:
 
+<div align="center">
+  
   | tier               | meaning                                                          |
   | ------------------ | ---------------------------------------------------------------- |
   | `measured`         | we benchmarked it                                                |
@@ -304,6 +310,8 @@ AiEDs provides:
   | `class-estimated`  | inferred from model class; no provider figure exists             |
   | `unknown`          | nothing sourceable; frontier-class fallback, labeled `unknown`   |
 
+<\div>
+  
 - **A sourced citation per coefficient** (the honesty contract: a number without provenance does not belong in the table). Gemini cites Google Aug 2025 (arXiv:2508.15734); GPT cites the OpenAI Jun 2025 blog figure; Claude states plainly it is a class estimate (no Anthropic figure as of 2026-01); an unlisted model returns the frontier-class fallback labeled `unknown` rather than a confident guess.
 
 Concretely: the same 412-in / 890-out exchange that 1.x would have blurred into one flat number now discloses `0.47664 Wh` energy-first with a `vendor-published` tier and a citation for Gemini, versus `0.691128 Wh` labeled `unknown` for a model not in the table - the reader can see both the number and how much to trust it.
@@ -404,6 +412,8 @@ friction) are Apache 2.0. Text and data that document or parameterize the
 standard (so attribution survives forks and citation stays intact) are
 CC BY 4.0.
 
+<div align="center">
+  
 | Path                         | License                   |
 | ---------------------------- | ------------------------- |
 | `lib/`                       | [Apache 2.0](LICENSE)     |
@@ -415,6 +425,8 @@ CC BY 4.0.
 | `K13.md`                     | [CC BY 4.0](LICENSE-DOCS) |
 | `templates/`                 | [Apache 2.0](LICENSE)     |
 | `eplus/v1/methodology.md`    | [CC BY 4.0](LICENSE-DOCS) |
+
+<\div>
 
 The K13 report templates are the clearest case of that split. `templates/` is a
 reference implementation, so it is Apache 2.0 and forkable without attribution
