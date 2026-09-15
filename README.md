@@ -65,7 +65,7 @@ and checked, and it is not ratified. All three live in this repository.
 
 | Standard                                  | Version                   | License                                              | Canonical text                                                          | Read it                                                                                                        |
 | ----------------------------------------- | ------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **AiEDs - AI Energy Disclosure Standard** | methodology 2.1.0         | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai)                                                               |
+| **AiEDs - AI Energy Disclosure Standard** | methodology 2.2.0         | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai)                                                               |
 | **K13 - AI Response Standard**            | 2.0.0                     | CC BY 4.0 prose, Apache 2.0 reference templates      | [K13.md](K13.md) with `templates/`                                      | [randomknights.xyz/k13](https://randomknights.xyz/k13/)                                                        |
 | **E+ - Earth Health Score Methodology**   | 1.0.0 DRAFT, not ratified | CC BY 4.0 prose                                      | [eplus/v1/methodology.md](eplus/v1/methodology.md)                      | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md) once deployed |
 
@@ -163,12 +163,13 @@ AiEDs surfaces:
 - **`/lib`** - the reference library (TypeScript/Node): **tokens + model in; energy-first disclosure out** (energy modeled from per-model coefficients, carbon derived from energy), byte-mirroring the rand0m.ai app so app and standard agree to the number.
 - **`/mcp`** - a keyless MCP server (TypeScript/Node) exposing three tools: `aieds_estimate`, `aieds_factors`, `aieds_disclose`.
 
-> **CURRENT VERSION: methodology 2.1.0 (MCP server 2.0.1). Versions 1.x are
+> **CURRENT VERSION: methodology 2.2.0 (MCP server 2.0.1). Versions 1.x are
 > SUPERSEDED and MUST NOT be implemented.** 1.x specified a flat 0.30 gCO2e per
 > 1k tokens for every model and derived energy backward from carbon. Both are
-> wrong. If you are new here, implement 2.1.0; do not pick up 1.0.0 because it
-> sounds like the stable base. 2.1.0 is clarifying and changes no number, so
-> 2.0.0 records remain valid. See `spec/methodology.md`.
+> wrong. If you are new here, implement 2.2.0; do not pick up 1.0.0 because it
+> sounds like the stable base. 2.1.0 is clarifying and 2.2.0 is additive, and
+> neither changes an existing number, so 2.0.0 and 2.1.0 records remain valid.
+> See `spec/methodology.md`.
 
 **Metric hierarchy** (methodology section 1.1): Level 1 modeled scientific estimates (energy, CO2e) -> Level 2 operational metrics (tokens, cost, latency) -> Level 3 human equivalencies (Tree-Time, phone charges, ...; educational only, never offsets).
 
@@ -216,7 +217,7 @@ const d = disclosureFromResponse({
 ### Validating a record today
 
 The schema is `spec/aieds.schema.json`, JSON Schema draft 2020-12, methodology
-2.1.0. The schema file itself did not change in 2.1.0.
+2.2.0. The schema file itself changed in neither 2.1.0 nor 2.2.0.
 
 Its `$id` is `https://standard.rand0m.ai/aieds/v2/aieds.schema.json`, and the
 host serves the schema at that URL, byte-identical to `spec/aieds.schema.json`
@@ -257,11 +258,12 @@ ENERGY figure was arrived at, and defaults to `low` for any token-proxy method.
 They are different ladders and neither implies the other, which is why they are
 separate fields rather than one widened one.
 
-Methodology 2.1.0 states the provenance ladder as `measured`,
+Methodology 2.2.0 states the provenance ladder as `measured`,
 `vendor-published`, `class-estimated`, `synthetic`, `unknown`, strongest first.
 The schema enum still carries only the first three and the last: `synthetic` is
-normative prose in 2.1.0 and a proposed schema addition for 2.2.0, so a
-machine-validated record cannot stamp it yet. A producer with a generated input
+normative prose from 2.1.0 onward and a proposed addition to a FUTURE schema
+revision, which methodology 2.2.0 did not make, so a machine-validated record
+cannot stamp it yet. A producer with a generated input
 stamps the nearest rung the schema carries and says in prose that the input was
 generated.
 
@@ -324,7 +326,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Surface              | Path                         | License    | Description                                                                                                                                                  |
 | -------------------- | ---------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Schema               | `spec/aieds.schema.json`     | Apache 2.0 | JSON Schema 2020-12 for one disclosure                                                                                                                       |
-| Methodology          | `spec/methodology.md`        | CC BY 4.0  | 2.1.0: energy-first path + per-model coefficients + factor tables + the provenance ladder                                                                    |
+| Methodology          | `spec/methodology.md`        | CC BY 4.0  | 2.2.0: energy-first path + per-model coefficients + factor tables + the provenance ladder + two-term measured device coefficients                            |
 | Coefficient tables   | `spec/v2/aieds-factors.json` | CC BY 4.0  | The published factor data every surface reads                                                                                                                |
 | Measurements         | `spec/measurements/`         | CC BY 4.0  | Measurement harnesses, method documents and raw power samples. EVIDENCE, not coefficients: nothing here is in a factor table unless a factor table cites it. |
 | Examples             | `spec/examples/`             | CC BY 4.0  | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script                                                               |
@@ -341,7 +343,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 ### Shipped (this repo)
 
 - [x] `aieds.schema.json` (JSON Schema draft 2020-12)
-- [x] `methodology.md` 2.1.0 (energy-first; per-model coefficients + the provenance ladder + citations) with factor tables + governance
+- [x] `methodology.md` 2.2.0 (energy-first; per-model coefficients + the provenance ladder + two-term measured device coefficients + citations) with factor tables + governance
 - [x] 7 conformance examples (4 valid, 3 superseded-1.x rejection cases) + validate script
 - [x] MCP server 2.0.0: `aieds_estimate`, `aieds_factors`, `aieds_disclose`
 - [x] Reference library 2.1.0: energy-first, byte-mirrors the app, emits provenance + confidence
@@ -373,7 +375,7 @@ energy first, so a citation without a version does not say which numbers were
 used.
 
 > Random Knights, LLC (2026). AiEDs - AI Energy Disclosure Standard,
-> version 2.1.0. CC BY 4.0. https://standard.rand0m.ai
+> version 2.2.0. CC BY 4.0. https://standard.rand0m.ai
 
 > Random Knights, LLC (2026). K13 - AI Response Standard, version 2.0.0.
 > CC BY 4.0. https://github.com/random-knights/standard

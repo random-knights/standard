@@ -1,23 +1,24 @@
 # AiEDs Methodology
 
-> **CURRENT VERSION: 2.1.0. Versions 1.x are SUPERSEDED and MUST NOT be
+> **CURRENT VERSION: 2.2.0. Versions 1.x are SUPERSEDED and MUST NOT be
 > implemented.** 1.x specified a flat 0.30 gCO2e per 1k tokens for every model
-> and derived energy backward from carbon. Both are wrong. Implement 2.1.0 (see
+> and derived energy backward from carbon. Both are wrong. Implement 2.2.0 (see
 > the changelog below and `README.md`). Do not pick up 1.0.0 because it reads
-> like a stable base; it is not. 2.0.0 records remain valid: 2.1.0 is
-> clarifying, and it changes no number.
+> like a stable base; it is not. 2.0.0 and 2.1.0 records remain valid: 2.1.0 is
+> clarifying and 2.2.0 is additive, and neither changes an existing number.
 
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 2.1.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
+**Version:** 2.2.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
 **Status:** Ratified
-**Effective:** 2026-09-12
+**Effective:** 2026-09-15
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
 ## CHANGELOG
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 2.2.0   | 2026-09-15 | **MINOR (additive). No existing number changes; 2.0.0 and 2.1.0 records remain valid.** WHAT CHANGED: new section 2.3.1 and Table 4, MEASURED DEVICE COEFFICIENTS, fitted as a TWO-TERM model `energyWh = a + b * tokens` per phase and per device by ordinary least squares over 36 varied runs, with 95 percent intervals on both terms and the residual diagnostics that say whether the line fits. `a` is a per-request FIXED cost and `b` the marginal per-token cost. THE NUMBER: no published figure moves. Table 2's class estimates, every hosted coefficient, both grid intensities and every constant are byte-identical to 2.1.0; this version only ADDS a table that was not there. WHY IT IS TWO TERMS: a single Wh-per-million-tokens figure divides a fixed per-request cost by a varying token count, which is not a constant. Measured on the first device, the pooled figure came out with an interquartile range wider than its own median, and the fit shows why. A per-request fixed cost is a NEW disclosure shape that sections 2.1 to 2.4 cannot express. WHAT DID NOT CHANGE: the provenance ladder, the confidence ladder, the response-surface path, the schema, the Mature Reference Tree, the two grid values, and every hosted profile. Hosted calls have no measured intercept and stay `class-estimated` with `low` confidence. WHAT IS NOW UNRESOLVED: PREFILL on both measured models. A quadratic term in tokens is significant there (p below 1e-13), so energy is convex in token count rather than affine, the fitted intercept is a curvature artifact rather than a fixed cost, and the fitted line predicts negative energy inside the observed range. UNRESOLVED, not NOT-APPLICABLE: prefill applies and its energy was measured; the two-term shape cannot carry it. DECODE is published, and its intercept is NOT distinguishable from zero on either model, which is the result the two-term model predicts and is evidence the shape is right where it is used. EVIDENCE AND REPRODUCE: method document, harness, and every raw power sample are published under `spec/measurements/`; `node harness/summarise.mjs` recomputes every figure in Table 4 from the committed raw data. |
 | 2.1.0   | 2026-09-12 | **MINOR (clarifying). No number changes; 2.0.0 records remain valid.** Section 5.1 becomes the PROVENANCE ladder: `measured`, `vendor-published`, `class-estimated`, `synthetic`, `unknown`, strongest first, matching what the schema's `provenance` text already describes. `synthetic` is new and means the producer KNOWS it generated the input; `unknown` means the source cannot be characterised at all, and recording a generated input as `unknown` understates it (owner ruling, 2026-09-11). The 2.0.0 rungs `estimated`, `modeled`, `provider-derived`, `verified` are retired to a legacy-terms note with a reading mapping. `confidence` is stated to be the producer's overall confidence in the energy figure, defaulting to `low` for any token-proxy method. New section 2.4.1, cached prefill: cache-creation and cache-read tokens are counted as input, the breakdown is published alongside the total when the provider reports it, and charging cache reads at the full input coefficient is named as a conservative bias rather than a measurement. No new coefficient. The schema is NOT edited in this version: its `provenance` enum is closed at four rungs and `compute` has no field for the token breakdown, so both are written up as a 2.2.0 schema proposal and a machine-validated record cannot carry `synthetic` until then. |
 | 2.0.0   | 2026-07-12 | **MAJOR (breaking).** ENERGY-FIRST response surface (section 2.4 v2): energy-first derivation replaces the flat 0.30 gCO2e/1k-token constant and the carbon-first inversion. The SAME input now yields DIFFERENT output (a typical exchange moves 0.375 g -> 0.103 g), so under semver this is a breaking change, NOT the minor 1.2.0 it was briefly cut as (see tagging note). Per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr. |
 | 1.1.0   | 2026-07-11 | Metric hierarchy (section 1.1). Carbon-first response-surface path (section 2.4) with pinned app-surface grid intensity (429). Level-3 human equivalencies incl. Tree-Time (section 2.5). Response-surface confidence ladder mapping (section 5.1). Reference library (`/lib`). Additive only. |
@@ -98,6 +99,94 @@ energyKWh = (tokens / 1_000_000) x Wh_per_million / 1_000
 ```
 
 `Wh_per_million` by model scale from **Table 2** (section 4). This path is order-of-magnitude only; hardware utilisation, batch size, and serving efficiency dominate actual consumption. **Confidence: `low`.**
+
+### 2.3.1 Measured Device Coefficients, two-term (2.2.0)
+
+A MEASURED DEVICE COEFFICIENT is obtained by sampling the accelerator's own
+power telemetry while a named model runs on a named machine, subtracting a
+measured idle baseline, and FITTING the result rather than averaging it:
+
+```
+energyWh = a + b x tokens
+```
+
+`a` is a PER-REQUEST FIXED COST, in Wh per request. `b` is the MARGINAL
+per-token cost, in Wh per token; Table 4 states it per million tokens so it can
+be read against Table 2. Prefill and decode are fitted separately and carry
+their own `a` and `b`.
+
+**Why two terms and not one.** Every other path in this document expresses
+energy as a rate times a count. That shape cannot represent a cost a request
+pays once. Dividing a fixed cost by a varying token count does not give a
+constant, it gives a number that falls as requests get longer, and the first
+device measured under this section produced exactly that: a single
+Wh-per-million-tokens figure whose interquartile range was wider than its own
+median. The spread was not noise. It was a missing term.
+
+**A per-request fixed cost is a NEW disclosure shape.** No AiEDs record before
+2.2.0 could carry one. A producer using this path publishes both terms and both
+intervals, and MUST NOT collapse them into a single per-token figure, because
+collapsing them is what the pooled figure already showed to be meaningless.
+
+**THE SCOPE FENCE, and it is normative.** A measured device coefficient
+describes only the hardware, runtime, model and quantization it names. It MUST
+NOT be applied to any other system, and in particular MUST NOT be applied to
+hosted inference. A real measurement of one machine, presented as the energy of
+a different machine, is a worse disclosure than an honest class estimate: it
+carries the authority of a measurement and none of the applicability. Hosted API
+calls expose neither GPU-seconds nor watts to the caller, have NO measured
+intercept, and remain `class-estimated` with `low` confidence. No better
+arithmetic changes that, and a measured `a` from Table 4 is never carried onto a
+hosted profile.
+
+**Fitting is not optional, and neither is checking the fit.** A two-term entry
+is publishable only when all of these are stated, and
+`spec/test/measured-devices.test.mjs` refuses an entry that omits any:
+
+1. The estimator (ordinary least squares) and the design: at least 30 runs
+   spanning at least three token counts.
+2. Both terms with 95 percent intervals, by a stated method. Table 4's intervals
+   are t-based on `n - 2` degrees of freedom; a seeded percentile bootstrap over
+   pairs is published beside them as a distribution-free cross-check, and the
+   two agreeing is part of the evidence.
+3. `r2` and the residual standard error.
+4. A CURVATURE TEST. The fit is refitted with a quadratic term in tokens. If
+   that term is significant, the affine model is MIS-SPECIFIED and the entry is
+   NOT published: a straight line through a curve has whatever intercept it
+   needs at zero tokens to compensate, which is not a fixed cost and can be
+   negative.
+5. Whether `a` is distinguishable from zero. An interval straddling zero is a
+   real and useful result, not a failure: it says that phase has no measurable
+   fixed cost.
+
+**Choosing between Table 2 and Table 4.** They answer different questions:
+
+| You know | Use | Confidence |
+|----------|-----|-----------|
+| The exact machine, runtime, model and quantization, and Table 4 has that row | Table 4 | `high` |
+| The machine class only, or the workload ran somewhere you cannot name | Table 2 | `low` |
+| A machine Table 4 does not list, even a similar one | Table 2 | `low` |
+
+The third row is the one that matters. A coefficient measured on a laptop part
+does not become a coefficient for the desktop part of the same name, a different
+driver, a different quantization of the same model, or a different serving
+runtime. Each changes the number, and the way to find out by how much is to
+measure it.
+
+**Measurement scope is not a footnote.** A tool that reports one component's
+power measures that component. Table 4's first entries were taken with
+`nvidia-smi`, which reports the discrete GPU's BOARD power, so host CPU, system
+memory and any integrated GPU are NOT included. Such a figure is disclosed as
+"dGPU board power during inference" and never as system power. A tool reporting
+package power rather than board power is a different measurement again and must
+be labelled as such.
+
+**Cached prefill (section 2.4.1) and the two-term shape.** Where a prefill entry
+is published, the two terms make a cached prefill checkable: a cache read should
+show a near-zero contribution from `b` while still paying `a`. NOTE that no
+prefill entry is published in 2.2.0 (see Table 4's unresolved list), so this is
+a property of the shape and not yet an observation. It becomes one when a device
+yields a prefill fit that passes the curvature test.
 
 ### 2.4 Response-Surface Path (v2: ENERGY-FIRST)
 
@@ -185,7 +274,8 @@ coefficient with a citation, through the section 6 governance route.
 `tokens`, `gpuSeconds`, `flops` and `hardware`, with `additionalProperties`
 false, so there is no field for the breakdown. A schema-conformant record
 therefore carries the TOTAL in `compute.tokens`, unchanged, and publishes the
-breakdown beside the record until a 2.2.0 schema revision adds fields for it.
+breakdown beside the record until a schema revision adds fields for it. That
+revision had not been made as of methodology 2.2.0; see the note in section 5.1.
 
 ### 2.5 Human Equivalencies (Level 3)
 
@@ -265,6 +355,53 @@ Derived from published A100/H100 inference benchmarks. These are rough order-of-
 | Sweden | 45 | Swedish Energy Agency 2023 |
 | Norway | 29 | NVE 2023 |
 
+### Table 4 - Measured Device Coefficients (two-term, section 2.3.1)
+
+`a` is the per-request fixed cost in Wh per request; `b` is the marginal cost in
+Wh per million tokens. Both cells carry the 95 percent interval in parentheses.
+Every row is a direct board-power measurement of the named machine and applies
+to that machine ONLY (section 2.3.1, scope fence).
+
+| Device | Runtime | Model | Quantization | Phase | a, Wh per request (95% CI) | b, Wh per million tokens (95% CI) | Runs |
+|--------|---------|-------|--------------|-------|---------------------------|-----------------------------------|------|
+| NVIDIA GeForce RTX 3060 Laptop GPU | Ollama 0.34.0 | llama3.2:1b | Q8_0 | decode | -0.001692 (-0.004049 to 0.000665) | 99.273 (90.969 to 107.577) | 36 |
+| NVIDIA GeForce RTX 3060 Laptop GPU | Ollama 0.34.0 | llama3.2:latest | Q4_K_M | decode | -0.001838 (-0.004996 to 0.001319) | 197.467 (186.343 to 208.592) | 36 |
+
+On BOTH published rows `a` is NOT distinguishable from zero at 95 percent: the
+interval straddles it. That is the result the two-term model predicts for
+decode, which runs at the device's power ceiling for essentially its whole
+window, and it is evidence that the shape is right where it is used rather than
+an embarrassment to be rounded away. A consumer may take `a` as zero for these
+rows and MUST carry the interval.
+
+Scope, for every row above: discrete GPU board power via `nvidia-smi
+power.draw`, accurate to within +/- 5 W by NVIDIA's own statement. Host CPU,
+system memory and the integrated GPU are NOT measured. Batch size 1, context
+8192, loaded-idle baseline subtracted, post-response power decay excluded from
+both terms and published separately. Method, harness and raw samples:
+`spec/measurements/2026-09-14-rtx-3060-laptop/`.
+
+#### Table 4 unresolved
+
+Measured, fitted, and NOT published, because the affine model is mis-specified
+for them. These are UNRESOLVED, not NOT-APPLICABLE: the phase applies and its
+energy was measured; the two-term shape cannot carry it.
+
+| Device | Model | Quantization | Phase | Runs |
+|--------|-------|--------------|-------|------|
+| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:1b | Q8_0 | prefill | 36 |
+| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:latest | Q4_K_M | prefill | 36 |
+
+A quadratic term in tokens is significant on both (p below 1e-13), so prefill
+energy is CONVEX in token count rather than affine. The mechanism is visible in
+the raw data: board power ramps from idle toward the device ceiling over about a
+second, so a longer prefill runs at a higher average power and energy grows
+faster than linearly. Fitting a straight line to that gives a NEGATIVE
+intercept, and the fitted line predicts negative energy inside the observed
+range, which is not physical. A prefill entry returns when a device yields a fit
+that passes the curvature test, or when a shape that can represent the ramp is
+ratified.
+
 ---
 
 ## 5. Confidence Levels
@@ -277,6 +414,16 @@ Derived from published A100/H100 inference benchmarks. These are rough order-of-
 
 Fractional confidence (0 to 1) may be substituted for the string enum when a probabilistic derivation is available.
 
+**`high` has exactly one route in this document (2.2.0).** It is a direct
+hardware power measurement of the machine that ran the work: the Table 4 path in
+section 2.3.1, or an equivalent instrument reading (IPMI, a PDU, an in-line
+meter) taken on that same machine. Every other path here is a proxy and caps at
+`med` or `low`. A producer never raises `confidence` above `low` because an
+estimate looks plausible, and never carries `high` over from a measurement of a
+DIFFERENT machine: applying a Table 4 row to hardware it does not name makes the
+figure `low`, not `high`, because the number is then an assumption about
+transferability rather than a measurement.
+
 ### 5.1 Provenance Ladder
 
 `provenance` says where the FACTOR came from. `confidence` (section 5) says how
@@ -288,7 +435,7 @@ The ladder, strongest first:
 
 | Rung | Meaning |
 |------|---------|
-| `measured` | The factor was benchmarked directly, on the hardware or the surface it describes. |
+| `measured` | The factor was benchmarked directly, on the hardware or the surface it describes. See 2.2.0's conditions below. |
 | `vendor-published` | The provider published a figure. Cite it; note any split assumptions the figure folds together. |
 | `class-estimated` | Inferred from the model class. No provider figure exists. |
 | `synthetic` | The producer KNOWS it generated the input the factor was derived from: a representative grid, a constant table, a seeded generator. The number is real and reproducible; what it describes was generated rather than observed. |
@@ -301,6 +448,26 @@ generated input and loses the one fact a reader most needs: that nothing was
 observed, deliberately, and the producer can say what it made instead. This rung
 was ruled in by the owner on 2026-09-11.
 
+**What `measured` requires (2.2.0).** The rung is not a self-assessment. A
+factor may claim `measured` only when all six hold, and Table 4's entries are
+gated against them by `spec/test/measured-devices.test.mjs`:
+
+1. The instrument, its reading, and its stated accuracy are named.
+2. The MEASUREMENT SCOPE says what the instrument does and does not include.
+3. An idle baseline was measured and subtracted, and both are published.
+4. The figure is FITTED over at least 30 runs spanning at least three token
+   counts, and every term is published with a 95 percent interval by a stated
+   method. A single number with no interval is not a measurement result; it is
+   one observation.
+5. The fit is CHECKED and the check is published: `r2`, the residual standard
+   error, and a curvature test. A significant quadratic term means the affine
+   model is mis-specified and the entry is NOT published.
+6. The raw samples and the method are published, in enough detail that a third
+   party can repeat the measurement rather than trust the number.
+
+A factor that fails any of these is at best `class-estimated`, whatever
+instrument was pointed at it.
+
 `confidence` in a disclosure is the producer's OVERALL confidence in the energy
 figure, not a per-coefficient grade. It defaults to `low` for any token-proxy
 method, which is every response-surface path in section 2.4. A producer raises
@@ -311,7 +478,11 @@ estimate looks plausible.
 (`spec/aieds.schema.json`, unchanged in this version) enumerates `provenance`
 as `measured`, `vendor-published`, `class-estimated`, `unknown`, and the enum is
 closed. A machine-validated record therefore CANNOT carry `synthetic` until a
-2.2.0 schema revision adds it. Until then a producer with a generated input
+schema revision adds it. (2.2.0 note: methodology 2.2.0 did NOT make that
+revision. The schema is versioned separately, by its own `$id`, and the wording
+above dates from 2.1.0, when the next methodology version and the next schema
+version were expected to be one change. They were not. The schema addition is
+still outstanding and still goes through section 6 governance.) Until then a producer with a generated input
 stamps the nearest rung the schema does carry and says in prose that the input
 was generated. The rung is normative in this methodology; the schema catches up
 in its own version, by the section 6 governance route.
