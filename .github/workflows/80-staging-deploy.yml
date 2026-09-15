@@ -43,8 +43,10 @@ jobs:
         run: |
           cd .firebase/standard-site
           find . -type f -print0 | sort -z | xargs -0 sha256sum > ../../public.sha256
-          cd ../..
-          sha256sum -c public.sha256
+          # Check from inside the built tree: the manifest paths are relative to it.
+          # Checked from the repo root, the first run read ./index.html at the root
+          # and failed on six files while three that also exist there passed.
+          sha256sum -c ../../public.sha256
       - uses: actions/upload-artifact@v5
         with:
           name: standard-site
