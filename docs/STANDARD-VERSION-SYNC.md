@@ -85,7 +85,7 @@ to a person, expires on a date nobody has in their calendar, and makes machine
 edits look human in the audit log. An App is owned by the organisation, survives
 people, and mints a token per run that expires within the hour, so the only
 stored secret is a private key that does not rotate on a schedule. Its pull
-requests arrive from `rk-standard-sync[bot]`, which is the point: the table is
+requests arrive from `standard-sync[bot]`, which is the point: the table is
 supposed to be visibly not hand-maintained.
 
 **Why not the built-in `GITHUB_TOKEN`.** It cannot write to another repository
@@ -96,7 +96,7 @@ required `CI Gate` check would never run and the pull request could never merge.
 
 1. Go to **github.com/organizations/random-knights/settings/apps** and choose
    **New GitHub App**.
-2. Name it `rk-standard-sync`. Homepage `https://standard.rand0m.ai`.
+2. Name it `standard-sync`. Homepage `https://standard.rand0m.ai`.
 3. **Uncheck Webhook Active.** This App is driven by Actions, not by webhooks.
 4. Repository permissions, and nothing else:
    - **Contents: Read and write** (to push the branch)

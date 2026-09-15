@@ -137,8 +137,8 @@ jobs:
               echo "::endgroup::"
               continue
             fi
-            git config user.name "rk-standard-sync[bot]"
-            git config user.email "rk-standard-sync[bot]@users.noreply.github.com"
+            git config user.name "standard-sync[bot]"
+            git config user.email "329637049+standard-sync[bot]@users.noreply.github.com"
             git checkout -b "$BRANCH"
             git add -- "$readme"
             git commit -F - <<'MSG'
@@ -148,7 +148,7 @@ jobs:
           which derives them from the canonical documents and gates them. This
           commit carries no judgement of its own.
 
-          Opened by rk-standard-sync[bot]. Nobody hand-edited this table.
+          Opened by standard-sync[bot]. Nobody hand-edited this table.
           MSG
             git push --force-with-lease origin "$BRANCH"
             if ! gh pr view "$BRANCH" --repo "random-knights/$repo" --json number >/dev/null 2>&1; then
