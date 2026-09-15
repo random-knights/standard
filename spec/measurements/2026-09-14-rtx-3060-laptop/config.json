@@ -1,0 +1,28 @@
+{
+  "$comment": "Run matrix for the AiEDs measured-energy harness. Deterministic: the same config produces the same sweep in the same order, and each run's prompt nonce is derived from its run id. Host facts are recorded here because they are citation fields, not settings; change them only when the machine changes.",
+  "models": ["llama3.2:1b", "llama3.2:latest"],
+  "promptTiers": {
+    "short": 200,
+    "medium": 1500,
+    "long": 4500
+  },
+  "tierOrder": ["short", "medium", "long"],
+  "completionCaps": [64, 192, 448],
+  "repeats": 4,
+  "numCtx": 8192,
+  "keepAlive": "20m",
+  "idleSeconds": 60,
+  "idleSettleSeconds": 20,
+  "settleMs": 4000,
+  "tailSeconds": 2,
+  "samplingIntervalMs": 10,
+  "$intervalNote": "10 ms is the REQUESTED interval and is a floor, not a promise. Measured on this machine: -lms 50 delivered about 63 ms and -lms 10 delivers about 15.5 ms, which matches the driver's own internal power sampling of about 14.6 ms (nvidia-smi -q -d POWER reported 119 samples in 8.16 s). The achieved interval is computed from the timestamps and is what summary.json and README.md report.",
+  "$settleNote": "settleMs is 4000 because board power on this part decays from the 60 W enforced limit back to about 13 W over one to two seconds after a response completes. The settle must exceed tailSeconds so the decay is fully sampled and the next run starts from baseline. idleSettleSeconds is 20 for the same reason: a six-second idle window taken straight after a request read 22.8 W instead of 13 W, which made every net figure negative in the first smoke run.",
+  "$matrixNote": "3 prompt tiers x 3 completion caps x 4 repeats = 36 runs per model, plus one excluded load call. Tiers are NOMINAL targets; every figure uses the server's own prompt_eval_count and eval_count. On the 2026-09-14 sweep the tiers came out at 252, 1528 and 4370 prompt tokens for llama3.2:1b and 251, 1527 and 4369 for llama3.2:latest.",
+  "host": {
+    "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+    "ramGb": 15.4,
+    "os": "Microsoft Windows 11 Home 10.0.26200 build 26200",
+    "ambient": "unknown: this machine has no ambient sensor and none is claimed"
+  }
+}
