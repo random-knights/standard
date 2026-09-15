@@ -93,6 +93,32 @@ Section numbers are sections of the [E+ methodology](../methodology.md).
 | 7 (7.2, 5.2, 5.3) | `meta.isLive`, `meta.notLiveDomains` and every per-domain `fresh` flag follow from the document's own provenance block, and every sub-score repeats the provenance its domain declares |
 | 8 (7.2) | any altered published number is rejected |
 | 1a (7.1) | `meta.eplusVersion` names the standard version the document conforms to (a warning by default, see below) |
+| 9 (6) | the breach panel: nine entries always, state recomputed from the published control value against the published threshold, `breachCount` equal to the transgressed entries and nothing else, `unknown` published rather than omitted, a citation on every entry, and a provisional entry marked as one (a warning only when the document publishes no panel at all, see below) |
+
+Check 9 is what makes the breach panel worth publishing. Section 6 says an
+entry's state comes from the published control VALUE against the published
+THRESHOLD and never from a domain's normalized health, so the checker
+recomputes the state and the `transgressed` flag itself:
+
+```
+past       = direction "benefit" ? value < boundary : value > boundary
+beyond     = direction "benefit" ? value < highRisk : value > highRisk
+state      = not past ? "Safe operating space"
+           : beyond   ? "Beyond the boundary"
+                      : "Zone of uncertainty"
+unknown    <=> the value and transgressed are both absent
+```
+
+A producer that read a domain's normalized health instead passes every other
+check here and fails this one. That is the audited case: ocean acidification
+publishing a health of 94.5, which any band table reads as safe, while its own
+published control value of Omega 2.7 is past every published version of its
+boundary.
+
+A threshold that publishes no high-risk line cannot place a value BEYOND one,
+so a transgression there reads as the zone of uncertainty. That keeps a sourced
+absence from becoming an invented severity: the Planetary Health Check 2025
+prints a boundary of 0 percent for novel entities and prints no high-risk line.
 
 Check 7 is the one that makes provenance checkable rather than promised.
 Section 5.3 states liveness as arithmetic:
@@ -117,11 +143,18 @@ would be importing a producer constant, which section 7.2 forbids.
 ## Warnings
 
 A warning is a requirement of the standard that this document does not meet and
-that does not fail the run by default. There is exactly one today:
+that does not fail the run by default. There are two today.
+
 `meta.eplusVersion` (section 7.1 item 1a). The reference implementation does
 not emit it yet, so making it fatal would mean the checker could not ship until
 the producer caught up, and relaxing the requirement would mean the standard
 said one thing and the checker another.
+
+The `boundaries` block (section 6), when the document publishes none at all.
+Every document published before the panel existed is in that state, including
+the live reference one. A panel that IS published is checked as a failure in
+every mode: a document cannot publish a panel and then be graded leniently on
+it.
 
 So the gap is printed on every single run, `--strict` turns it into a failure,
 and the strict run is the gate that will prove 1.0.0 conformance the day the

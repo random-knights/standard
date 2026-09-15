@@ -178,7 +178,13 @@ test("the hand-built document is conformant, and the arithmetic is checked", () 
   const result = verifyPublishedScoreDoc(baseDoc());
   assert.deepEqual(result.findings, []);
   assert.equal(result.ok, true);
-  assert.deepEqual(result.warnings, []);
+  // ONE warning, and it is the honest one: this fixture publishes no section 6
+  // breach panel, exactly like every document published before the panel
+  // existed. Absence warns, it does not fail. See check 9 below.
+  assert.deepEqual(
+    result.warnings.map((w) => w.path),
+    ["boundaries"],
+  );
   assert.equal(result.headlinePublished, 57.6);
   assert.equal(result.headlineRecomputed, 57.6);
   assert.equal(result.isLivePublished, true);
@@ -521,9 +527,11 @@ test("check 1a: a missing eplusVersion is a WARNING by default, and the run stil
   const result = verifyPublishedScoreDoc(doc);
   assert.equal(result.ok, true);
   assert.deepEqual(result.findings, []);
-  assert.equal(result.warnings.length, 1);
-  assert.equal(result.warnings[0].path, "meta.eplusVersion");
-  assert.match(result.warnings[0].note, /does not conform to 1\.0\.0/);
+  const versionWarnings = result.warnings.filter(
+    (w) => w.path === "meta.eplusVersion",
+  );
+  assert.equal(versionWarnings.length, 1);
+  assert.match(versionWarnings[0].note, /does not conform to 1\.0\.0/);
   assert.match(formatConformanceReport(result), /WARNING meta\.eplusVersion/);
 });
 
@@ -546,8 +554,11 @@ test("check 1a: a non-semver eplusVersion is reported", () => {
     }),
   );
   assert.equal(result.ok, true);
-  assert.equal(result.warnings.length, 1);
-  assert.match(result.warnings[0].note, /not a semver string/);
+  const versionWarnings = result.warnings.filter(
+    (w) => w.path === "meta.eplusVersion",
+  );
+  assert.equal(versionWarnings.length, 1);
+  assert.match(versionWarnings[0].note, /not a semver string/);
 });
 
 test("the E+ standard version and the implementation version are reported apart", () => {
@@ -579,4 +590,410 @@ test("weights come from the document, so a whole different weighting still verif
   const result = verifyPublishedScoreDoc(doc);
   assert.deepEqual(result.findings, []);
   assert.equal(result.ok, true);
+});
+
+// -- check 9: the breach panel (section 6) -----------------------------------
+//
+// THE PANEL FIXTURE, worked out by hand once, same discipline as the document
+// above: every expected state is written as a literal, so the suite and the
+// checker never agree because they ran the same function.
+//
+//   ocean acidification   benefit, PB 2.86, high-risk 2.75, value 2.70
+//                         2.70 < 2.75  ->  Beyond the boundary, transgressed
+//   land-system change    benefit, PB 75, high-risk 54, value 62
+//                         54 <= 62 < 75  ->  Zone of uncertainty, transgressed
+//   climate change        burden,  PB 350, high-risk 450, value 423
+//                         350 < 423 <= 450  ->  Zone of uncertainty, transgressed
+//   the other six         value null, transgressed null  ->  unknown
+//
+//   breachCount 3, highRiskCount 1, evaluatedCount 3, unknownCount 6, total 9
+//
+// The thresholds are the Planetary Health Check 2025 executive summary's, so
+// the fixture is a document a real producer could publish rather than a shape
+// with invented numbers in it.
+const CITE = "Planetary Health Check 2025 executive summary";
+
+function evaluated(id, boundary, highRisk, direction, value, state, domainId) {
+  return {
+    id,
+    name: id,
+    controlVariable: "the accepted control variable for " + id,
+    controlVariableCitation: CITE,
+    threshold: {
+      boundary,
+      highRisk,
+      units: "example",
+      direction,
+      citation: CITE,
+    },
+    value: {
+      controlValue: value,
+      units: "example",
+      domainId,
+      readFrom: "regions.global.subScores[" + domainId + "].controlValue",
+      provenance: "synthetic",
+      synthetic: true,
+      sourceVintage: null,
+      provisional: true,
+    },
+    state,
+    transgressed: true,
+    frameworkReportedState: "Beyond the boundary",
+    evaluationNote: "worked by hand in the test fixture",
+  };
+}
+
+function unknownEntry(id) {
+  return {
+    id,
+    name: id,
+    controlVariable: "the accepted control variable for " + id,
+    controlVariableCitation: CITE,
+    threshold: {
+      boundary: null,
+      highRisk: null,
+      units: "example",
+      direction: "burden",
+      citation: CITE,
+    },
+    value: null,
+    state: "unknown",
+    transgressed: null,
+    frameworkReportedState: "Beyond the boundary",
+    evaluationNote: "this implementation does not measure this control variable",
+  };
+}
+
+function panelDoc(mutate) {
+  const doc = JSON.parse(JSON.stringify(baseDoc()));
+  doc.boundaries = {
+    schema: "earth.boundaries.v1",
+    generatedAt: doc.meta.generatedAt,
+    thresholdEdition: "planetary-health-check-2025",
+    breachCount: 3,
+    highRiskCount: 1,
+    evaluatedCount: 3,
+    unknownCount: 6,
+    totalBoundaries: 9,
+    breachedIds: [
+      "ocean-acidification",
+      "land-system-change",
+      "climate-change",
+    ],
+    aggregationRule: "NOT averaged, NOT weighted, NOT offsettable.",
+    evaluationRule: "State is computed from the published control VALUE.",
+    framework: {
+      name: "Planetary boundaries",
+      edition: "Planetary Health Check 2025",
+      reportedBreached: 7,
+      reportedOf: 9,
+      citation: CITE,
+      note: "the framework's own count, never summed into breachCount",
+    },
+    panel: [
+      evaluated(
+        "climate-change",
+        350,
+        450,
+        "burden",
+        423,
+        "Zone of uncertainty",
+        "climate",
+      ),
+      unknownEntry("biosphere-integrity"),
+      evaluated(
+        "land-system-change",
+        75,
+        54,
+        "benefit",
+        62,
+        "Zone of uncertainty",
+        "land-cover",
+      ),
+      unknownEntry("freshwater-change"),
+      unknownEntry("biogeochemical-flows"),
+      evaluated(
+        "ocean-acidification",
+        2.86,
+        2.75,
+        "benefit",
+        2.7,
+        "Beyond the boundary",
+        "ocean-acidification",
+      ),
+      unknownEntry("atmospheric-aerosol-loading"),
+      unknownEntry("stratospheric-ozone-depletion"),
+      unknownEntry("novel-entities"),
+    ],
+  };
+  if (mutate) mutate(doc);
+  return doc;
+}
+
+test("check 9: a conforming panel passes, and its counts are recomputed", () => {
+  const result = verifyPublishedScoreDoc(panelDoc());
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.warnings, []);
+  assert.equal(result.boundaryPanelSize, 9);
+  assert.equal(result.breachCountPublished, 3);
+  assert.equal(result.breachCountRecomputed, 3);
+  assert.match(
+    formatConformanceReport(result),
+    /breach panel 9 entries, breaches published 3, recomputed 3/,
+  );
+});
+
+test("check 9: a document with no panel warns, and fails under strict", () => {
+  // FAIL-FIRST: this is the state of every document published before the panel
+  // existed, including the live reference one, so it must warn and not fail.
+  const lenient = verifyPublishedScoreDoc(baseDoc());
+  assert.equal(lenient.ok, true);
+  assert.equal(lenient.boundaryPanelSize, null);
+  assert.equal(
+    lenient.warnings.filter((w) => w.path === "boundaries").length,
+    1,
+  );
+  const strict = verifyPublishedScoreDoc(baseDoc(), { strict: true });
+  assert.equal(strict.ok, false);
+  assert.ok(paths(strict).includes("boundaries"));
+});
+
+test("check 9: a panel that omits a boundary is rejected, by name", () => {
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      d.boundaries.panel = d.boundaries.panel.filter(
+        (e) => e.id !== "novel-entities",
+      );
+      d.boundaries.unknownCount = 5;
+      d.boundaries.totalBoundaries = 8;
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.match(noteFor(result, "boundaries.panel"), /novel-entities/);
+  assert.match(noteFor(result, "boundaries.panel"), /never omitted/);
+});
+
+test("check 9: state derived from normalized health instead of the value is rejected", () => {
+  // THE DECISIVE ONE (consensus finding C5). Ocean acidification's published
+  // health is 94.5, which any band table reads as safe, while its own control
+  // value 2.70 is past the 2.86 boundary and past the 2.75 high-risk line. A
+  // producer that read the health publishes "Safe operating space" here.
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      const e = d.boundaries.panel.find((x) => x.id === "ocean-acidification");
+      e.state = "Safe operating space";
+      e.transgressed = false;
+      d.boundaries.breachCount = 2;
+      d.boundaries.highRiskCount = 0;
+      d.boundaries.breachedIds = ["land-system-change", "climate-change"];
+    }),
+  );
+  assert.equal(result.ok, false);
+  const p = paths(result);
+  assert.ok(p.includes("boundaries.panel[5].ocean-acidification.state"));
+  assert.ok(p.includes("boundaries.panel[5].ocean-acidification.transgressed"));
+  assert.match(
+    noteFor(result, "boundaries.panel[5].ocean-acidification.state"),
+    /never from a domain's normalized health/,
+  );
+});
+
+test("check 9: a summed breachCount is rejected", () => {
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      d.boundaries.breachCount = 3 + d.boundaries.framework.reportedBreached;
+    }),
+  );
+  assert.equal(result.ok, false);
+  const f = result.findings.find((x) => x.path === "boundaries.breachCount");
+  assert.equal(f.published, 10);
+  assert.equal(f.recomputed, 3);
+});
+
+test("check 9: breachCount taken from the framework's own count is rejected", () => {
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      d.boundaries.breachCount = 7;
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.match(
+    noteFor(result, "boundaries.breachCount"),
+    /framework count is context/,
+  );
+});
+
+test("check 9: unknown is unknown if and only if value and transgressed are absent", () => {
+  const claimsSafeWithNoValue = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      const e = d.boundaries.panel.find((x) => x.id === "freshwater-change");
+      e.state = "Safe operating space";
+      d.boundaries.evaluatedCount = 4;
+      d.boundaries.unknownCount = 5;
+    }),
+  );
+  assert.equal(claimsSafeWithNoValue.ok, false);
+  assert.match(
+    noteFor(
+      claimsSafeWithNoValue,
+      "boundaries.panel[3].freshwater-change.state",
+    ),
+    /publishing neither/,
+  );
+
+  const unknownWithAValue = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      const e = d.boundaries.panel.find((x) => x.id === "land-system-change");
+      e.state = "unknown";
+      e.transgressed = null;
+      d.boundaries.breachCount = 2;
+      d.boundaries.breachedIds = ["ocean-acidification", "climate-change"];
+      d.boundaries.evaluatedCount = 2;
+      d.boundaries.unknownCount = 7;
+    }),
+  );
+  assert.equal(unknownWithAValue.ok, false);
+  assert.match(
+    noteFor(unknownWithAValue, "boundaries.panel[2].land-system-change.state"),
+    /unknown while publishing a value/,
+  );
+});
+
+test("check 9: an unknown entry with no reason is rejected", () => {
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      d.boundaries.panel.find((x) => x.id === "novel-entities").evaluationNote =
+        "";
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.ok(
+    paths(result).includes("boundaries.panel[8].novel-entities.evaluationNote"),
+  );
+});
+
+test("check 9: an entry with no citation does not publish", () => {
+  const noControlCite = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      d.boundaries.panel[0].controlVariableCitation = "";
+    }),
+  );
+  assert.equal(noControlCite.ok, false);
+  assert.ok(
+    paths(noControlCite).includes(
+      "boundaries.panel[0].climate-change.controlVariableCitation",
+    ),
+  );
+
+  const noThresholdCite = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      d.boundaries.panel[0].threshold.citation = "";
+    }),
+  );
+  assert.equal(noThresholdCite.ok, false);
+  assert.ok(
+    paths(noThresholdCite).includes(
+      "boundaries.panel[0].climate-change.threshold.citation",
+    ),
+  );
+});
+
+test("check 9: a proxy domain may not evaluate a boundary", () => {
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      const e = d.boundaries.panel.find((x) => x.id === "climate-change");
+      e.value.domainId = "ocean";
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.match(
+    noteFor(result, "boundaries.panel[0].climate-change.value.domainId"),
+    /proxy domains are excluded/,
+  );
+});
+
+test("check 9: a synthetic input still produces a state, but must say provisional", () => {
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      d.boundaries.panel.find(
+        (x) => x.id === "ocean-acidification",
+      ).value.provisional = false;
+    }),
+  );
+  assert.equal(result.ok, false);
+  const note = noteFor(
+    result,
+    "boundaries.panel[5].ocean-acidification.value.provisional",
+  );
+  assert.match(note, /marked provisional/);
+  assert.match(note, /forcing it to unknown would empty the panel/);
+
+  // and a measured input is NOT forced to carry it
+  const measured = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      const e = d.boundaries.panel.find((x) => x.id === "ocean-acidification");
+      e.value.provenance = "measured";
+      e.value.synthetic = false;
+      e.value.provisional = false;
+    }),
+  );
+  assert.deepEqual(measured.findings, []);
+});
+
+test("check 9: the counts must agree with the panel they describe", () => {
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      d.boundaries.unknownCount = 5;
+      d.boundaries.evaluatedCount = 4;
+      d.boundaries.totalBoundaries = 9;
+    }),
+  );
+  assert.equal(result.ok, false);
+  const p = paths(result);
+  assert.ok(p.includes("boundaries.unknownCount"));
+  assert.ok(p.includes("boundaries.evaluatedCount"));
+});
+
+test("check 9: breachedIds must be the transgressed entries", () => {
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      d.boundaries.breachedIds = ["ocean-acidification"];
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.ok(paths(result).includes("boundaries.breachedIds"));
+});
+
+test("check 9: a threshold with no high-risk line reads as the zone of uncertainty", () => {
+  // Novel entities is the real case: PHC 2025 prints a boundary of 0 percent
+  // and prints no high-risk line, so a sourced absence must not become an
+  // invented severity.
+  const result = verifyPublishedScoreDoc(
+    panelDoc((d) => {
+      const e = d.boundaries.panel.find((x) => x.id === "novel-entities");
+      e.threshold.boundary = 0;
+      e.threshold.highRisk = null;
+      e.threshold.direction = "burden";
+      e.value = {
+        controlValue: 12,
+        units: "percent",
+        domainId: "novel-entities-input",
+        readFrom: "example",
+        provenance: "measured",
+        synthetic: false,
+        sourceVintage: null,
+        provisional: false,
+      };
+      e.state = "Zone of uncertainty";
+      e.transgressed = true;
+      e.evaluationNote = "past the boundary; the source prints no high-risk line";
+      d.boundaries.breachCount = 4;
+      d.boundaries.evaluatedCount = 4;
+      d.boundaries.unknownCount = 5;
+      d.boundaries.breachedIds.push("novel-entities");
+    }),
+  );
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.breachCountRecomputed, 4);
 });
