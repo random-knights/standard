@@ -46,6 +46,12 @@ const PROMISED = [
   ["eplus/v1/methodology.md", "eplus/v1/methodology.md"],
   ["LICENSE", "LICENSE"],
   ["LICENSE-DOCS", "LICENSE-DOCS"],
+  ["favicon-16x16.png", "assets/icons/favicon-16x16.png"],
+  ["favicon-32x32.png", "assets/icons/favicon-32x32.png"],
+  ["apple-touch-icon.png", "assets/icons/apple-touch-icon.png"],
+  ["android-chrome-192x192.png", "assets/icons/android-chrome-192x192.png"],
+  ["android-chrome-512x512.png", "assets/icons/android-chrome-512x512.png"],
+  ["site.webmanifest", "assets/icons/site.webmanifest"],
 ];
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -87,6 +93,10 @@ test("the on-disk tree has exactly the files the build promises, no more", () =>
 
 test("no served text artifact carries a CR byte at the source", () => {
   for (const [servedPath, sourcePath] of PROMISED) {
+    // Binary artifacts (the favicon PNGs) legitimately contain 0x0d; the CR
+    // rule is about line endings and applies to text only. .gitattributes
+    // marks the PNGs binary so they are never normalised either way.
+    if (sourcePath.endsWith(".png")) continue;
     const bytes = readFileSync(resolve(repoRoot, sourcePath));
     assert.ok(
       !bytes.includes(0x0d),

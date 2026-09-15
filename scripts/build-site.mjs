@@ -392,6 +392,10 @@ function renderIndexHtml() {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>standard.rand0m.ai</title>
 <meta name="description" content="Machine artifacts for the standards Random Knights publishes: schemas, methodology, and reference tables at permanent versioned URLs.">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <style>${CANON_CSS}</style>
 </head>
 <body>
@@ -426,6 +430,18 @@ ${eplusSection()}
 `;
 }
 
+// Served at the root, sourced from assets/icons/<same name>. Rendered from the
+// RK mark (assets/icons is the only copy in this repo; the master lives with
+// the brand assets).
+export const FAVICON_FILES = [
+  "favicon-16x16.png",
+  "favicon-32x32.png",
+  "apple-touch-icon.png",
+  "android-chrome-192x192.png",
+  "android-chrome-512x512.png",
+  "site.webmanifest",
+];
+
 export function expectedFiles() {
   const files = new Map([
     ["index.html", Buffer.from(renderIndexHtml())],
@@ -455,6 +471,13 @@ export function expectedFiles() {
       "versions.json",
       readFileSync(join(repoRoot, "spec", "v2", "standard-versions.json")),
     ],
+    // The family mark as favicon, served at the site root like every other
+    // family property. Sources live under assets/icons so the byte-identity
+    // gate covers them like any served artifact.
+    ...FAVICON_FILES.map((name) => [
+      name,
+      readFileSync(join(repoRoot, "assets", "icons", name)),
+    ]),
   ]);
   if (k13MdPresent) {
     files.set(join(K13_DIR, "K13.md"), readFileSync(join(repoRoot, "K13.md")));

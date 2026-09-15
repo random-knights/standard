@@ -2,3 +2,4 @@
 spec/aieds.schema.json -text
 spec/v2/aieds-factors.json -text
 spec/v2/standard-versions.json -text
+assets/icons/*.png binary
