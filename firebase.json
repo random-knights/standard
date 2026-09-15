@@ -27,6 +27,12 @@
           "headers": [
             { "key": "Cache-Control", "value": "public, max-age=600" }
           ]
+        },
+        {
+          "source": "/",
+          "headers": [
+            { "key": "Cache-Control", "value": "public, max-age=600" }
+          ]
         }
       ]
     },
@@ -54,6 +60,12 @@
         },
         {
           "source": "**/*.@(html|css|js)",
+          "headers": [
+            { "key": "Cache-Control", "value": "public, max-age=600" }
+          ]
+        },
+        {
+          "source": "/",
           "headers": [
             { "key": "Cache-Control", "value": "public, max-age=600" }
           ]
