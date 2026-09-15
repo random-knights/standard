@@ -120,6 +120,92 @@
         "max": 86.79,
         "iqrWiderThanMedian": false
       },
+      "fit": {
+        "prefill": {
+          "method": "ordinary least squares, energy_joules = a + b * tokens",
+          "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+          "n": 36,
+          "df": 34,
+          "aWhPerRequest": -0.00286,
+          "aWhPerRequestCI": [
+            -0.003965,
+            -0.001754
+          ],
+          "aPValue": 0.000008,
+          "aDistinguishableFromZero": true,
+          "bWhPerToken": 0.000006332,
+          "bWhPerTokenCI": [
+            0.000005919,
+            0.000006746
+          ],
+          "bWhPerMillionTokens": 6.332,
+          "bWhPerMillionTokensCI": [
+            5.919,
+            6.746
+          ],
+          "bPValue": 0,
+          "bootstrapAWhPerRequestCI": [
+            -0.004136,
+            -0.001911
+          ],
+          "bootstrapBWhPerTokenCI": [
+            0.000006024,
+            0.000006673
+          ],
+          "bootstrapResamples": 10000,
+          "bootstrapSeed": 24301,
+          "tCritical": 2.032245,
+          "r2": 0.966145,
+          "residualStandardErrorJoules": 7.557968,
+          "residualMaxAbsJoules": 13.607761,
+          "absResidualVsTokensPearson": -0.533943,
+          "curvatureSignificant": true,
+          "curvaturePValue": 0,
+          "curvatureNote": "A quadratic term IS significant, so a straight line is the wrong shape here and `a` is not a fixed cost: it is whatever the line needs at zero tokens to compensate for curvature. Do not publish this phase as a two-term coefficient."
+        },
+        "decode": {
+          "method": "ordinary least squares, energy_joules = a + b * tokens",
+          "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+          "n": 36,
+          "df": 34,
+          "aWhPerRequest": -0.001692,
+          "aWhPerRequestCI": [
+            -0.004049,
+            0.000665
+          ],
+          "aPValue": 0.153871,
+          "aDistinguishableFromZero": false,
+          "bWhPerToken": 0.000099273,
+          "bWhPerTokenCI": [
+            0.000090969,
+            0.000107577
+          ],
+          "bWhPerMillionTokens": 99.273,
+          "bWhPerMillionTokensCI": [
+            90.969,
+            107.577
+          ],
+          "bPValue": 0,
+          "bootstrapAWhPerRequestCI": [
+            -0.003403,
+            -0.000106
+          ],
+          "bootstrapBWhPerTokenCI": [
+            0.000090019,
+            0.000108517
+          ],
+          "bootstrapResamples": 10000,
+          "bootstrapSeed": 24301,
+          "tCritical": 2.032245,
+          "r2": 0.94553,
+          "residualStandardErrorJoules": 14.090854,
+          "residualMaxAbsJoules": 33.468318,
+          "absResidualVsTokensPearson": 0.453742,
+          "curvatureSignificant": false,
+          "curvaturePValue": 0.910387737,
+          "curvatureNote": "No significant quadratic term, so the affine two-term model is not contradicted by these data."
+        }
+      },
       "runs": [
         {
           "runId": "llama3.2-1b-load",
@@ -1715,6 +1801,92 @@
         "min": 7.74,
         "max": 63.67,
         "iqrWiderThanMedian": true
+      },
+      "fit": {
+        "prefill": {
+          "method": "ordinary least squares, energy_joules = a + b * tokens",
+          "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+          "n": 36,
+          "df": 34,
+          "aWhPerRequest": -0.005075,
+          "aWhPerRequestCI": [
+            -0.006267,
+            -0.003883
+          ],
+          "aPValue": 0,
+          "aDistinguishableFromZero": true,
+          "bWhPerToken": 0.000016305,
+          "bWhPerTokenCI": [
+            0.00001586,
+            0.000016751
+          ],
+          "bWhPerMillionTokens": 16.305,
+          "bWhPerMillionTokensCI": [
+            15.86,
+            16.751
+          ],
+          "bPValue": 0,
+          "bootstrapAWhPerRequestCI": [
+            -0.006419,
+            -0.004081
+          ],
+          "bootstrapBWhPerTokenCI": [
+            0.00001596,
+            0.000016683
+          ],
+          "bootstrapResamples": 10000,
+          "bootstrapSeed": 24301,
+          "tCritical": 2.032245,
+          "r2": 0.993897,
+          "residualStandardErrorJoules": 8.146918,
+          "residualMaxAbsJoules": 14.365636,
+          "absResidualVsTokensPearson": -0.410962,
+          "curvatureSignificant": true,
+          "curvaturePValue": 0,
+          "curvatureNote": "A quadratic term IS significant, so a straight line is the wrong shape here and `a` is not a fixed cost: it is whatever the line needs at zero tokens to compensate for curvature. Do not publish this phase as a two-term coefficient."
+        },
+        "decode": {
+          "method": "ordinary least squares, energy_joules = a + b * tokens",
+          "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+          "n": 36,
+          "df": 34,
+          "aWhPerRequest": -0.001838,
+          "aWhPerRequestCI": [
+            -0.004996,
+            0.001319
+          ],
+          "aPValue": 0.244896,
+          "aDistinguishableFromZero": false,
+          "bWhPerToken": 0.000197467,
+          "bWhPerTokenCI": [
+            0.000186343,
+            0.000208592
+          ],
+          "bWhPerMillionTokens": 197.467,
+          "bWhPerMillionTokensCI": [
+            186.343,
+            208.592
+          ],
+          "bPValue": 0,
+          "bootstrapAWhPerRequestCI": [
+            -0.004063,
+            0.00019
+          ],
+          "bootstrapBWhPerTokenCI": [
+            0.000184942,
+            0.000210133
+          ],
+          "bootstrapResamples": 10000,
+          "bootstrapSeed": 24301,
+          "tCritical": 2.032245,
+          "r2": 0.974538,
+          "residualStandardErrorJoules": 18.876011,
+          "residualMaxAbsJoules": 40.635767,
+          "absResidualVsTokensPearson": 0.600666,
+          "curvatureSignificant": false,
+          "curvaturePValue": 0.743138187,
+          "curvatureNote": "No significant quadratic term, so the affine two-term model is not contradicted by these data."
+        }
       },
       "runs": [
         {

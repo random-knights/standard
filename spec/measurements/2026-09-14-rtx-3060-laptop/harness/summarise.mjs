@@ -19,6 +19,94 @@ import {
   samplingIntervalMs,
   summariseRuns,
 } from "./lib/measure-math.mjs";
+import { fitTwoTerm } from "./lib/fit.mjs";
+
+const JOULES_PER_WH = 3600;
+
+/**
+ * The published two-term fit for one phase: energy_joules = a + b * tokens.
+ *
+ * WHY TWO TERMS. A single Wh-per-million-tokens coefficient divides a
+ * per-request fixed cost by a varying token count, which is not a constant, and
+ * on this hardware it produced an interquartile range wider than its own
+ * median. `a` is the fixed cost and `b` the marginal per-token cost, so the
+ * shape can express what the measurement actually found.
+ *
+ * Both terms are converted to Wh here and nowhere else, so the unit conversion
+ * happens once. Intervals are reported by two independent methods: t-based,
+ * which assumes normal homoscedastic residuals, and a seeded percentile
+ * bootstrap over pairs, which assumes neither. Disagreement between them is
+ * information, so both are published.
+ */
+function fitPhase(runs, phase) {
+  const tokenKey = phase === "prefill" ? "promptTokens" : "completionTokens";
+  const joulesKey = phase === "prefill" ? "prefillNetJoules" : "decodeNetJoules";
+  const xs = [];
+  const ys = [];
+  for (const r of runs) {
+    const x = r[tokenKey];
+    const y = r[joulesKey];
+    if (Number.isFinite(x) && x > 0 && Number.isFinite(y)) {
+      xs.push(x);
+      ys.push(y);
+    }
+  }
+  const f = fitTwoTerm(xs, ys);
+  if (f === null) return null;
+  const q = f.diagnostics.quadratic;
+  return {
+    method: "ordinary least squares, energy_joules = a + b * tokens",
+    intervalMethod:
+      "t-based at 95 percent (df = n - 2) as the published interval; seeded " +
+      "percentile bootstrap over pairs, 10000 resamples, as a " +
+      "distribution-free cross-check",
+    n: f.n,
+    df: f.df,
+    aWhPerRequest: round(f.a / JOULES_PER_WH, 6),
+    aWhPerRequestCI: [
+      round(f.aCI[0] / JOULES_PER_WH, 6),
+      round(f.aCI[1] / JOULES_PER_WH, 6),
+    ],
+    aPValue: round(f.aPValue, 6),
+    aDistinguishableFromZero: f.aPValue !== null ? f.aPValue < 0.05 : null,
+    bWhPerToken: round(f.b / JOULES_PER_WH, 9),
+    bWhPerTokenCI: [
+      round(f.bCI[0] / JOULES_PER_WH, 9),
+      round(f.bCI[1] / JOULES_PER_WH, 9),
+    ],
+    bWhPerMillionTokens: round((f.b / JOULES_PER_WH) * 1e6, 3),
+    bWhPerMillionTokensCI: [
+      round((f.bCI[0] / JOULES_PER_WH) * 1e6, 3),
+      round((f.bCI[1] / JOULES_PER_WH) * 1e6, 3),
+    ],
+    bPValue: round(f.bPValue, 9),
+    bootstrapAWhPerRequestCI: [
+      round(f.bootstrap.aCI[0] / JOULES_PER_WH, 6),
+      round(f.bootstrap.aCI[1] / JOULES_PER_WH, 6),
+    ],
+    bootstrapBWhPerTokenCI: [
+      round(f.bootstrap.bCI[0] / JOULES_PER_WH, 9),
+      round(f.bootstrap.bCI[1] / JOULES_PER_WH, 9),
+    ],
+    bootstrapResamples: f.bootstrap.resamples,
+    bootstrapSeed: f.bootstrap.seed,
+    tCritical: round(f.tCritical, 6),
+    r2: round(f.diagnostics.r2, 6),
+    residualStandardErrorJoules: round(f.diagnostics.residualStandardError, 6),
+    residualMaxAbsJoules: round(f.diagnostics.residualMaxAbs, 6),
+    absResidualVsTokensPearson: round(f.diagnostics.absResidualVsXPearson, 6),
+    curvatureSignificant: q === null ? null : q.significant,
+    curvaturePValue: q === null ? null : round(q.pValue, 9),
+    curvatureNote:
+      q !== null && q.significant
+        ? "A quadratic term IS significant, so a straight line is the wrong " +
+          "shape here and `a` is not a fixed cost: it is whatever the line " +
+          "needs at zero tokens to compensate for curvature. Do not publish " +
+          "this phase as a two-term coefficient."
+        : "No significant quadratic term, so the affine two-term model is not " +
+          "contradicted by these data.",
+  };
+}
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const MEASUREMENT_DIR = resolve(HERE, "..");
@@ -69,6 +157,11 @@ export function summariseDirectory(dir = MEASUREMENT_DIR) {
     );
     const loadCall = runResults.find((r) => r.isLoadCall) ?? null;
     const summary = summariseRuns(runResults);
+    // The same set the distribution is built from: the load call and any run
+    // with a disqualifying flag are out of both, so the median and the fit
+    // describe identical data.
+    const excludedIds = new Set(summary.excluded.map((e) => e.runId));
+    const fittableRuns = runResults.filter((r) => !excludedIds.has(r.runId));
     const interval = samplingIntervalMs(samples.samples);
 
     sessions.push({
@@ -108,6 +201,12 @@ export function summariseDirectory(dir = MEASUREMENT_DIR) {
           }
         : null,
       ...summary,
+      // The two-term fit runs over exactly the runs the distribution uses, so
+      // a reader comparing the median and the fit is comparing the same data.
+      fit: {
+        prefill: fitPhase(fittableRuns, "prefill"),
+        decode: fitPhase(fittableRuns, "decode"),
+      },
       runs: runResults,
     });
   }

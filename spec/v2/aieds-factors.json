@@ -1,7 +1,7 @@
 {
   "$comment": "Canonical AiEDs factor data. This file is the single source of truth for every coefficient the AiEDs tooling emits. The TypeScript packages read it directly; the Dart package mirrors it as compile-time constants and is gated against a vendored copy by test. Editing a value here is a methodology change: bump methodology.md and its changelog in the same commit (methodology.md section 6).",
   "schemaVersion": 1,
-  "methodologyVersion": "2.1.0",
+  "methodologyVersion": "2.2.0",
   "impactModelVersion": "v2",
   "constants": {
     "matureReferenceTreeCo2eGramsPerYear": {
@@ -305,5 +305,188 @@
     "ledBulbWatts": 10,
     "laptopWatts": 50,
     "carDrivingGramsCo2ePerKm": 170
+  },
+  "measuredDevices": {
+    "methodologySection": "2.3.1, Table 4",
+    "unit": "a in Wh per request, b in Wh per token",
+    "model": "energyWh = a + b * tokens, fitted per phase and per device",
+    "scopeFence": "A measured device coefficient describes only the hardware, runtime, model and quantization it names. It MUST NOT be applied to any other system, and in particular MUST NOT be applied to hosted inference.",
+    "note": "A per-request fixed cost `a` is a NEW disclosure shape. The AiEDs per-token paths in sections 2.1 to 2.4 cannot express it, which is why a single Wh-per-million-tokens figure measured on real hardware came out with an interquartile range wider than its own median. Hosted calls have no measured intercept and remain class-estimated with low confidence.",
+    "entries": [
+      {
+        "id": "rtx-3060-laptop-gpu-ollama-0-34-0-llama3-2-1b-q8-0",
+        "hardware": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "acceleratorDriver": "527.99",
+        "enforcedPowerLimitW": 60,
+        "hostCpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "hostRamGb": 15.4,
+        "os": "Microsoft Windows 11 Home 10.0.26200 build 26200",
+        "runtime": "Ollama 0.34.0",
+        "model": "llama3.2:1b",
+        "architecture": "llama",
+        "parameters": "1.2B",
+        "quantization": "Q8_0",
+        "contextLength": "8192",
+        "batchSize": 1,
+        "measurementScope": "dGPU board power only (nvidia-smi power.draw). Host CPU, system memory and the integrated GPU are NOT measured.",
+        "instrumentAccuracy": "nvidia-smi --help-query-gpu, driver 527.99: power.draw is the last measured power draw for the entire board, accurate to within +/- 5 watts.",
+        "samplingIntervalMs": 16,
+        "idleBaselineW": 13.229,
+        "idleBaselineBasis": "Loaded idle: model resident in VRAM, no request in flight, 60 s. Unloaded idle measured 13.486 W over 60 s; the difference is below this instrument's stated accuracy, so VRAM residency cost is not resolvable here.",
+        "unloadedIdleW": 13.486,
+        "tailExcluded": true,
+        "tailShareOfRequestPctMedian": 29.86,
+        "tailNote": "Both phase fits EXCLUDE the post-response power decay, which is real energy caused by the request but falls in neither phase window. Its median share of a request's net energy is published here so the size of the omission is a number rather than a caveat.",
+        "phases": {
+          "prefill": {
+            "status": "unresolved",
+            "runs": 36,
+            "degreesOfFreedom": 34,
+            "r2": 0.966145,
+            "residualStandardErrorJoules": 7.557968,
+            "absResidualVsTokensPearson": -0.533943,
+            "curvatureSignificant": true,
+            "curvaturePValue": 0,
+            "method": "ordinary least squares, energy_joules = a + b * tokens",
+            "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+            "reason": "The affine two-term model is MIS-SPECIFIED for prefill on this device. A quadratic term in tokens is significant, so energy is convex in token count rather than affine, and the fitted intercept is not a fixed per-request cost: it is whatever a straight line needs at zero tokens to compensate for the curvature. On these data that line predicts NEGATIVE energy inside the observed range, which is not physical. No coefficient is published for this phase.",
+            "unresolvedNotApplicable": "UNRESOLVED, not NOT-APPLICABLE: this phase applies and its energy was measured; it is the two-term SHAPE that cannot carry it yet."
+          },
+          "decode": {
+            "status": "published",
+            "runs": 36,
+            "degreesOfFreedom": 34,
+            "r2": 0.94553,
+            "residualStandardErrorJoules": 14.090854,
+            "absResidualVsTokensPearson": 0.453742,
+            "curvatureSignificant": false,
+            "curvaturePValue": 0.910387737,
+            "method": "ordinary least squares, energy_joules = a + b * tokens",
+            "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+            "aWhPerRequest": -0.001692,
+            "aWhPerRequestCI95": [
+              -0.004049,
+              0.000665
+            ],
+            "aPValue": 0.153871,
+            "aDistinguishableFromZero": false,
+            "aNote": "NOT distinguishable from zero at 95 percent: the interval straddles zero, so this phase shows no measurable fixed per-request cost. A consumer may take a as zero and should carry the interval.",
+            "bWhPerToken": 0.000099273,
+            "bWhPerTokenCI95": [
+              0.000090969,
+              0.000107577
+            ],
+            "bWhPerMillionTokens": 99.273,
+            "bWhPerMillionTokensCI95": [
+              90.969,
+              107.577
+            ],
+            "bPValue": 0,
+            "bootstrapAWhPerRequestCI95": [
+              -0.003403,
+              -0.000106
+            ],
+            "bootstrapBWhPerTokenCI95": [
+              0.000090019,
+              0.000108517
+            ],
+            "bootstrapResamples": 10000,
+            "bootstrapSeed": 24301
+          }
+        },
+        "provenance": "measured",
+        "confidence": "high",
+        "measurementDirectory": "spec/measurements/2026-09-14-rtx-3060-laptop",
+        "measurementCommit": "d9a3f0a029ed885bb4f76eff7ed35f6a70acfe7f",
+        "citation": "Random Knights, LLC (2026). Measured on NVIDIA GeForce RTX 3060 Laptop GPU, driver 527.99, Ollama 0.34.0, llama3.2:1b Q8_0, batch size 1, context 8192. Discrete GPU board power via nvidia-smi power.draw at about 16 ms, loaded-idle baseline 13.229 W subtracted, 36 runs. Method, harness and raw samples: spec/measurements/2026-09-14-rtx-3060-laptop/README.md at commit d9a3f0a029ed885bb4f76eff7ed35f6a70acfe7f."
+      },
+      {
+        "id": "rtx-3060-laptop-gpu-ollama-0-34-0-llama3-2-latest-q4-k-m",
+        "hardware": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "acceleratorDriver": "527.99",
+        "enforcedPowerLimitW": 60,
+        "hostCpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "hostRamGb": 15.4,
+        "os": "Microsoft Windows 11 Home 10.0.26200 build 26200",
+        "runtime": "Ollama 0.34.0",
+        "model": "llama3.2:latest",
+        "architecture": "llama",
+        "parameters": "3.2B",
+        "quantization": "Q4_K_M",
+        "contextLength": "8192",
+        "batchSize": 1,
+        "measurementScope": "dGPU board power only (nvidia-smi power.draw). Host CPU, system memory and the integrated GPU are NOT measured.",
+        "instrumentAccuracy": "nvidia-smi --help-query-gpu, driver 527.99: power.draw is the last measured power draw for the entire board, accurate to within +/- 5 watts.",
+        "samplingIntervalMs": 16,
+        "idleBaselineW": 13.407,
+        "idleBaselineBasis": "Loaded idle: model resident in VRAM, no request in flight, 60 s. Unloaded idle measured 13.486 W over 60 s; the difference is below this instrument's stated accuracy, so VRAM residency cost is not resolvable here.",
+        "unloadedIdleW": 13.486,
+        "tailExcluded": true,
+        "tailShareOfRequestPctMedian": 14.82,
+        "tailNote": "Both phase fits EXCLUDE the post-response power decay, which is real energy caused by the request but falls in neither phase window. Its median share of a request's net energy is published here so the size of the omission is a number rather than a caveat.",
+        "phases": {
+          "prefill": {
+            "status": "unresolved",
+            "runs": 36,
+            "degreesOfFreedom": 34,
+            "r2": 0.993897,
+            "residualStandardErrorJoules": 8.146918,
+            "absResidualVsTokensPearson": -0.410962,
+            "curvatureSignificant": true,
+            "curvaturePValue": 0,
+            "method": "ordinary least squares, energy_joules = a + b * tokens",
+            "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+            "reason": "The affine two-term model is MIS-SPECIFIED for prefill on this device. A quadratic term in tokens is significant, so energy is convex in token count rather than affine, and the fitted intercept is not a fixed per-request cost: it is whatever a straight line needs at zero tokens to compensate for the curvature. On these data that line predicts NEGATIVE energy inside the observed range, which is not physical. No coefficient is published for this phase.",
+            "unresolvedNotApplicable": "UNRESOLVED, not NOT-APPLICABLE: this phase applies and its energy was measured; it is the two-term SHAPE that cannot carry it yet."
+          },
+          "decode": {
+            "status": "published",
+            "runs": 36,
+            "degreesOfFreedom": 34,
+            "r2": 0.974538,
+            "residualStandardErrorJoules": 18.876011,
+            "absResidualVsTokensPearson": 0.600666,
+            "curvatureSignificant": false,
+            "curvaturePValue": 0.743138187,
+            "method": "ordinary least squares, energy_joules = a + b * tokens",
+            "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+            "aWhPerRequest": -0.001838,
+            "aWhPerRequestCI95": [
+              -0.004996,
+              0.001319
+            ],
+            "aPValue": 0.244896,
+            "aDistinguishableFromZero": false,
+            "aNote": "NOT distinguishable from zero at 95 percent: the interval straddles zero, so this phase shows no measurable fixed per-request cost. A consumer may take a as zero and should carry the interval.",
+            "bWhPerToken": 0.000197467,
+            "bWhPerTokenCI95": [
+              0.000186343,
+              0.000208592
+            ],
+            "bWhPerMillionTokens": 197.467,
+            "bWhPerMillionTokensCI95": [
+              186.343,
+              208.592
+            ],
+            "bPValue": 0,
+            "bootstrapAWhPerRequestCI95": [
+              -0.004063,
+              0.00019
+            ],
+            "bootstrapBWhPerTokenCI95": [
+              0.000184942,
+              0.000210133
+            ],
+            "bootstrapResamples": 10000,
+            "bootstrapSeed": 24301
+          }
+        },
+        "provenance": "measured",
+        "confidence": "high",
+        "measurementDirectory": "spec/measurements/2026-09-14-rtx-3060-laptop",
+        "measurementCommit": "d9a3f0a029ed885bb4f76eff7ed35f6a70acfe7f",
+        "citation": "Random Knights, LLC (2026). Measured on NVIDIA GeForce RTX 3060 Laptop GPU, driver 527.99, Ollama 0.34.0, llama3.2:latest Q4_K_M, batch size 1, context 8192. Discrete GPU board power via nvidia-smi power.draw at about 16 ms, loaded-idle baseline 13.407 W subtracted, 36 runs. Method, harness and raw samples: spec/measurements/2026-09-14-rtx-3060-laptop/README.md at commit d9a3f0a029ed885bb4f76eff7ed35f6a70acfe7f."
+      }
+    ]
   }
 }

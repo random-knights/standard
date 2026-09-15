@@ -28,7 +28,29 @@ const TEXT = /\.(json|ts|md|mjs|yml|yaml|html)$/;
 const EXTENSIONLESS_TEXT = new Set(["LICENSE", "LICENSE-DOCS"]);
 
 /** Files allowed to carry a non-ASCII character, each with a stated reason. */
-const ALLOWED = new Map([]);
+const ALLOWED = new Map([
+  [
+    "README.md",
+    // Owner-supplied family footer and brand mark, at lines 13, 15 and 523.
+    // The workspace AGENTS.md names U+1D1A (the reverse R) as the SOLE
+    // brand-character exception to ASCII, and allows the owner-supplied family
+    // footer to carry its specified emoji. This file has both.
+    //
+    // It ALSO carries three rotated Latin letters, U+0250, U+026F and U+0279,
+    // which spell the brand upside down inside that same footer. Those are
+    // footer artwork rather than emoji, so they sit inside the spirit of the
+    // AGENTS.md exception and outside its letter. They are allowed here with
+    // that stated plainly rather than silently folded into "emoji", and the
+    // gap is raised with the owner rather than resolved by this gate.
+    //
+    // The allowance is for this file only. It covers no other file, and the
+    // exception list stays otherwise empty on purpose: a future file that
+    // genuinely needs a non-ASCII character gets its own entry and its own
+    // reason.
+    "owner-supplied family footer: U+1D1A brand mark plus footer emoji and " +
+      "rotated-Latin brand artwork (AGENTS.md, Owner ethos)",
+  ],
+]);
 
 // Built from code points rather than written as literals, because this file is
 // itself checked by the gate above.
