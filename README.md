@@ -1,9 +1,9 @@
 <a name="readme-top"></a>
 
-<!-- HEANDER PNG -->
+<!-- HEADER PNG -->
 <div align="center">
   <picture>
-    <img alt="Random Knights < repo name here >" src="assets/standard.png">
+    <img alt="Random Knights Standard" src="assets/standard.png">
   </picture>
 
 <!-- HERO -->
@@ -36,7 +36,7 @@
 
 <!-- HERO GIF -->
 <p align="center">
-  <img alt="Random Knights < repo name here >" src="assets/standard.gif">
+  <img alt="Random Knights Standard" src="assets/standard.gif">
 </p>
 
 <!-- TITLE -->
