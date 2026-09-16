@@ -93,36 +93,77 @@ jobs:
           import { readFileSync } from 'node:fs';
           const manifest = readFileSync('public.sha256', 'utf8').trim().split('\n');
           const failures = [];
+          const MAX_ATTEMPTS = 6;
+          const RETRY_WAIT_MS = 10000;
+          const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+          let retriedCount = 0;
           for (const line of manifest) {
             const match = line.match(/^([0-9a-f]{64})\s+\.\/(.+)$/);
             if (!match) throw new Error(`Invalid manifest line: ${line}`);
             const [, expected, file] = match;
-            // cleanUrls is on, trailingSlash is off: the one index.html (at the
-            // root) serves at /; every other artifact serves at its own path
-            // verbatim, because build-site.mjs never emits a nested index.html.
             const path = file === 'index.html' ? '/' : `/${file}`;
             const url = `${process.env.BASE_URL}${path}?sha=${process.env.DEPLOY_SHA}`;
-            const response = await fetch(url, {
-              headers: { 'accept-encoding': 'identity' },
-              redirect: 'follow',
-            });
-            const bytes = Buffer.from(await response.arrayBuffer());
-            const actual = createHash('sha256').update(bytes).digest('hex');
-            const cacheControl = response.headers.get('cache-control') || '';
-            const contentType = response.headers.get('content-type') || '';
-            const cacheOk = file.endsWith('.schema.json') || /\.(json|md)$/.test(file)
-              ? cacheControl.includes('public') && cacheControl.includes('max-age=3600')
-              : /\.(html|css|js)$/.test(file)
-                ? cacheControl.includes('public') && cacheControl.includes('max-age=600')
-                : true;
-            const contentTypeOk = file.endsWith('.schema.json')
-              ? contentType.includes('application/schema+json')
-              : true;
-            const robotsOk = (response.headers.get('x-robots-tag') || '').includes('noindex');
-            if (response.status !== 200 || actual !== expected || !cacheOk || !contentTypeOk || !robotsOk) {
-              failures.push(`${file}: status=${response.status} expected=${expected} actual=${actual} cache=${cacheControl} content-type=${contentType} robots=${response.headers.get('x-robots-tag')}`);
+            let retriedThisFile = false;
+            for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+              let response = null;
+              let actual = null;
+              let cacheControl = '';
+              let contentType = '';
+              let failReason = null;
+              let retryable = false;
+              let passed = false;
+              try {
+                response = await fetch(url, {
+                  headers: { 'accept-encoding': 'identity' },
+                  redirect: 'follow',
+                });
+                const bytes = Buffer.from(await response.arrayBuffer());
+                actual = createHash('sha256').update(bytes).digest('hex');
+                cacheControl = response.headers.get('cache-control') || '';
+                contentType = response.headers.get('content-type') || '';
+                const cacheOk = file.endsWith('.schema.json') || /\.(json|md)$/.test(file)
+                  ? cacheControl.includes('public') && cacheControl.includes('max-age=3600')
+                  : /\.(html|css|js)$/.test(file)
+                    ? cacheControl.includes('public') && cacheControl.includes('max-age=600')
+                    : true;
+                const contentTypeOk = file.endsWith('.schema.json')
+                  ? contentType.includes('application/schema+json')
+                  : true;
+                const robotsOk = (response.headers.get('x-robots-tag') || '').includes('noindex');
+                if (response.status === 200 && actual === expected && cacheOk && contentTypeOk && robotsOk) {
+                  passed = true;
+                } else if (response.status === 404 || response.status >= 500) {
+                  failReason = `status=${response.status}`;
+                  retryable = true;
+                } else if (response.status !== 200) {
+                  failReason = `status=${response.status}`;
+                  retryable = false;
+                } else if (actual !== expected) {
+                  failReason = 'hash mismatch';
+                  retryable = true;
+                } else {
+                  failReason = 'header mismatch';
+                  retryable = true;
+                }
+              } catch (err) {
+                failReason = `network error (${err.message})`;
+                retryable = true;
+              }
+              if (passed) break;
+              if (!retryable || attempt === MAX_ATTEMPTS) {
+                failures.push(
+                  response
+                    ? `${file}: status=${response.status} expected=${expected} actual=${actual} cache=${cacheControl} content-type=${contentType} robots=${response.headers.get('x-robots-tag')}`
+                    : `${file}: ${failReason}`
+                );
+                break;
+              }
+              retriedThisFile = true;
+              console.log(`retrying ${file} (attempt ${attempt}/${MAX_ATTEMPTS}): ${failReason}`);
+              await sleep(RETRY_WAIT_MS);
             }
+            if (retriedThisFile) retriedCount += 1;
           }
           if (failures.length) throw new Error(failures.join('\n'));
-          console.log(`staging byte proof passed for ${manifest.length} files`);
+          console.log(`staging byte proof passed for ${manifest.length} files, ${retriedCount} needed retries`);
           NODE
