@@ -91,3 +91,9 @@ test("the deploy proves the bytes it served, not the config it used", () => {
   assert.match(staging, /max-age=3600/);
   assert.match(staging, /robotsOk/);
 });
+
+test("the byte proof retries a failing file up to 6 times, 10 seconds apart, before reporting red", () => {
+  assert.equal((staging.match(/MAX_ATTEMPTS = 6/g) || []).length, 1);
+  assert.equal((staging.match(/RETRY_WAIT_MS = 10000/g) || []).length, 1);
+  assert.match(staging, /if \(failures\.length\) throw new Error\(failures\.join\('\\n'\)\);/);
+});
