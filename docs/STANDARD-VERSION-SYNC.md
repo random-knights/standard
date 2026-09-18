@@ -75,8 +75,8 @@ developers' machines. Those ledgers are local and are not published. What is
 published is the generator's output, committed to `.github` under `aieds/`, so
 this fan-out has a source it can read with no credential.
 
-**`organisation`, never `org`.** The organisation-wide block is filed under
-`organisation`. `org` is a repository in this organisation, and when the block
+**`organisation`, never `org`.** The organization-wide block is filed under
+`organisation`. `org` is a repository in this organization, and when the block
 was first keyed `org` the repository's own block overwrote it: the public front
 page would have carried one repository's figures as the whole company's total.
 
@@ -110,7 +110,7 @@ minutes and it is done once.
 
 **Why an App rather than a personal access token.** A fine-grained PAT belongs
 to a person, expires on a date nobody has in their calendar, and makes machine
-edits look human in the audit log. An App is owned by the organisation, survives
+edits look human in the audit log. An App is owned by the organization, survives
 people, and mints a token per run that expires within the hour, so the only
 stored secret is a private key that does not rotate on a schedule. Its pull
 requests arrive from `standard-sync[bot]`, which is the point: the table is
@@ -146,7 +146,7 @@ required `CI Gate` check would never run and the pull request could never merge.
    Adding it to the workflow alone makes the token mint fail for the whole run.
    The fan-out also names this exact list, so a wider install grants access
    nothing uses.
-9. Add two secrets. Organisation secrets at
+9. Add two secrets. Organization secrets at
    **github.com/organizations/random-knights/settings/secrets/actions**, scoped
    to the `standard` repository, or repository secrets on `standard` directly:
    - `RK_SYNC_APP_ID` = the App ID from step 7

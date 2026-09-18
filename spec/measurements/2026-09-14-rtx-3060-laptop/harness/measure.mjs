@@ -23,7 +23,7 @@
 // SCOPE, and it is not a footnote: nvidia-smi reports the DISCRETE GPU's BOARD
 // power. Host CPU, system memory and the integrated GPU are NOT measured. Every
 // number this harness produces is "dGPU board power during inference" and must
-// be labelled exactly that. It is never "system power".
+// be labeled exactly that. It is never "system power".
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -320,7 +320,7 @@ async function fakeGenerate({ promptTokens, completionTokens, loadState, isLoadC
 // window collapsed to about 50 ms and the decode coefficient was measured over
 // nothing. The filler must be benign enough that the model simply works.
 const FILLER_WORDS =
-  "The harbour survey records tide height, wind direction and water " +
+  "The harbor survey records tide height, wind direction and water " +
   "temperature at each station. Readings are taken hourly and logged with " +
   "the station identifier, the observer initials and a short note on sea " +
   "state. Older paper logbooks are transcribed in winter when the survey " +

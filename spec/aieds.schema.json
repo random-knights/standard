@@ -63,7 +63,7 @@
         "inference",
         "training"
       ],
-      "description": "Measurement boundary. 'device' = client device energy (CPU/GPU/display) running an AI app; 'usage' = device + server-side inference combined; 'inference' = server-side inference only; 'training' = model training run. AiEDs v1 is optimised for device/usage/inference (agent-native). Training disclosures are supported but factor tables are inference-focused."
+      "description": "Measurement boundary. 'device' = client device energy (CPU/GPU/display) running an AI app; 'usage' = device + server-side inference combined; 'inference' = server-side inference only; 'training' = model training run. AiEDs v1 is optimized for device/usage/inference (agent-native). Training disclosures are supported but factor tables are inference-focused."
     },
     "window": {
       "type": "string",

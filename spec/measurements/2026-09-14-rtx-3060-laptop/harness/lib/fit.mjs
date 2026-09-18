@@ -16,7 +16,7 @@
 // reads a clock. Given the same inputs it returns the same numbers, bootstrap
 // included, because the resampler is seeded.
 //
-// A FIT IS NOT A LICENCE. `a` and `b` mean something only if the residuals say
+// A FIT IS NOT A LICENSE. `a` and `b` mean something only if the residuals say
 // a straight line describes the data. So every fit returns its diagnostics and
 // the caller is expected to look at them: r2, the residual standard error, the
 // slope of |residual| against x (heteroscedasticity), and a curvature test that
@@ -180,7 +180,7 @@ export function quadraticTest(xs, ys) {
   const n = xs.length;
   if (n < 4) return null;
   // Normal equations for y = c0 + c1 x + c2 x^2, solved by Gaussian
-  // elimination on the 3x3 system. Centred on the mean of x to keep the
+  // elimination on the 3x3 system. Centered on the mean of x to keep the
   // matrix well conditioned.
   const mx = xs.reduce((s, v) => s + v, 0) / n;
   const z = xs.map((x) => x - mx);

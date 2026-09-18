@@ -57,7 +57,7 @@
  *   - it reads ONLY the document (weights come from `meta.weights`, never from
  *     any producer constant), so it can be run against any implementation;
  *   - it imports nothing at all, from anywhere, so a producer bug cannot be
- *     cancelled out by the same bug in the checker;
+ *     canceled out by the same bug in the checker;
  *   - the arithmetic is re-implemented here from the published
  *     `meta.derivation.steps` rather than shared with any producer.
  *
