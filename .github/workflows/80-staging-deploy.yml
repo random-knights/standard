@@ -24,6 +24,9 @@ concurrency:
 
 env:
   STAGING_URL: https://abc-standard-rand0m-ai.web.app
+  STAGING_CUSTOM_URL: https://stg.standard.rand0m.ai
+  STAGING_BUCKET: randomknights-abc-staging-private
+  SITE_PREFIX: standard
 
 jobs:
   build:
@@ -71,99 +74,68 @@ jobs:
         run: |
           cd .firebase/standard-site
           sha256sum -c ../../public.sha256
-      - name: Deploy exact artifact to staging
+      - name: Upload the exact artifact to the private staging bucket
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_RANDOMKNIGHTS_ABC }}
         run: |
+          set -euo pipefail
           if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
             echo "FIREBASE_SERVICE_ACCOUNT_RANDOMKNIGHTS_ABC is not available to this repository."
             exit 1
           fi
-          echo "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/sa.json" \
+            --project randomknights-abc >/dev/null
+          gcloud storage rsync --recursive --delete-unmatched-destination-objects \
+            ".firebase/standard-site" "gs://$STAGING_BUCKET/$SITE_PREFIX"
+      - name: Deploy the gate shim to staging hosting
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_RANDOMKNIGHTS_ABC }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
           npx -y firebase-tools@14 deploy --only hosting:staging --project randomknights-abc --non-interactive
-      - name: Prove staging bytes
-        env:
-          BASE_URL: ${{ env.STAGING_URL }}
-          DEPLOY_SHA: ${{ github.sha }}
-        shell: bash
+      - name: Prove the staging bytes in the bucket
         run: |
-          node --input-type=module <<'NODE'
-          import { createHash } from 'node:crypto';
-          import { readFileSync } from 'node:fs';
-          const manifest = readFileSync('public.sha256', 'utf8').trim().split('\n');
-          const failures = [];
-          const MAX_ATTEMPTS = 6;
-          const RETRY_WAIT_MS = 10000;
-          const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-          let retriedCount = 0;
-          for (const line of manifest) {
-            const match = line.match(/^([0-9a-f]{64})\s+\.\/(.+)$/);
-            if (!match) throw new Error(`Invalid manifest line: ${line}`);
-            const [, expected, file] = match;
-            const path = file === 'index.html' ? '/' : `/${file}`;
-            const url = `${process.env.BASE_URL}${path}?sha=${process.env.DEPLOY_SHA}`;
-            let retriedThisFile = false;
-            for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-              let response = null;
-              let actual = null;
-              let cacheControl = '';
-              let contentType = '';
-              let failReason = null;
-              let retryable = false;
-              let passed = false;
-              try {
-                response = await fetch(url, {
-                  headers: { 'accept-encoding': 'identity' },
-                  redirect: 'follow',
-                });
-                const bytes = Buffer.from(await response.arrayBuffer());
-                actual = createHash('sha256').update(bytes).digest('hex');
-                cacheControl = response.headers.get('cache-control') || '';
-                contentType = response.headers.get('content-type') || '';
-                const cacheOk = file.endsWith('.schema.json') || /\.(json|md)$/.test(file)
-                  ? cacheControl.includes('public') && cacheControl.includes('max-age=3600')
-                  : /\.(html|css|js)$/.test(file)
-                    ? cacheControl.includes('public') && cacheControl.includes('max-age=600')
-                    : true;
-                const contentTypeOk = file.endsWith('.schema.json')
-                  ? contentType.includes('application/schema+json')
-                  : true;
-                const robotsOk = (response.headers.get('x-robots-tag') || '').includes('noindex');
-                if (response.status === 200 && actual === expected && cacheOk && contentTypeOk && robotsOk) {
-                  passed = true;
-                } else if (response.status === 404 || response.status >= 500) {
-                  failReason = `status=${response.status}`;
-                  retryable = true;
-                } else if (response.status !== 200) {
-                  failReason = `status=${response.status}`;
-                  retryable = false;
-                } else if (actual !== expected) {
-                  failReason = 'hash mismatch';
-                  retryable = true;
-                } else {
-                  failReason = 'header mismatch';
-                  retryable = true;
-                }
-              } catch (err) {
-                failReason = `network error (${err.message})`;
-                retryable = true;
-              }
-              if (passed) break;
-              if (!retryable || attempt === MAX_ATTEMPTS) {
-                failures.push(
-                  response
-                    ? `${file}: status=${response.status} expected=${expected} actual=${actual} cache=${cacheControl} content-type=${contentType} robots=${response.headers.get('x-robots-tag')}`
-                    : `${file}: ${failReason}`
-                );
-                break;
-              }
-              retriedThisFile = true;
-              console.log(`retrying ${file} (attempt ${attempt}/${MAX_ATTEMPTS}): ${failReason}`);
-              await sleep(RETRY_WAIT_MS);
-            }
-            if (retriedThisFile) retriedCount += 1;
-          }
-          if (failures.length) throw new Error(failures.join('\n'));
-          console.log(`staging byte proof passed for ${manifest.length} files, ${retriedCount} needed retries`);
-          NODE
+          set -euo pipefail
+          manifest="$PWD/public.sha256"
+          rm -rf "$RUNNER_TEMP/proof"
+          mkdir -p "$RUNNER_TEMP/proof"
+          gcloud storage cp --recursive "gs://$STAGING_BUCKET/$SITE_PREFIX/*" "$RUNNER_TEMP/proof/" >/dev/null
+          cd "$RUNNER_TEMP/proof"
+          sha256sum -c "$manifest"
+          echo "staging byte proof passed for $(wc -l < "$manifest") files in gs://$STAGING_BUCKET/$SITE_PREFIX"
+      - name: Prove the gate is closed to an unauthenticated visitor
+        run: |
+          set -euo pipefail
+          # The site itself must never reach a stranger. Both the default host
+          # and the custom staging hostname have to answer with the gate's
+          # sign-in page, and the bytes must not be the site's own index.
+          index_sha=$(awk '$2 == "./index.html" { print $1 }' "public.sha256")
+          if [ -z "$index_sha" ]; then
+            echo "FAIL: the manifest has no ./index.html to compare against"
+            exit 1
+          fi
+          for host in "$STAGING_URL" "$STAGING_CUSTOM_URL"; do
+            passed=""
+            for attempt in 1 2 3 4 5 6; do
+              code=$(curl -s -o "$RUNNER_TEMP/gate.html" -w '%{http_code}' "$host/") || code=000
+              if [ "$code" = "200" ] && grep -q 'rk-staging-gate-sign-in' "$RUNNER_TEMP/gate.html"; then
+                passed="yes"
+                break
+              fi
+              echo "retrying $host (attempt $attempt/6): status=$code"
+              sleep 10
+            done
+            if [ -z "$passed" ]; then
+              echo "FAIL: $host did not return the gate sign-in page"
+              exit 1
+            fi
+            served_sha=$(sha256sum "$RUNNER_TEMP/gate.html" | awk '{ print $1 }')
+            if [ "$served_sha" = "$index_sha" ]; then
+              echo "FAIL: $host served the site itself to an unauthenticated request"
+              exit 1
+            fi
+            echo "gate closed on $host"
+          done
