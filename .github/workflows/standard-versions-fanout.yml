@@ -18,6 +18,23 @@
 # reports what it would have done and succeeds, rather than failing a release.
 # Automation that goes red on a missing credential trains people to ignore red.
 #
+# IT CARRIES TWO BLOCKS NOW. The STANDARD version table, which moves when a
+# version in this repo moves, and the AiEDs disclosure block, which moves when
+# the AiEDs README generator runs over the SessionEnd ledgers. Both are
+# generated, both are delimited by markers, and both are synced by scripts that
+# live in random-knights/.github. One fan-out carries both because the expensive
+# part is the credential and the clone, not the rewrite, and two workflows
+# opening two pull requests against the same README would conflict with each
+# other for no gain.
+#
+# A README WITH NO AiEDs MARKERS IS SKIPPED, NOT FAILED. Adding the marker pair
+# is a deliberate one-time edit in each repo, because a script that goes looking
+# for a place to put a block ends up pattern-matching markdown, which is how
+# every hand-maintained copy in this org drifted before. Until a repo opts in,
+# this reports that it has not and moves on. A red run on a repo that has simply
+# not adopted the block yet is a red run nobody can fix, and those teach people
+# to ignore red.
+#
 # IT NEVER MERGES. It opens pull requests and stops.
 
 name: Standard versions fan-out
@@ -44,12 +61,14 @@ jobs:
       - name: Check out the standard
         uses: actions/checkout@v4
 
-      - name: Check out the sync script
+      - name: Check out the sync scripts and the generated AiEDs blocks
         uses: actions/checkout@v4
         with:
           repository: random-knights/.github
           path: .standard-sync
-          sparse-checkout: scripts
+          sparse-checkout: |
+            scripts
+            aieds
           sparse-checkout-cone-mode: false
 
       - uses: actions/setup-node@v4
@@ -101,15 +120,22 @@ jobs:
           set -euo pipefail
           VERSIONS="$PWD/spec/v2/standard-versions.json"
           SYNC="$PWD/.standard-sync/scripts/sync-standard-versions.mjs"
+          AIEDS_SYNC="$PWD/.standard-sync/scripts/sync-aieds.mjs"
+          AIEDS_SOURCE="$PWD/.standard-sync/aieds"
           BRANCH=chore/standard-versions
 
-          # repo:readme pairs. .github renders the table on the org profile
-          # page, not on its own README.
-          TARGETS=".github:profile/README.md abc:README.md r1-01:README.md xyz-earth:README.md"
+          # repo:readme:aieds-block triples. .github renders both blocks on the
+          # org profile page, not on its own README, and its AiEDs block is the
+          # ORGANISATION one. That block is filed under `organisation` and not
+          # under `org`, because org IS a repository here and the collision put
+          # one repo's figures on the public front page as the whole company's.
+          TARGETS=".github:profile/README.md:organisation abc:README.md:abc r1-01:README.md:r1-01 xyz-earth:README.md:xyz-earth"
 
           for entry in $TARGETS; do
             repo="${entry%%:*}"
-            readme="${entry#*:}"
+            rest="${entry#*:}"
+            readme="${rest%%:*}"
+            block="${rest#*:}"
             echo "::group::$repo"
             work="$(mktemp -d)"
             if [ "$CONFIGURED" != "true" ]; then
@@ -119,9 +145,20 @@ jobs:
             fi
             git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/random-knights/${repo}.git" "$work"
             if ! node "$SYNC" --write --source "$VERSIONS" "$work/$readme"; then
-              echo "::error::$repo: $readme could not be rewritten (missing markers?)"
+              echo "::error::$repo: $readme could not be rewritten (missing STANDARD markers?)"
               echo "::endgroup::"
               continue
+            fi
+            # Exit 2 from the AiEDs sync means a real problem, and the only one
+            # a consumer can have here is "no AIEDS markers yet", which is an
+            # opt-in state and not a failure. Anything else would already have
+            # failed the STANDARD sync above, on the same file.
+            set +e
+            node "$AIEDS_SYNC" --write --repo "$block" --source "$AIEDS_SOURCE" "$work/$readme"
+            aieds_code=$?
+            set -e
+            if [ "$aieds_code" -eq 2 ]; then
+              echo "::notice::$repo: $readme carries no AIEDS markers yet, so the AiEDs block was not placed. Add the marker pair once, by hand, to opt in."
             fi
             cd "$work"
             if git diff --quiet -- "$readme"; then
@@ -142,20 +179,25 @@ jobs:
             git checkout -b "$BRANCH"
             git add -- "$readme"
             git commit -F - <<'MSG'
-          chore(readme): sync the STANDARD version table
+          chore(readme): sync the generated README blocks
 
-          Regenerated from the versions published by random-knights/standard,
-          which derives them from the canonical documents and gates them. This
-          commit carries no judgement of its own.
+          Regenerates the STANDARD version table from the versions published by
+          random-knights/standard, which derives them from the canonical
+          documents and gates them, and the AiEDs disclosure block from the
+          blocks published in random-knights/.github, which the AiEDs README
+          generator produced from the SessionEnd ledgers.
 
-          Opened by standard-sync[bot]. Nobody hand-edited this table.
+          This commit carries no judgement of its own. Nobody hand-edited either
+          block, and a guard fails a README where somebody has.
+
+          Opened by standard-sync[bot].
           MSG
             git push --force-with-lease origin "$BRANCH"
             if ! gh pr view "$BRANCH" --repo "random-knights/$repo" --json number >/dev/null 2>&1; then
               gh pr create --repo "random-knights/$repo" \
                 --head "$BRANCH" \
-                --title "chore(readme): sync the STANDARD version table" \
-                --body "A standard version moved. This regenerates the STANDARD block in $readme from the versions published at https://standard.rand0m.ai/versions.json. The bot does not merge; review and merge when you are happy."
+                --title "chore(readme): sync the generated README blocks" \
+                --body "This regenerates the generated blocks in $readme: the STANDARD version table from the versions published at https://standard.rand0m.ai/versions.json, and the AiEDs disclosure block from the blocks published in random-knights/.github. Both are generated, neither was hand-edited, and a guard fails a README where one has drifted. The bot does not merge; review and merge when you are happy."
             fi
             cd - >/dev/null
             echo "::endgroup::"

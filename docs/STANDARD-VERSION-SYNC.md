@@ -59,6 +59,32 @@ Three rules make it hold:
    because parsing the table is how the description column drifted.
 3. **Nothing merges itself.** The fan-out opens pull requests. You merge.
 
+## The fan-out carries a second block: AiEDs
+
+Since 2026-09-17 the same fan-out also syncs each repository's AiEDs disclosure
+block, the one that states the energy of developing that repository. It works
+exactly like the version table and for the same reasons: the block is generated,
+it is delimited by `<!-- AIEDS:BEGIN -->` and `<!-- AIEDS:END -->`, and
+`scripts/sync-aieds.mjs` in `.github` rewrites what is between the markers.
+
+Three things worth knowing.
+
+**The blocks are generated somewhere else.** They come from the AiEDs README
+generator in the working root, which reads the `SessionEnd` ledgers on the
+developers' machines. Those ledgers are local and are not published. What is
+published is the generator's output, committed to `.github` under `aieds/`, so
+this fan-out has a source it can read with no credential.
+
+**`organisation`, never `org`.** The organisation-wide block is filed under
+`organisation`. `org` is a repository in this organisation, and when the block
+was first keyed `org` the repository's own block overwrote it: the public front
+page would have carried one repository's figures as the whole company's total.
+
+**A repository with no AIEDS markers is skipped, not failed.** Adding the marker
+pair is a one-time hand edit per repository. Until a repository makes it, the
+fan-out says so in a notice and carries on. A red run on a repository that has
+simply not adopted the block is a red run nobody can fix.
+
 ## Where each piece lives, and why
 
 | Piece | Repo | Credential |
@@ -67,7 +93,9 @@ Three rules make it hold:
 | `scripts/sync-standard-versions.mjs` (the logic, one copy) | .github | none |
 | `standard-versions.yml` (reusable drift check) | .github | none |
 | `standard-versions-check.yml` (caller) | each consumer | none |
-| `standard-versions-fanout.yml` (opens the PRs) | standard | the App |
+| `scripts/sync-aieds.mjs` and `aieds/` (the generated blocks) | .github | none |
+| `aieds.yml` (reusable AiEDs drift check) | .github | none |
+| `standard-versions-fanout.yml` (opens the PRs, both blocks) | standard | the App |
 
 The fan-out is here and not in `.github` for a stated reason: `.github/AGENTS.md`
 says nothing private, internal or secret belongs in that repo and that no
@@ -109,6 +137,13 @@ required `CI Gate` check would never run and the pull request could never merge.
 7. Note the **App ID** from the App settings page.
 8. **Install App**, and choose **Only select repositories**:
    `.github`, `abc`, `r1-01`, `xyz-earth`. Do NOT select all repositories.
+
+   **This list is the fan-out's whole reach.** A repository that is not in it,
+   and not in the `repositories:` list in `standard-versions-fanout.yml`, gets
+   no pull request from the fan-out and its generated blocks have to be updated
+   by a direct pull request instead. Adding a repository means BOTH: selecting
+   it here, which only the owner can do, and adding it to the workflow's list.
+   Adding it to the workflow alone makes the token mint fail for the whole run.
    The fan-out also names this exact list, so a wider install grants access
    nothing uses.
 9. Add two secrets. Organisation secrets at
