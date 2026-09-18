@@ -1,0 +1,29 @@
+# This repo carries its own AiEDs disclosure block, so it is a consumer of the
+# org's reusable drift check. No credential: check only.
+#
+# The block states the energy of developing THIS repository. That matters more
+# here than anywhere else: this is the repository that publishes the AiEDs
+# methodology, so a hand-typed figure in its own README would be the standard
+# failing its own honesty contract.
+name: AiEDs check
+
+on:
+  pull_request:
+    paths:
+      - README.md
+      - .github/workflows/aieds-check.yml
+  schedule:
+    # Weekly backstop, offset from the STANDARD version check so the two do not
+    # queue against each other. This is what notices if the fan-out did not run.
+    - cron: "41 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  aieds:
+    uses: random-knights/.github/.github/workflows/aieds.yml@main
+    with:
+      repo: standard
+      readme: README.md
