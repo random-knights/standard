@@ -337,14 +337,14 @@ Concretely: the same 412-in / 890-out exchange that 1.x would have blurred into 
 <td align="center" width="25%">
 
 ⚡<br>
-<b>10.0</b><br>
+<b>12.6</b><br>
 <sub>kWh</sub>
 
 </td>
 <td align="center" width="25%">
 
 🌫️<br>
-<b>4.3</b><br>
+<b>5.4</b><br>
 <sub>kg CO₂e</sub>
 
 </td>
@@ -352,15 +352,15 @@ Concretely: the same 412-in / 890-out exchange that 1.x would have blurred into 
 
 🌳<br>
 <sub>Tree-Time</sub><br>
-<b>74</b><br>
+<b>94</b><br>
 <sub>days</sub>
 
 </td>
 <td align="center" width="25%">
 
 🔢<br>
-<b>56.64 M</b><br>
-<sub>tokens, 8 sessions</sub>
+<b>71.84 M</b><br>
+<sub>tokens, 13 sessions</sub>
 
 </td>
 </tr>
@@ -371,8 +371,8 @@ Concretely: the same 412-in / 890-out exchange that 1.x would have blurred into 
 **The figures above are the AiEDs impact of developing this repository,**
 measured by a `SessionEnd` hook on the developers' machines and reported under AiEDs section 2.4.1,<br>
 which counts plain input, cache-creation and cache-read tokens all as input at the input coefficient.<br>
-<sub>97.3 percent of our input is cache reads, so that rule decides the answer by 7.4x.
-Weighting a cache read at 0.1 instead gives <b>1.4 kWh, 0.6 kg CO₂e, 10 days of Tree-Time</b>.
+<sub>97.5 percent of our input is cache reads, so that rule decides the answer by 7.6x.
+Weighting a cache read at 0.1 instead gives <b>1.7 kWh, 0.7 kg CO₂e, 12 days of Tree-Time</b>.
 That lower figure is <b>a local departure from the standard, not a reading of it</b>. It is
 published because it is what this project offsets against.
 </sub>
@@ -384,11 +384,11 @@ published because it is what this project offsets against.
 
 | Equivalent | Amount | Basis |
 | --- | ---: | --- |
-| Phone charges | 829 | 12 Wh per charge |
-| LED bulb hours | 995 | 10 W bulb |
-| Laptop hours | 199 | 50 W laptop |
-| Driving distance | 25 km | 170 g CO₂e per km |
-| Tree-Time | 74 days | 21 kg CO₂e per mature tree per year |
+| Phone charges | 1,051 | 12 Wh per charge |
+| LED bulb hours | 1,261 | 10 W bulb |
+| Laptop hours | 252 | 50 W laptop |
+| Driving distance | 32 km | 170 g CO₂e per km |
+| Tree-Time | 94 days | 21 kg CO₂e per mature tree per year |
 
 </details>
 
@@ -397,11 +397,11 @@ published because it is what this project offsets against.
 
 <sub>What the figures above cost, and what it would take to absorb them. Modeled, like everything else here.</sub>
 
-**Energy cost: USD 1.83.** 10.0 kWh at USD 0.1834 per kWh, the United States average residential price for June 2026 (18.34 cents per kilowatthour), from <a href="https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_5_3">U.S. Energy Information Administration, Electric Power Monthly, Table 5.3</a>. The rate is pinned, not looked up at render time, so this figure is reproducible.
+**Energy cost: USD 2.31.** 12.6 kWh at USD 0.1834 per kWh, the United States average residential price for June 2026 (18.34 cents per kilowatthour), from <a href="https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_5_3">U.S. Energy Information Administration, Electric Power Monthly, Table 5.3</a>. The rate is pinned, not looked up at render time, so this figure is reproducible.
 
-**Modeled provider spend: USD 21.12.** The same sessions priced at published API list prices, rates version 2026-09-01, with cache writes at 1.25x and cache reads at 0.1x an input token. It is a MODEL, not a bill: this work runs on a subscription, so the marginal cost was nothing. It covers the 4 of 8 sessions counted above whose model that file prices; the other 4 carry a model nobody has priced and add nothing, rather than an assumed rate.
+**Modeled provider spend: USD 30.05.** The same sessions priced at published API list prices, rates version 2026-09-01, with cache writes at 1.25x and cache reads at 0.1x an input token. It is a MODEL, not a bill: this work runs on a subscription, so the marginal cost was nothing. It covers the 8 of 13 sessions counted above whose model that file prices; the other 5 carry a model nobody has priced and add nothing, rather than an assumed rate.
 
-**Trees needed: 1.** 4.3 kg CO₂e divided by 21 kg CO₂e, the yearly capture of one mature tree, rounded up: 1 mature tree would absorb this carbon within one year. Put the other way round, that is the Tree-Time above: one mature tree working for 74 days.
+**Trees needed: 1.** 5.4 kg CO₂e divided by 21 kg CO₂e, the yearly capture of one mature tree, rounded up: 1 mature tree would absorb this carbon within one year. Put the other way round, that is the Tree-Time above: one mature tree working for 94 days.
 
 </details>
 
