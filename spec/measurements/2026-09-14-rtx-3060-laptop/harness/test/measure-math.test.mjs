@@ -289,7 +289,7 @@ test("dry run: the whole pipeline produces a summary with no GPU present", async
     // FAKE_* constants: 50 W under load, 14 W idle.
     assert.equal(round(session.idle.loadedMeanW, 3), 14);
 
-    // Determinism: summarising the same directory twice is byte-identical.
+    // Determinism: summarizing the same directory twice is byte-identical.
     const a = JSON.stringify(summariseDirectory(dir));
     const b = JSON.stringify(summariseDirectory(dir));
     assert.equal(a, b);

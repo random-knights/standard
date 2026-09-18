@@ -53,7 +53,7 @@ AiEDs scope definitions:
 - **device** - energy consumed by the client device (CPU, GPU, display) running an AI app.
 - **usage** - device + server-side inference combined (full user-facing footprint).
 - **inference** - server-side inference only (no client energy).
-- **training** - a model training run. Factor tables are inference-optimised; apply training-specific measured values where available.
+- **training** - a model training run. Factor tables are inference-optimized; apply training-specific measured values where available.
 
 ### 1.1 Metric Hierarchy
 
@@ -98,7 +98,7 @@ energyKWh = joules / 3_600_000
 energyKWh = (tokens / 1_000_000) x Wh_per_million / 1_000
 ```
 
-`Wh_per_million` by model scale from **Table 2** (section 4). This path is order-of-magnitude only; hardware utilisation, batch size, and serving efficiency dominate actual consumption. **Confidence: `low`.**
+`Wh_per_million` by model scale from **Table 2** (section 4). This path is order-of-magnitude only; hardware utilization, batch size, and serving efficiency dominate actual consumption. **Confidence: `low`.**
 
 ### 2.3.1 Measured Device Coefficients, two-term (2.2.0)
 
@@ -179,7 +179,7 @@ power measures that component. Table 4's first entries were taken with
 memory and any integrated GPU are NOT included. Such a figure is disclosed as
 "dGPU board power during inference" and never as system power. A tool reporting
 package power rather than board power is a different measurement again and must
-be labelled as such.
+be labeled as such.
 
 **Cached prefill (section 2.4.1) and the two-term shape.** Where a prefill entry
 is published, the two terms make a cached prefill checkable: a cache read should

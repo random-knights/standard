@@ -547,7 +547,7 @@ A conforming E+ document contains, at minimum:
    window, `domainProvenance`, `isLive`, `weightCarryingDomains`,
    `notLiveDomains`, `stale`, `staleDomains`, `oldestSourceVintage`,
    `vintagelessDomains`, `measuredCoverage`.
-7. `meta.globalRingDiagnostic` (or an equivalent labelled diagnostic) wherever
+7. `meta.globalRingDiagnostic` (or an equivalent labeled diagnostic) wherever
    a superseded headline rule is retained for continuity.
 8. The breach panel of section 6, once built (OQ-8). Until then the document
    MUST state in `meta.disclosure` that the aggregation has no breach term.
@@ -590,7 +590,7 @@ constant and no network call other than fetching the document:
 
 The checker MUST read weights from `meta.weights`, never from the producer's
 constants, and MUST import nothing from the producer, so a producer bug cannot
-be cancelled by the same bug in the checker. It MUST be shown to FAIL: the
+be canceled by the same bug in the checker. It MUST be shown to FAIL: the
 reference test suite runs it against byte-for-byte fixtures of the real
 2026-09-10 (63.4 published, 58.95 rollup) and 2026-09-11 (63.8 published, 59.2
 rollup) documents, where it must fail and name the headline, and then against a
@@ -680,7 +680,7 @@ not compute does not.
   row can be read against the framework's own reports.
 - **Kunming-Montreal Global Biodiversity Framework Target 3** - the
   conservation domain is scored against 30x30 as a response indicator, and is
-  labelled `contextual-proxy` because Target 3 is a policy target, not a
+  labeled `contextual-proxy` because Target 3 is a policy target, not a
   planetary boundary.
 
 ---

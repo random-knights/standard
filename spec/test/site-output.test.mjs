@@ -95,7 +95,7 @@ test("no served text artifact carries a CR byte at the source", () => {
   for (const [servedPath, sourcePath] of PROMISED) {
     // Binary artifacts (the favicon PNGs) legitimately contain 0x0d; the CR
     // rule is about line endings and applies to text only. .gitattributes
-    // marks the PNGs binary so they are never normalised either way.
+    // marks the PNGs binary so they are never normalized either way.
     if (sourcePath.endsWith(".png")) continue;
     const bytes = readFileSync(resolve(repoRoot, sourcePath));
     assert.ok(

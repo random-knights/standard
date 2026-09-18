@@ -84,7 +84,7 @@ test("the index page lists AiEDs as live and K13.md as published", () => {
 test("the index page lists E+ at the version and status its own text declares", () => {
   // Same honesty gate as K13: the served copy is byte-identical to the repo
   // file, the version on the page is parsed from the document header, and a
-  // draft is labelled as a draft until the text itself says otherwise.
+  // draft is labeled as a draft until the text itself says otherwise.
   const indexKey = [...files.keys()].find((k) => k === "index.html");
   const html = files.get(indexKey).toString("utf8");
   const source = readFileSync(resolve(repoRoot, "eplus/v1/methodology.md"), "utf8");

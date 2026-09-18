@@ -3,7 +3,7 @@
 <!-- K13 v2.0.0 template for offline viewing.
      Six levels, all six NORMATIVE under K13 2.0.0. Same structure as
      temp1ate.html but rendered as markdown.
-     Licence: this template is Apache 2.0, a reference implementation you may
+     License: this template is Apache 2.0, a reference implementation you may
      fork without attribution friction. The REQUIREMENT it renders, the
      ordered section list in K13.md under "The report template", is
      specification text and is CC BY 4.0. Fork the markup; cite the standard.
@@ -771,7 +771,7 @@ FILL: the formal gate result with scope, confidence, and known limits
 
 ### How it fits
 
-FILL: the formal relation to the wider programme of work, and what it enables next
+FILL: the formal relation to the wider program of work, and what it enables next
 
 FILL: what preceded this work, and what it unblocks.
 

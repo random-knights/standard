@@ -49,7 +49,7 @@ export function parseSampleLine(line) {
  * "2026/09/14 15:45:33.163" (nvidia-smi prints LOCAL time) -> epoch ms.
  *
  * Built from components rather than handed to the Date string parser, because
- * that parser's behaviour on this shape is implementation-defined. Components
+ * that parser's behavior on this shape is implementation-defined. Components
  * go through the local-time Date constructor, which is what the string means
  * and which handles a daylight-saving boundary correctly.
  */

@@ -193,7 +193,7 @@ The ramp-up falls inside the prefill window and is correctly charged there. The
 decay does not fall inside either phase window. Attributing it to decode would
 overstate a per-token decode cost; ignoring it silently would understate the
 request. So it is measured as its own window, published per run as
-`tailNetJoules` and `tailShareOfRequestPct`, and summarised as a distribution.
+`tailNetJoules` and `tailShareOfRequestPct`, and summarized as a distribution.
 **The two phase figures therefore do not include the tail, and the size of that
 omission is a measured number in `summary.json`, not a caveat.**
 
@@ -217,7 +217,7 @@ Two prompt-construction decisions are load bearing:
   against about 1600 tokens per second when the prefix genuinely differs. Cached
   prefill is a real thing to disclose (methodology 2.4.1), but it is not what
   this harness measures.
-- **The filler text is a benign harbour-survey paragraph, and the task asks for
+- **The filler text is a benign harbor-survey paragraph, and the task asks for
   a long essay.** The first filler was the NATO phonetic alphabet, which
   `llama3.2:1b` refused: "I can't provide a commentary on the list of military
   units". A refusal is 36 tokens, so every decode window collapsed to about
@@ -418,5 +418,5 @@ Stated plainly, because a measurement whose limits are buried is not repeatable.
    separately (see Method, section 4). On the 1B model it is a median 29.9 per
    cent of a request's net energy, which is not a rounding error.
 8. **Per-token prefill energy here is length dependent** and is therefore not
-   summarised honestly by one number. See "Why no coefficient was published".
+   summarized honestly by one number. See "Why no coefficient was published".
 9. **Nothing here describes hosted inference.** See the scope fence at the top.
