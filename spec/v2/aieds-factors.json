@@ -1,7 +1,7 @@
 {
   "$comment": "Canonical AiEDs factor data. This file is the single source of truth for every coefficient the AiEDs tooling emits. The TypeScript packages read it directly; the Dart package mirrors it as compile-time constants and is gated against a vendored copy by test. Editing a value here is a methodology change: bump methodology.md and its changelog in the same commit (methodology.md section 6).",
   "schemaVersion": 1,
-  "methodologyVersion": "2.2.0",
+  "methodologyVersion": "2.3.0",
   "impactModelVersion": "v2",
   "constants": {
     "matureReferenceTreeCo2eGramsPerYear": {
@@ -307,11 +307,11 @@
     "carDrivingGramsCo2ePerKm": 170
   },
   "measuredDevices": {
-    "methodologySection": "2.3.1, Table 4",
-    "unit": "a in Wh per request, b in Wh per token",
-    "model": "energyWh = a + b * tokens, fitted per phase and per device",
+    "methodologySection": "2.3.1, Table 4; prefill bands 2.3.2, Table 4b",
+    "unit": "a in Wh per request, b in Wh per token; band figures in Wh per million tokens",
+    "model": "energyWh = a + b * tokens, fitted per phase and per device; prefill published as a per-prompt-length-band distribution where the affine fit is mis-specified (see each entry's prefill.bands)",
     "scopeFence": "A measured device coefficient describes only the hardware, runtime, model and quantization it names. It MUST NOT be applied to any other system, and in particular MUST NOT be applied to hosted inference.",
-    "note": "A per-request fixed cost `a` is a NEW disclosure shape. The AiEDs per-token paths in sections 2.1 to 2.4 cannot express it, which is why a single Wh-per-million-tokens figure measured on real hardware came out with an interquartile range wider than its own median. Hosted calls have no measured intercept and remain class-estimated with low confidence.",
+    "note": "A per-request fixed cost `a` is a NEW disclosure shape. The AiEDs per-token paths in sections 2.1 to 2.4 cannot express it, which is why a single Wh-per-million-tokens figure measured on real hardware came out with an interquartile range wider than its own median. Hosted calls have no measured intercept and remain class-estimated with low confidence. Where prefill's affine fit is mis-specified, no single coefficient is published; the phase is reported as a per-band median and interquartile range instead (methodology 2.3.2).",
     "entries": [
       {
         "id": "rtx-3060-laptop-gpu-ollama-0-34-0-llama3-2-1b-q8-0",
@@ -339,7 +339,7 @@
         "tailNote": "Both phase fits EXCLUDE the post-response power decay, which is real energy caused by the request but falls in neither phase window. Its median share of a request's net energy is published here so the size of the omission is a number rather than a caveat.",
         "phases": {
           "prefill": {
-            "status": "unresolved",
+            "status": "published-by-band",
             "runs": 36,
             "degreesOfFreedom": 34,
             "r2": 0.966145,
@@ -349,8 +349,53 @@
             "curvaturePValue": 0,
             "method": "ordinary least squares, energy_joules = a + b * tokens",
             "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
-            "reason": "The affine two-term model is MIS-SPECIFIED for prefill on this device. A quadratic term in tokens is significant, so energy is convex in token count rather than affine, and the fitted intercept is not a fixed per-request cost: it is whatever a straight line needs at zero tokens to compensate for the curvature. On these data that line predicts NEGATIVE energy inside the observed range, which is not physical. No coefficient is published for this phase.",
-            "unresolvedNotApplicable": "UNRESOLVED, not NOT-APPLICABLE: this phase applies and its energy was measured; it is the two-term SHAPE that cannot carry it yet."
+            "reason": "The affine two-term model is MIS-SPECIFIED for prefill on this device. A quadratic term in tokens is significant, so energy is convex in token count rather than affine, and the fitted intercept is not a fixed per-request cost: it is whatever a straight line needs at zero tokens to compensate for the curvature. On these data that line predicts NEGATIVE energy inside the observed range, which is not physical. No single coefficient is published for this phase.",
+            "bandNote": "No single a/b coefficient is published for this phase; see bands below. Each band reports the median and interquartile range of Wh per million tokens observed at that prompt length, not a fitted line.",
+            "bandUnit": "Wh per million tokens",
+            "bands": [
+              {
+                "band": "short",
+                "lowerBoundTokens": 0,
+                "upperBoundTokens": 256,
+                "runs": 12,
+                "promptTokensObservedMin": 252,
+                "promptTokensObservedMax": 252,
+                "medianWhPerMillionTokens": 2.474,
+                "q1WhPerMillionTokens": 1.163,
+                "q3WhPerMillionTokens": 3.591,
+                "iqrWhPerMillionTokens": 2.429,
+                "minWhPerMillionTokens": 0.485,
+                "maxWhPerMillionTokens": 4.185
+              },
+              {
+                "band": "medium",
+                "lowerBoundTokens": 256,
+                "upperBoundTokens": 2048,
+                "runs": 12,
+                "promptTokensObservedMin": 1528,
+                "promptTokensObservedMax": 1528,
+                "medianWhPerMillionTokens": 2.848,
+                "q1WhPerMillionTokens": 2.7,
+                "q3WhPerMillionTokens": 2.894,
+                "iqrWhPerMillionTokens": 0.194,
+                "minWhPerMillionTokens": 1.987,
+                "maxWhPerMillionTokens": 3.129
+              },
+              {
+                "band": "long",
+                "lowerBoundTokens": 2048,
+                "upperBoundTokens": null,
+                "runs": 12,
+                "promptTokensObservedMin": 4370,
+                "promptTokensObservedMax": 4370,
+                "medianWhPerMillionTokens": 5.897,
+                "q1WhPerMillionTokens": 5.722,
+                "q3WhPerMillionTokens": 6.015,
+                "iqrWhPerMillionTokens": 0.293,
+                "minWhPerMillionTokens": 5.579,
+                "maxWhPerMillionTokens": 6.143
+              }
+            ]
           },
           "decode": {
             "status": "published",
@@ -426,7 +471,7 @@
         "tailNote": "Both phase fits EXCLUDE the post-response power decay, which is real energy caused by the request but falls in neither phase window. Its median share of a request's net energy is published here so the size of the omission is a number rather than a caveat.",
         "phases": {
           "prefill": {
-            "status": "unresolved",
+            "status": "published-by-band",
             "runs": 36,
             "degreesOfFreedom": 34,
             "r2": 0.993897,
@@ -436,8 +481,53 @@
             "curvaturePValue": 0,
             "method": "ordinary least squares, energy_joules = a + b * tokens",
             "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
-            "reason": "The affine two-term model is MIS-SPECIFIED for prefill on this device. A quadratic term in tokens is significant, so energy is convex in token count rather than affine, and the fitted intercept is not a fixed per-request cost: it is whatever a straight line needs at zero tokens to compensate for the curvature. On these data that line predicts NEGATIVE energy inside the observed range, which is not physical. No coefficient is published for this phase.",
-            "unresolvedNotApplicable": "UNRESOLVED, not NOT-APPLICABLE: this phase applies and its energy was measured; it is the two-term SHAPE that cannot carry it yet."
+            "reason": "The affine two-term model is MIS-SPECIFIED for prefill on this device. A quadratic term in tokens is significant, so energy is convex in token count rather than affine, and the fitted intercept is not a fixed per-request cost: it is whatever a straight line needs at zero tokens to compensate for the curvature. On these data that line predicts NEGATIVE energy inside the observed range, which is not physical. No single coefficient is published for this phase.",
+            "bandNote": "No single a/b coefficient is published for this phase; see bands below. Each band reports the median and interquartile range of Wh per million tokens observed at that prompt length, not a fitted line.",
+            "bandUnit": "Wh per million tokens",
+            "bands": [
+              {
+                "band": "short",
+                "lowerBoundTokens": 0,
+                "upperBoundTokens": 256,
+                "runs": 12,
+                "promptTokensObservedMin": 251,
+                "promptTokensObservedMax": 251,
+                "medianWhPerMillionTokens": 3.207,
+                "q1WhPerMillionTokens": 2.908,
+                "q3WhPerMillionTokens": 4.416,
+                "iqrWhPerMillionTokens": 1.508,
+                "minWhPerMillionTokens": 1.827,
+                "maxWhPerMillionTokens": 6.518
+              },
+              {
+                "band": "medium",
+                "lowerBoundTokens": 256,
+                "upperBoundTokens": 2048,
+                "runs": 12,
+                "promptTokensObservedMin": 1527,
+                "promptTokensObservedMax": 1527,
+                "medianWhPerMillionTokens": 11.282,
+                "q1WhPerMillionTokens": 10.696,
+                "q3WhPerMillionTokens": 11.409,
+                "iqrWhPerMillionTokens": 0.713,
+                "minWhPerMillionTokens": 10.369,
+                "maxWhPerMillionTokens": 12.165
+              },
+              {
+                "band": "long",
+                "lowerBoundTokens": 2048,
+                "upperBoundTokens": null,
+                "runs": 12,
+                "promptTokensObservedMin": 4369,
+                "promptTokensObservedMax": 4369,
+                "medianWhPerMillionTokens": 15.261,
+                "q1WhPerMillionTokens": 15.04,
+                "q3WhPerMillionTokens": 15.651,
+                "iqrWhPerMillionTokens": 0.611,
+                "minWhPerMillionTokens": 15.013,
+                "maxWhPerMillionTokens": 15.85
+              }
+            ]
           },
           "decode": {
             "status": "published",

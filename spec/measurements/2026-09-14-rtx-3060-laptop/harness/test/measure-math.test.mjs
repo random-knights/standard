@@ -17,6 +17,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
+  bandForPromptTokens,
   distribution,
   idleBaseline,
   integrateWindow,
@@ -24,6 +25,8 @@ import {
   parseNvidiaTimestamp,
   parseSampleLine,
   parseSamples,
+  PREFILL_BANDS,
+  prefillByBand,
   quantile,
   round,
   runEnergy,
@@ -162,6 +165,73 @@ test("a spread wider than its own median is flagged, because it is a stop", () =
   // publish it, so the flag is computed, not judged later by a reader.
   const d = distribution([1, 1, 10, 100]);
   assert.equal(d.iqrWiderThanMedian, true);
+});
+
+test("prefill band boundaries are contiguous, inclusive on the lower end, and unbounded above", () => {
+  // RK-124: short [0,256), medium [256,2048), long [2048, infinity).
+  assert.equal(PREFILL_BANDS.length, 3);
+  assert.equal(PREFILL_BANDS[0].band, "short");
+  assert.equal(PREFILL_BANDS[0].lowerBoundTokens, 0);
+  assert.equal(PREFILL_BANDS[0].upperBoundTokens, 256);
+  assert.equal(PREFILL_BANDS[1].band, "medium");
+  assert.equal(PREFILL_BANDS[1].lowerBoundTokens, 256);
+  assert.equal(PREFILL_BANDS[1].upperBoundTokens, 2048);
+  assert.equal(PREFILL_BANDS[2].band, "long");
+  assert.equal(PREFILL_BANDS[2].lowerBoundTokens, 2048);
+  assert.equal(PREFILL_BANDS[2].upperBoundTokens, null);
+});
+
+test("band selection is exact at every boundary, lower end inclusive", () => {
+  // The pair either side of each boundary, plus the boundary itself. A
+  // consumer selecting the wrong band at exactly 256 or 2048 tokens would
+  // silently apply the wrong figure, so both edges are pinned here.
+  assert.equal(bandForPromptTokens(0), "short");
+  assert.equal(bandForPromptTokens(1), "short");
+  assert.equal(bandForPromptTokens(255), "short");
+  assert.equal(bandForPromptTokens(256), "medium");
+  assert.equal(bandForPromptTokens(257), "medium");
+  assert.equal(bandForPromptTokens(2047), "medium");
+  assert.equal(bandForPromptTokens(2048), "long");
+  assert.equal(bandForPromptTokens(2049), "long");
+  assert.equal(bandForPromptTokens(1_000_000), "long");
+});
+
+test("band selection rejects what a token count cannot be", () => {
+  assert.equal(bandForPromptTokens(-1), null);
+  assert.equal(bandForPromptTokens(NaN), null);
+  assert.equal(bandForPromptTokens(undefined), null);
+  assert.equal(bandForPromptTokens(Infinity), null);
+});
+
+test("prefillByBand groups by band and reports every band, even an empty one", () => {
+  const runs = [
+    { promptTokens: 100, prefillWhPerMillionTokens: 2 },
+    { promptTokens: 200, prefillWhPerMillionTokens: 4 },
+    { promptTokens: 300, prefillWhPerMillionTokens: 10 },
+    { promptTokens: 5000, prefillWhPerMillionTokens: 50 },
+  ];
+  const bands = prefillByBand(runs);
+  assert.equal(bands.length, 3);
+  const short = bands.find((b) => b.band === "short");
+  assert.equal(short.runs, 2);
+  assert.equal(short.medianWhPerMillionTokens, 3);
+  assert.equal(short.promptTokensObservedMin, 100);
+  assert.equal(short.promptTokensObservedMax, 200);
+  const medium = bands.find((b) => b.band === "medium");
+  assert.equal(medium.runs, 1);
+  assert.equal(medium.medianWhPerMillionTokens, 10);
+  const long = bands.find((b) => b.band === "long");
+  assert.equal(long.runs, 1);
+  assert.equal(long.medianWhPerMillionTokens, 50);
+});
+
+test("prefillByBand reports n:0 for a band with no runs, not a missing entry", () => {
+  const runs = [{ promptTokens: 100, prefillWhPerMillionTokens: 2 }];
+  const bands = prefillByBand(runs);
+  assert.equal(bands.length, 3, "every band must be present");
+  const medium = bands.find((b) => b.band === "medium");
+  assert.equal(medium.runs, 0);
+  assert.equal(medium.medianWhPerMillionTokens, null);
 });
 
 test("the achieved sampling interval is computed, never assumed", () => {

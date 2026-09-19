@@ -109,6 +109,62 @@ interface ScopedGridValue {
   readonly citation: string | null;
 }
 
+/**
+ * One prompt-length band of a measured PREFILL phase (methodology 2.3.2,
+ * Table 4b; RK-124). Reported as an empirical distribution, never a fitted
+ * coefficient: `lowerBoundTokens` is inclusive, `upperBoundTokens` is
+ * exclusive and null on the last band.
+ */
+export interface MeasuredPrefillBand {
+  readonly band: string;
+  readonly lowerBoundTokens: number;
+  readonly upperBoundTokens: number | null;
+  readonly runs: number;
+  readonly promptTokensObservedMin: number | null;
+  readonly promptTokensObservedMax: number | null;
+  readonly medianWhPerMillionTokens: number | null;
+  readonly q1WhPerMillionTokens: number | null;
+  readonly q3WhPerMillionTokens: number | null;
+  readonly iqrWhPerMillionTokens: number | null;
+  readonly minWhPerMillionTokens: number | null;
+  readonly maxWhPerMillionTokens: number | null;
+}
+
+/**
+ * A measured phase's publication state (methodology 2.3.1/2.3.2). Only
+ * `published` carries `aWhPerRequest`/`bWhPerToken`-shaped fields (read
+ * directly off the published JSON, not restated here); only
+ * `published-by-band` carries `bands`. `unresolved` carries neither.
+ */
+interface MeasuredPhase {
+  readonly status: "published" | "unresolved" | "published-by-band";
+  readonly bands?: readonly MeasuredPrefillBand[];
+  readonly [key: string]: unknown;
+}
+
+/**
+ * One row of Table 4 / Table 4b: a device, runtime, model and quantization
+ * this repository has directly measured. See methodology.md section 2.3.1
+ * for the scope fence this type exists to make impossible to bypass by
+ * accident: a measured entry is looked up by `id` and nothing here is ever
+ * merged into a hosted {@link ModelEnergyProfile}.
+ */
+export interface MeasuredDeviceEntry {
+  readonly id: string;
+  readonly hardware: string;
+  readonly runtime: string;
+  readonly model: string;
+  readonly quantization: string;
+  readonly phases: {
+    readonly prefill: MeasuredPhase;
+    readonly decode: MeasuredPhase;
+  };
+  readonly provenance: "measured";
+  readonly confidence: "high";
+  readonly citation: string;
+  readonly [key: string]: unknown;
+}
+
 interface FactorFile {
   readonly methodologyVersion: string;
   readonly impactModelVersion: string;
@@ -131,6 +187,9 @@ interface FactorFile {
     readonly ledBulbWatts: number;
     readonly laptopWatts: number;
     readonly carDrivingGramsCo2ePerKm: number;
+  };
+  readonly measuredDevices?: {
+    readonly entries: readonly MeasuredDeviceEntry[];
   };
 }
 
@@ -236,4 +295,69 @@ export function energyProfileForModel(
     }
   }
   return UNKNOWN_MODEL_PROFILE;
+}
+
+// -- Measured devices (methodology 2.3.1/2.3.2, Table 4 / Table 4b) --------
+//
+// THE SCOPE FENCE, enforced by construction and not just by prose: nothing in
+// this section is reachable from energyProfileForModel, disclosureFromResponse
+// or any other hosted-path function in this package. A measured entry is
+// looked up by its own `id` (a device+runtime+model+quantization string, never
+// a hosted provider model id) and is returned as its own type, which
+// ModelEnergyProfile has no field to receive. There is no code path here that
+// takes a hosted `model` string and returns a measured coefficient.
+
+/**
+ * Every published measured-device entry (Table 4 / Table 4b), exactly as
+ * `spec/v2/aieds-factors.json` carries it. Empty if this build of the table
+ * predates measuredDevices (defensive; every 2.2.0+ table carries it).
+ */
+export const MEASURED_DEVICES: readonly MeasuredDeviceEntry[] =
+  FACTORS.measuredDevices?.entries ?? [];
+
+/** Looks up a measured-device entry by its published Table 4 / 4b `id`. */
+export function measuredDeviceById(
+  deviceId: string | undefined,
+): MeasuredDeviceEntry | undefined {
+  const id = (deviceId ?? "").trim();
+  if (id.length === 0) return undefined;
+  return MEASURED_DEVICES.find((e) => e.id === id);
+}
+
+/**
+ * Selects a measured PREFILL band by prompt token count (methodology 2.3.2).
+ * Band boundaries are read from the device's OWN published bands (inclusive
+ * on the lower end), never restated here, so this function cannot drift from
+ * Table 4b by carrying a second copy of 256 or 2048.
+ *
+ * Returns `null`, never a guess, when:
+ *  - `deviceId` does not name a published measured device (this is also how
+ *    a hosted provider model id is refused: it is never a published device
+ *    id, so it can never reach a band);
+ *  - that device's prefill phase is not `published-by-band` (still
+ *    `unresolved`, or a future device whose affine fit is not mis-specified
+ *    and so is `published` as a two-term coefficient instead); or
+ *  - `promptTokens` is not a finite count, or falls outside every published
+ *    band (should not happen: the published bands are contiguous and
+ *    unbounded above, but a caller must not assume that of every future
+ *    table and this function will not paper over it).
+ */
+export function measuredPrefillBandFor(
+  deviceId: string | undefined,
+  promptTokens: number,
+): MeasuredPrefillBand | null {
+  const entry = measuredDeviceById(deviceId);
+  if (!entry) return null;
+  const phase = entry.phases.prefill;
+  if (phase.status !== "published-by-band" || !phase.bands) return null;
+  if (!Number.isFinite(promptTokens) || promptTokens < 0) return null;
+  for (const b of phase.bands) {
+    if (
+      promptTokens >= b.lowerBoundTokens &&
+      (b.upperBoundTokens === null || promptTokens < b.upperBoundTokens)
+    ) {
+      return b;
+    }
+  }
+  return null;
 }

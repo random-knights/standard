@@ -1,23 +1,25 @@
 # AiEDs Methodology
 
-> **CURRENT VERSION: 2.2.0. Versions 1.x are SUPERSEDED and MUST NOT be
+> **CURRENT VERSION: 2.3.0. Versions 1.x are SUPERSEDED and MUST NOT be
 > implemented.** 1.x specified a flat 0.30 gCO2e per 1k tokens for every model
-> and derived energy backward from carbon. Both are wrong. Implement 2.2.0 (see
+> and derived energy backward from carbon. Both are wrong. Implement 2.3.0 (see
 > the changelog below and `README.md`). Do not pick up 1.0.0 because it reads
-> like a stable base; it is not. 2.0.0 and 2.1.0 records remain valid: 2.1.0 is
-> clarifying and 2.2.0 is additive, and neither changes an existing number.
+> like a stable base; it is not. 2.0.0, 2.1.0 and 2.2.0 records remain valid:
+> 2.1.0 is clarifying, and 2.2.0 and 2.3.0 are additive; none changes an
+> existing number.
 
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 2.2.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
+**Version:** 2.3.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
 **Status:** Ratified
-**Effective:** 2026-09-15
+**Effective:** 2026-09-19
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
 ## CHANGELOG
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 2.3.0   | 2026-09-19 | **MINOR (additive). No existing number changes; 2.0.0, 2.1.0 and 2.2.0 records remain valid.** WHAT CHANGED: new section 2.3.2 and Table 4b, MEASURED PREFILL COEFFICIENTS BY PROMPT-LENGTH BAND, publishing what 2.2.0 left UNRESOLVED. Owner decision on RK-16 (2026-09-18): publish prefill stratified by prompt length rather than rent an H100 hour or wait for a shape that fits the convex curve. THE SHAPE: three bands (short, under 256 prompt tokens; medium, 256 to under 2048; long, 2048 and over), boundaries inclusive on the lower end, chosen from the sample's own three prompt-length tiers. Each band publishes the RUN COUNT and the MEDIAN and INTERQUARTILE RANGE of Wh per million tokens observed in it, not a fitted line: no shape is assumed, so no shape can be mis-specified. THE NUMBER: no published figure moves. Table 2, Table 4's two decode rows, both grid intensities and every constant are byte-identical to 2.2.0; the two prefill rows that were on the "Table 4 unresolved" list are REMOVED from that list (both models now have band figures) and that list is empty as of this version. THE SCOPE FENCE IS UNCHANGED: a band figure describes only the named hardware, runtime, model and quantization; it MUST NOT be applied to hosted inference, which remains `class-estimated` with `low` confidence. WHAT DID NOT CHANGE: the provenance ladder, the confidence ladder, the response-surface path, the schema, decode's published two-term coefficients, the Mature Reference Tree, the two grid values. The reference library (`lib/`) gains a band-selection function reading these bands by prompt token count; it is additive and does not touch the response-surface disclosure path. EVIDENCE AND REPRODUCE: same raw samples as 2.2.0, no new measurement; the measurement harness now also emits `prefillBands` per session (see section 2.3.2), and `node harness/emit-factor-entry.mjs table` emits Table 4b's rows from the same committed bytes. |
 | 2.2.0   | 2026-09-15 | **MINOR (additive). No existing number changes; 2.0.0 and 2.1.0 records remain valid.** WHAT CHANGED: new section 2.3.1 and Table 4, MEASURED DEVICE COEFFICIENTS, fitted as a TWO-TERM model `energyWh = a + b * tokens` per phase and per device by ordinary least squares over 36 varied runs, with 95 percent intervals on both terms and the residual diagnostics that say whether the line fits. `a` is a per-request FIXED cost and `b` the marginal per-token cost. THE NUMBER: no published figure moves. Table 2's class estimates, every hosted coefficient, both grid intensities and every constant are byte-identical to 2.1.0; this version only ADDS a table that was not there. WHY IT IS TWO TERMS: a single Wh-per-million-tokens figure divides a fixed per-request cost by a varying token count, which is not a constant. Measured on the first device, the pooled figure came out with an interquartile range wider than its own median, and the fit shows why. A per-request fixed cost is a NEW disclosure shape that sections 2.1 to 2.4 cannot express. WHAT DID NOT CHANGE: the provenance ladder, the confidence ladder, the response-surface path, the schema, the Mature Reference Tree, the two grid values, and every hosted profile. Hosted calls have no measured intercept and stay `class-estimated` with `low` confidence. WHAT IS NOW UNRESOLVED: PREFILL on both measured models. A quadratic term in tokens is significant there (p below 1e-13), so energy is convex in token count rather than affine, the fitted intercept is a curvature artifact rather than a fixed cost, and the fitted line predicts negative energy inside the observed range. UNRESOLVED, not NOT-APPLICABLE: prefill applies and its energy was measured; the two-term shape cannot carry it. DECODE is published, and its intercept is NOT distinguishable from zero on either model, which is the result the two-term model predicts and is evidence the shape is right where it is used. EVIDENCE AND REPRODUCE: method document, harness, and every raw power sample are published under `spec/measurements/`; `node harness/summarise.mjs` recomputes every figure in Table 4 from the committed raw data. |
 | 2.1.0   | 2026-09-12 | **MINOR (clarifying). No number changes; 2.0.0 records remain valid.** Section 5.1 becomes the PROVENANCE ladder: `measured`, `vendor-published`, `class-estimated`, `synthetic`, `unknown`, strongest first, matching what the schema's `provenance` text already describes. `synthetic` is new and means the producer KNOWS it generated the input; `unknown` means the source cannot be characterised at all, and recording a generated input as `unknown` understates it (owner ruling, 2026-09-11). The 2.0.0 rungs `estimated`, `modeled`, `provider-derived`, `verified` are retired to a legacy-terms note with a reading mapping. `confidence` is stated to be the producer's overall confidence in the energy figure, defaulting to `low` for any token-proxy method. New section 2.4.1, cached prefill: cache-creation and cache-read tokens are counted as input, the breakdown is published alongside the total when the provider reports it, and charging cache reads at the full input coefficient is named as a conservative bias rather than a measurement. No new coefficient. The schema is NOT edited in this version: its `provenance` enum is closed at four rungs and `compute` has no field for the token breakdown, so both are written up as a 2.2.0 schema proposal and a machine-validated record cannot carry `synthetic` until then. |
 | 2.0.0   | 2026-07-12 | **MAJOR (breaking).** ENERGY-FIRST response surface (section 2.4 v2): energy-first derivation replaces the flat 0.30 gCO2e/1k-token constant and the carbon-first inversion. The SAME input now yields DIFFERENT output (a typical exchange moves 0.375 g -> 0.103 g), so under semver this is a breaking change, NOT the minor 1.2.0 it was briefly cut as (see tagging note). Per-model Wh/1k-token coefficients with confidence tiers + citations; carbon derived from energy; impact-model version stamp (`v2`) on disclosures and usage rows; aggregates must not blend versions; Mature Reference Tree unified at 21 kg CO2e/yr. |
@@ -182,11 +184,70 @@ package power rather than board power is a different measurement again and must
 be labeled as such.
 
 **Cached prefill (section 2.4.1) and the two-term shape.** Where a prefill entry
-is published, the two terms make a cached prefill checkable: a cache read should
-show a near-zero contribution from `b` while still paying `a`. NOTE that no
-prefill entry is published in 2.2.0 (see Table 4's unresolved list), so this is
-a property of the shape and not yet an observation. It becomes one when a device
-yields a prefill fit that passes the curvature test.
+is published as a two-term coefficient, the two terms make a cached prefill
+checkable: a cache read should show a near-zero contribution from `b` while
+still paying `a`. NOTE that no device has yielded a two-term prefill fit that
+passes the curvature test as of 2.3.0 (both measured models are published BY
+BAND instead; see section 2.3.2), so this remains a property of the shape and
+not yet an observation. A band figure has no `a`/`b` split and does not make
+cached prefill checkable; that becomes available when a device yields a
+two-term prefill fit that passes the curvature test.
+
+### 2.3.2 Prefill by Prompt-Length Band (2.3.0)
+
+Section 2.3.1's two-term fit is MIS-SPECIFIED for prefill on both measured
+models (Table 4b below; formerly Table 4's unresolved list under 2.2.0): a
+quadratic term in tokens is significant, so per-token prefill energy is not
+constant across prompt lengths. THE MECHANISM: board power ramps from idle
+toward the device's ceiling over roughly a second at the start of a request.
+A SHORT prefill finishes before the ramp does and averages a low power; a LONG
+prefill spends most of its window at the ceiling and averages a much higher
+one. A single blended coefficient states neither figure correctly, which is
+exactly the defect the RK-16 harness found: the pooled interquartile range
+came out wider than its own median.
+
+2.3.0 resolves this without fitting a curve. The measured runs are grouped
+into three PROMPT-LENGTH BANDS, and each band's own energy-per-token figures
+are reported as a DISTRIBUTION (run count, median and interquartile range),
+not a fitted line. No shape is assumed, so no shape can be mis-specified, and
+nothing is modeled or extrapolated between bands: each band's number describes
+only the requests actually measured in it.
+
+**Band boundaries**, chosen from the sample's own prompt-length distribution
+(three tiers around 250, 1500 and 4350 tokens; see
+`spec/measurements/2026-09-14-rtx-3060-laptop/README.md`), not fitted, and
+INCLUSIVE ON THE LOWER END:
+
+| Band | Prompt tokens |
+|------|----------------|
+| short | under 256 |
+| medium | 256 to under 2048 |
+| long | 2048 and over |
+
+**Band selection.** A consumer selects a row by counting the prompt's own
+input tokens and finding the band whose range contains that count. A prompt of
+exactly 256 tokens is medium, not short; a prompt of exactly 2048 tokens is
+long, not medium.
+
+**THE SCOPE FENCE, restated (it does not change with the shape).** A band
+figure describes only the named hardware, runtime, model and quantization,
+measured at the prompt lengths observed in that band. It MUST NOT be applied
+to any other system, and in particular MUST NOT be applied to hosted
+inference. Hosted calls remain `class-estimated` with `low` confidence; no
+band figure is carried onto a hosted profile, and the same test that enforces
+this for Table 4's two-term entries
+(`spec/test/measured-devices.test.mjs`) enforces it for the bands.
+
+**What is published per band:** the run count, the median and interquartile
+range of Wh per million tokens observed in the band, and the minimum and
+maximum. The 12 runs per band here are the full set collected at that prompt
+length, not a subsample chosen to look clean; `promptTokensObservedMin` and
+`promptTokensObservedMax` in the published data name exactly what was
+measured.
+
+Table 4b, section 4, carries the published bands. `node harness/summarise.mjs`
+recomputes them from the same committed raw samples Table 4 and its formerly
+unresolved prefill rows were built from.
 
 ### 2.4 Response-Surface Path (v2: ENERGY-FIRST)
 
@@ -381,26 +442,44 @@ system memory and the integrated GPU are NOT measured. Batch size 1, context
 both terms and published separately. Method, harness and raw samples:
 `spec/measurements/2026-09-14-rtx-3060-laptop/`.
 
-#### Table 4 unresolved
+A quadratic term in tokens is significant on both measured models (p below
+1e-13), so prefill energy is CONVEX in token count rather than affine and no
+two-term prefill row is published here. Fitting a straight line to that gives
+a NEGATIVE intercept that predicts negative energy inside the observed range,
+which is not physical. A two-term prefill row returns when a device yields a
+fit that passes the curvature test, or when a shape that can represent the
+ramp is ratified. Until then, prefill is published BY BAND: see Table 4b.
 
-Measured, fitted, and NOT published, because the affine model is mis-specified
-for them. These are UNRESOLVED, not NOT-APPLICABLE: the phase applies and its
-energy was measured; the two-term shape cannot carry it.
+### Table 4b - Measured Prefill Coefficients by Prompt-Length Band (section 2.3.2)
 
-| Device | Model | Quantization | Phase | Runs |
-|--------|-------|--------------|-------|------|
-| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:1b | Q8_0 | prefill | 36 |
-| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:latest | Q4_K_M | prefill | 36 |
+Wh per million tokens: the median and interquartile range (Q1 to Q3) of the
+runs observed in that band. No curve is fitted; see section 2.3.2 for why.
+Scope identical to Table 4: discrete GPU board power via `nvidia-smi
+power.draw`, loaded-idle baseline subtracted, batch size 1, context 8192,
+post-response power decay excluded and published separately. Method, harness
+and raw samples: `spec/measurements/2026-09-14-rtx-3060-laptop/`.
 
-A quadratic term in tokens is significant on both (p below 1e-13), so prefill
-energy is CONVEX in token count rather than affine. The mechanism is visible in
-the raw data: board power ramps from idle toward the device ceiling over about a
-second, so a longer prefill runs at a higher average power and energy grows
-faster than linearly. Fitting a straight line to that gives a NEGATIVE
-intercept, and the fitted line predicts negative energy inside the observed
-range, which is not physical. A prefill entry returns when a device yields a fit
-that passes the curvature test, or when a shape that can represent the ramp is
-ratified.
+| Device | Model | Quantization | Band | Prompt tokens | Runs | Median (Wh/1M tok) | IQR, Q1 to Q3 (Wh/1M tok) |
+|--------|-------|---------------|------|-----------------|------|----------------------|-----------------------------|
+| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:1b | Q8_0 | short | 0 to < 256 | 12 | 2.474 | 1.163 to 3.591 |
+| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:1b | Q8_0 | medium | 256 to < 2048 | 12 | 2.848 | 2.7 to 2.894 |
+| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:1b | Q8_0 | long | >= 2048 | 12 | 5.897 | 5.722 to 6.015 |
+| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:latest | Q4_K_M | short | 0 to < 256 | 12 | 3.207 | 2.908 to 4.416 |
+| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:latest | Q4_K_M | medium | 256 to < 2048 | 12 | 11.282 | 10.696 to 11.409 |
+| NVIDIA GeForce RTX 3060 Laptop GPU | llama3.2:latest | Q4_K_M | long | >= 2048 | 12 | 15.261 | 15.04 to 15.651 |
+
+Per-model per-band energy grows monotonically with prompt length (short <
+medium < long on both models), which is the ramp story in section 2.3.2: a
+short prefill finishes before the board reaches its power ceiling and a long
+one spends most of its window there. THE SCOPE FENCE applies to every row
+above exactly as it applies to Table 4: measured on this laptop, never applied
+to hosted inference.
+
+No device currently has an unresolved measured phase: both measured models'
+prefill moved from Table 4's 2.2.0 unresolved list to Table 4b above, and
+decode was already published in Table 4. A future device whose prefill fails
+the curvature test AND lacks enough runs in a band to report would still be
+recorded UNRESOLVED, not NOT-APPLICABLE, per `spec/test/measured-devices.test.mjs`.
 
 ---
 

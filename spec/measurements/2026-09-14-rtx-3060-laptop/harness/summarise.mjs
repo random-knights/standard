@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import {
   idleBaseline,
   parseSamples,
+  prefillByBand,
   round,
   runEnergy,
   samplingIntervalMs,
@@ -207,6 +208,10 @@ export function summariseDirectory(dir = MEASUREMENT_DIR) {
         prefill: fitPhase(fittableRuns, "prefill"),
         decode: fitPhase(fittableRuns, "decode"),
       },
+      // Prefill by prompt-length band (RK-124, methodology 2.3.0), over the
+      // SAME included-run set the fit and the pooled distribution use. No
+      // curve is fitted here; see measure-math.mjs prefillByBand.
+      prefillBands: prefillByBand(fittableRuns),
       runs: runResults,
     });
   }

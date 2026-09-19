@@ -42,7 +42,26 @@ const SCOPE_FENCE =
   "model and quantization it names. It MUST NOT be applied to any other " +
   "system, and in particular MUST NOT be applied to hosted inference.";
 
-function phaseBlock(f, phase) {
+// A prefill band, as prefillByBand emits it, reshaped for publication. No
+// value is restated: every field here is read off the harness's own output.
+function bandEntry(b) {
+  return {
+    band: b.band,
+    lowerBoundTokens: b.lowerBoundTokens,
+    upperBoundTokens: b.upperBoundTokens,
+    runs: b.runs,
+    promptTokensObservedMin: b.promptTokensObservedMin,
+    promptTokensObservedMax: b.promptTokensObservedMax,
+    medianWhPerMillionTokens: b.medianWhPerMillionTokens,
+    q1WhPerMillionTokens: b.q1WhPerMillionTokens,
+    q3WhPerMillionTokens: b.q3WhPerMillionTokens,
+    iqrWhPerMillionTokens: b.iqrWhPerMillionTokens,
+    minWhPerMillionTokens: b.minWhPerMillionTokens,
+    maxWhPerMillionTokens: b.maxWhPerMillionTokens,
+  };
+}
+
+function phaseBlock(f, phase, bands) {
   const common = {
     runs: f.n,
     degreesOfFreedom: f.df,
@@ -55,17 +74,36 @@ function phaseBlock(f, phase) {
     intervalMethod: f.intervalMethod,
   };
   if (f.curvatureSignificant) {
+    const reason =
+      `The affine two-term model is MIS-SPECIFIED for ${phase} on this ` +
+      "device. A quadratic term in tokens is significant, so energy is " +
+      "convex in token count rather than affine, and the fitted intercept " +
+      "is not a fixed per-request cost: it is whatever a straight line " +
+      "needs at zero tokens to compensate for the curvature. On these data " +
+      "that line predicts NEGATIVE energy inside the observed range, which " +
+      "is not physical. No single coefficient is published for this phase.";
+    if (phase === "prefill" && Array.isArray(bands) && bands.some((b) => b.runs > 0)) {
+      // RK-124 (methodology 2.3.0): a mis-specified affine fit is not
+      // published, but the phase is not left unresolved either. It is
+      // reported as an EMPIRICAL DISTRIBUTION per prompt-length band, which
+      // assumes no shape and so cannot be mis-specified the same way.
+      return {
+        status: "published-by-band",
+        ...common,
+        reason,
+        bandNote:
+          "No single a/b coefficient is published for this phase; see " +
+          "bands below. Each band reports the median and interquartile " +
+          "range of Wh per million tokens observed at that prompt length, " +
+          "not a fitted line.",
+        bandUnit: "Wh per million tokens",
+        bands: bands.map(bandEntry),
+      };
+    }
     return {
       status: "unresolved",
       ...common,
-      reason:
-        `The affine two-term model is MIS-SPECIFIED for ${phase} on this ` +
-        "device. A quadratic term in tokens is significant, so energy is " +
-        "convex in token count rather than affine, and the fitted intercept " +
-        "is not a fixed per-request cost: it is whatever a straight line " +
-        "needs at zero tokens to compensate for the curvature. On these data " +
-        "that line predicts NEGATIVE energy inside the observed range, which " +
-        "is not physical. No coefficient is published for this phase.",
+      reason,
       unresolvedNotApplicable:
         "UNRESOLVED, not NOT-APPLICABLE: this phase applies and its energy " +
         "was measured; it is the two-term SHAPE that cannot carry it yet.",
@@ -134,7 +172,7 @@ export function entries() {
         "median share of a request's net energy is published here so the size " +
         "of the omission is a number rather than a caveat.",
       phases: {
-        prefill: phaseBlock(s.fit.prefill, "prefill"),
+        prefill: phaseBlock(s.fit.prefill, "prefill", s.prefillBands),
         decode: phaseBlock(s.fit.decode, "decode"),
       },
       provenance: "measured",
@@ -155,9 +193,11 @@ export function entries() {
 
 export function block() {
   return {
-    methodologySection: "2.3.1, Table 4",
-    unit: "a in Wh per request, b in Wh per token",
-    model: "energyWh = a + b * tokens, fitted per phase and per device",
+    methodologySection: "2.3.1, Table 4; prefill bands 2.3.2, Table 4b",
+    unit: "a in Wh per request, b in Wh per token; band figures in Wh per million tokens",
+    model: "energyWh = a + b * tokens, fitted per phase and per device; " +
+      "prefill published as a per-prompt-length-band distribution where the " +
+      "affine fit is mis-specified (see each entry's prefill.bands)",
     scopeFence: SCOPE_FENCE,
     note:
       "A per-request fixed cost `a` is a NEW disclosure shape. The AiEDs " +
@@ -165,7 +205,9 @@ export function block() {
       "a single Wh-per-million-tokens figure measured on real hardware came " +
       "out with an interquartile range wider than its own median. Hosted " +
       "calls have no measured intercept and remain class-estimated with low " +
-      "confidence.",
+      "confidence. Where prefill's affine fit is mis-specified, no single " +
+      "coefficient is published; the phase is reported as a per-band median " +
+      "and interquartile range instead (methodology 2.3.2).",
     entries: entries(),
   };
 }
@@ -192,8 +234,31 @@ export function unresolvedRows() {
   for (const e of entries()) {
     for (const phase of ["prefill", "decode"]) {
       const p = e.phases[phase];
-      if (p.status === "published") continue;
+      if (p.status !== "unresolved") continue;
       lines.push(`| ${e.hardware} | ${e.model} | ${e.quantization} | ${phase} | ${p.runs} |`);
+    }
+  }
+  return lines;
+}
+
+// Table 4b: prefill published BY BAND (RK-124, methodology 2.3.0). One row
+// per band per entry, in band order (short, medium, long).
+export function bandRows() {
+  const lines = [];
+  for (const e of entries()) {
+    const p = e.phases.prefill;
+    if (p.status !== "published-by-band") continue;
+    for (const b of p.bands) {
+      const tokenRange =
+        b.upperBoundTokens === null
+          ? `>= ${b.lowerBoundTokens}`
+          : `${b.lowerBoundTokens} to < ${b.upperBoundTokens}`;
+      const median = `${b.medianWhPerMillionTokens}`;
+      const iqr = `${b.q1WhPerMillionTokens} to ${b.q3WhPerMillionTokens}`;
+      lines.push(
+        `| ${e.hardware} | ${e.model} | ${e.quantization} | ${b.band} | ` +
+          `${tokenRange} | ${b.runs} | ${median} | ${iqr} |`,
+      );
     }
   }
   return lines;
@@ -203,7 +268,10 @@ const what = process.argv[2] ?? "json";
 if (what === "json") {
   process.stdout.write(`${JSON.stringify(block(), null, 2)}\n`);
 } else if (what === "table") {
-  process.stdout.write(`${tableRows().join("\n")}\n\nUNRESOLVED\n${unresolvedRows().join("\n")}\n`);
+  process.stdout.write(
+    `${tableRows().join("\n")}\n\nTABLE 4B (prefill by band)\n${bandRows().join("\n")}\n\n` +
+      `UNRESOLVED\n${unresolvedRows().join("\n")}\n`,
+  );
 } else if (what === "patch") {
   const path = join(SPEC_DIR, "v2", "aieds-factors.json");
   const factors = JSON.parse(readFileSync(path, "utf8"));
