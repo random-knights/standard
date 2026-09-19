@@ -12,7 +12,7 @@
 
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 1.0.0 (E+ standard semver - distinct from the implementation's `methodologyVersion`, see section 9)
+**Version:** 1.1.0 (E+ standard semver - distinct from the implementation's `methodologyVersion`, see section 9)
 **Status:** Draft, awaiting owner ratification
 **Effective:** not yet
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
@@ -21,6 +21,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 1.1.0   | 2026-09-18 | **PENDING ADR 0018 AMENDMENT RATIFICATION.** Section 6 gains 6.1, a second breach-panel evaluation mode: `live` (the existing feed-driven mode) and `assessed` (a value taken from the pinned published edition, cited with edition and year, never presented as live), under an amendment to ADR 0018 that is Proposed, not yet Accepted. Adds the conformance rule the reference implementation's tests follow once the amendment is Accepted: every entry carries `mode` in `{live, assessed, unknown}`; an assessed entry carries a non-empty edition, year and citation; the breach count publishes as `liveBreachCount` and `assessedBreachCount`, two fields, never summed. No published number moves and no existing rule (1 through 5) changes; this is a minor version because the schema of the published panel gains new fields. |
 | 1.0.0   | 2026-09-13 | **DRAFT. First assembled text.** Nine domains and weights as frozen by ADR 0008 and amended by ADR 0012; every normalizer including the v0.7 protected-area saturation and humility ceiling; the coverage-normalized region mean and the v0.8 exposure-weighted headline; the five-rung provenance ladder with the rule that a document MUST NOT declare live for a synthetic or carried-forward input; the non-averageable breach panel under owner decision D2; conformance requirements for documents and implementations; governance. Owner decisions D4 to D7 (2026-09-13) applied in the same draft: `meta.eplusVersion` is a conformance requirement (D4); the `air`, `ocean` and `biodiversity` basis relabel to `contextual-proxy` is decided and waits on its ADR (D5); the conformance checker is published from this repository as its single canonical home at `eplus/v1/conformance/`, runnable by a third party with no producer checkout, and the reference implementation consumes it pinned to a commit rather than keeping a copy (D6); the `global` pseudo-region defect is dated with a resolution plan (D7). The six remaining open questions are listed in section 10 and none of them is answered here. |
 
 ## Implementation changelog (public)
@@ -473,6 +474,45 @@ that publishes one is checked against every requirement below.
 5. **The headline and the breach count sit together** wherever either is shown.
    The number never appears alone.
 
+### 6.1 Two evaluation modes (pending ADR 0018 amendment ratification)
+
+RK-125 found that seven of the nine boundaries have no candidate input, live
+or otherwise: no public feed this product can ingest on a schedule reaches
+land-system change, freshwater change, biogeochemical flows, biosphere
+integrity or novel entities. The owner decided to publish those five from a
+pinned published edition rather than leave them `unknown` forever, under an
+amendment to ADR 0018 that is Proposed, not yet Accepted, as this text is
+written. The text below states what a conforming panel does once that
+amendment is Accepted; until then, section 6 above (conditions 1 through 5)
+governs alone and a document publishes no `mode` field.
+
+Every entry, once the amendment is Accepted, states which of two evaluation
+modes produced it:
+
+- **live** - the control value is computed from a feed this product ingests on
+  a schedule, with provenance and staleness published. This is the mode every
+  entry uses today (condition 3 above still governs which domain, if any, is
+  the accepted control variable).
+- **assessed** - the control value and its state are taken from the published
+  edition already pinned in the panel (today the Planetary Health Check
+  2025), with the edition, the year of the cited value, and the citation
+  published on the entry itself. An assessed entry is refreshed only when a
+  new edition is pinned by decision, never on the product's own refresh
+  schedule, and it is never presented as live.
+
+Two further rules apply once assessed entries exist:
+
+- `breachCount` splits into `liveBreachCount` and `assessedBreachCount`,
+  counted separately over entries of each mode, and the two are never summed
+  into one figure. This is the same discipline condition 5 above already
+  applies to the framework's own count: a measurement and a citation are
+  never blended into one number.
+- A boundary with no numeric control variable in the pinned edition (novel
+  entities, per condition 2's citation rule) is published `mode: "assessed"`
+  with its qualitative state and `value: null`. This is the existing
+  null-value case conditions 2 and 4 already allow, now labeled with the mode
+  that produced it, not a sixth state.
+
 Derived requirements a conforming panel satisfies (these become the tests):
 
 - The panel enumerates all nine planetary boundaries (climate change, biosphere
@@ -498,6 +538,11 @@ Derived requirements a conforming panel satisfies (these become the tests):
   Planetary Health Check 2025, as the audits cite it) MAY be published beside
   the panel as context, in its own object, and is never summed into
   `breachCount`.
+- **Once the ADR 0018 amendment in section 6.1 is Accepted:** every entry
+  carries `mode` in `{live, assessed, unknown}`; an entry with `mode:
+  "assessed"` carries a non-empty edition, year and citation; the panel
+  publishes `liveBreachCount` and `assessedBreachCount` as two separate
+  fields and no expression sums them into one.
 
 Worked reading, on the 2026-09-11 document, under the proposed panel:
 ocean acidification at Omega 2.7 is transgressed under both threshold editions
