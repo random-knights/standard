@@ -404,6 +404,78 @@ export function roundDistribution(d, decimals) {
   };
 }
 
+/**
+ * Prompt-length bands for the PREFILL phase (RK-124, methodology 2.3.0).
+ *
+ * The affine two-term fit (fit.mjs) is mis-specified for prefill: the board
+ * power ramp from idle toward the device ceiling takes about a second, so a
+ * short prefill finishes before the ramp does and a long one spends most of
+ * its window at the ceiling, and per-token energy is not constant across
+ * prompt lengths. Rather than fit a different curve, prefill is reported as
+ * an EMPIRICAL DISTRIBUTION within each band: no shape is assumed, so no
+ * shape can be mis-specified.
+ *
+ * Boundaries are chosen from the sample's own prompt-length distribution
+ * (three tiers around 250, 1500 and 4350 tokens; see this directory's
+ * README.md), not fitted, and are INCLUSIVE ON THE LOWER END: a prompt of
+ * exactly 256 tokens is medium, not short.
+ */
+export const PREFILL_BANDS = Object.freeze([
+  Object.freeze({ band: "short", lowerBoundTokens: 0, upperBoundTokens: 256 }),
+  Object.freeze({ band: "medium", lowerBoundTokens: 256, upperBoundTokens: 2048 }),
+  Object.freeze({ band: "long", lowerBoundTokens: 2048, upperBoundTokens: null }),
+]);
+
+/**
+ * Which band a prompt token count falls in, or null if it is not a positive
+ * finite count. Lower bound inclusive, upper bound exclusive; the last band
+ * has no upper bound.
+ */
+export function bandForPromptTokens(tokens) {
+  if (!Number.isFinite(tokens) || tokens < 0) return null;
+  for (const b of PREFILL_BANDS) {
+    if (tokens >= b.lowerBoundTokens && (b.upperBoundTokens === null || tokens < b.upperBoundTokens)) {
+      return b.band;
+    }
+  }
+  return null;
+}
+
+/**
+ * Groups the INCLUDED runs (same set the two-term fit uses) by prompt-length
+ * band and reports the empirical distribution of prefillWhPerMillionTokens
+ * within each band. Every band in PREFILL_BANDS is always present in the
+ * output, with n:0 if no run fell in it, so a consumer never has to guess
+ * whether a missing row means zero runs or a bug.
+ */
+export function prefillByBand(includedRuns) {
+  const byBand = new Map(PREFILL_BANDS.map((b) => [b.band, []]));
+  for (const r of includedRuns) {
+    const band = bandForPromptTokens(r.promptTokens);
+    if (band === null) continue;
+    byBand.get(band).push(r);
+  }
+  return PREFILL_BANDS.map((b) => {
+    const runs = byBand.get(b.band);
+    const d = distribution(runs.map((r) => r.prefillWhPerMillionTokens));
+    const promptTokensObserved = runs.map((r) => r.promptTokens);
+    return {
+      band: b.band,
+      lowerBoundTokens: b.lowerBoundTokens,
+      upperBoundTokens: b.upperBoundTokens,
+      runs: d.n,
+      promptTokensObservedMin: promptTokensObserved.length ? Math.min(...promptTokensObserved) : null,
+      promptTokensObservedMax: promptTokensObserved.length ? Math.max(...promptTokensObserved) : null,
+      medianWhPerMillionTokens: round(d.median, 3),
+      q1WhPerMillionTokens: round(d.q1, 3),
+      q3WhPerMillionTokens: round(d.q3, 3),
+      iqrWhPerMillionTokens: round(d.iqr, 3),
+      minWhPerMillionTokens: round(d.min, 3),
+      maxWhPerMillionTokens: round(d.max, 3),
+    };
+  });
+}
+
 /** Mean power over a whole idle CSV, which is the baseline the runs subtract. */
 export function idleBaseline(samples) {
   if (samples.length < 2) {

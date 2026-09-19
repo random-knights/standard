@@ -1,13 +1,13 @@
 {
   "name": "@random-knights/aieds-reference",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "AiEDs 2.1.0 reference library - energy-first disclosures: tokens + model in, per-model modeled energy (with provenance + citation) and derived carbon out",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "node --test dist/test/disclosure.test.js"
+    "test": "node --test dist/test/disclosure.test.js dist/test/measured-prefill-bands.test.js"
   },
   "keywords": ["aieds", "ai", "energy", "carbon", "disclosure", "tree-time"],
   "license": "Apache-2.0",

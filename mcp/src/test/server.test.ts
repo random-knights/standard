@@ -235,10 +235,13 @@ describe("factor tables come from the published file", () => {
     // not support. The stamp is now read from the table it labels.
     // The literal moves deliberately with a ratified methodology version, never
     // silently: 2.0.0 to 2.1.0 on 2026-09-12, when section 5.1 became the
-    // provenance ladder and 2.4.1 added cached prefill. Neither changed a
-    // number in the tables, which is why 2.1.0 is a minor bump.
+    // provenance ladder and 2.4.1 added cached prefill; 2.1.0 to 2.2.0 on
+    // 2026-09-15, when Table 4 added measured device coefficients; 2.2.0 to
+    // 2.3.0 on 2026-09-19, when Table 4b published prefill by prompt-length
+    // band (RK-124). None changed a number already published, which is why
+    // each is a minor bump.
     assert.strictEqual(FACTORS.methodologyVersion, METHODOLOGY_VERSION);
-    assert.strictEqual(METHODOLOGY_VERSION, "2.2.0");
+    assert.strictEqual(METHODOLOGY_VERSION, "2.3.0");
     assert.strictEqual(IMPACT_MODEL_VERSION, "v2");
   });
 

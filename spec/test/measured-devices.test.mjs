@@ -16,10 +16,15 @@
 //      be able to miss it.
 //   2. EVERY TERM HAS AN INTERVAL. `a` and `b` are estimates. An estimate
 //      published without its interval is the defect OQ-10 names.
-//   3. A MIS-SPECIFIED FIT IS NOT PUBLISHED. If the curvature test is
-//      significant, the entry is unresolved and must NOT appear in Table 4.
-//      A straight line through a curve has whatever intercept it needs at zero
-//      tokens, and calling that a fixed per-request cost is a false claim.
+//   3. A MIS-SPECIFIED FIT IS NOT PUBLISHED AS A SCALAR. If the curvature test
+//      is significant, no single a/b coefficient is published and the entry
+//      must NOT appear in Table 4. A straight line through a curve has
+//      whatever intercept it needs at zero tokens, and calling that a fixed
+//      per-request cost is a false claim. The phase is then either UNRESOLVED
+//      (no coefficient at all, Table 4's unresolved list) or, for prefill when
+//      band data exists (RK-124, methodology 2.3.0), PUBLISHED-BY-BAND: an
+//      empirical median and interquartile range per prompt-length band, in
+//      Table 4b, with no shape fitted and so no shape to mis-specify.
 import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync, readFileSync } from "node:fs";
@@ -76,7 +81,8 @@ test("the measured-device block exists and declares its model and section", () =
   const md = factors.measuredDevices;
   assert.ok(md, "spec/v2/aieds-factors.json has no measuredDevices block");
   assert.match(md.methodologySection, /Table 4/);
-  assert.equal(md.unit, "a in Wh per request, b in Wh per token");
+  assert.match(md.methodologySection, /Table 4b/);
+  assert.match(md.unit, /a in Wh per request, b in Wh per token/);
   assert.match(md.model, /energyWh = a \+ b \* tokens/);
   assert.ok(Array.isArray(md.entries) && md.entries.length > 0);
 });
@@ -153,8 +159,13 @@ test("every measured entry carries what a measurement has to carry", () => {
     for (const phase of PHASES) {
       assert.ok(e.phases?.[phase], `${who}: no ${phase} block`);
       assert.ok(
-        ["published", "unresolved"].includes(e.phases[phase].status),
-        `${who} ${phase}: status must be published or unresolved`,
+        ["published", "unresolved", "published-by-band"].includes(e.phases[phase].status),
+        `${who} ${phase}: status must be published, unresolved or published-by-band`,
+      );
+      assert.ok(
+        phase === "prefill" || e.phases[phase].status !== "published-by-band",
+        `${who} ${phase}: only prefill may be published-by-band; decode is a ` +
+          `two-term phase or unresolved`,
       );
     }
   }
@@ -189,26 +200,66 @@ test("a mis-specified fit is unresolved, and an unresolved phase carries no coef
       const p = e.phases[phase];
       const who = `${e.id} ${phase}`;
       if (p.curvatureSignificant) {
-        assert.equal(
-          p.status,
-          "unresolved",
+        assert.ok(
+          p.status === "unresolved" || p.status === "published-by-band",
           `${who}: the curvature test is significant, so the affine model is ` +
-            `mis-specified and this phase MUST NOT be published`,
+            `mis-specified and this phase MUST NOT publish a single a/b ` +
+            `coefficient (status must be unresolved or published-by-band)`,
+        );
+      }
+      if (p.status === "unresolved" || p.status === "published-by-band") {
+        assert.equal(p.aWhPerRequest, undefined, `${who}: ${p.status} but has a`);
+        assert.equal(p.bWhPerToken, undefined, `${who}: ${p.status} but has b`);
+        assert.ok(
+          typeof p.reason === "string" && p.reason.trim().length > 0,
+          `${who}: a ${p.status} phase must say why no single coefficient is published`,
         );
       }
       if (p.status === "unresolved") {
-        assert.equal(p.aWhPerRequest, undefined, `${who}: unresolved but has a`);
-        assert.equal(p.bWhPerToken, undefined, `${who}: unresolved but has b`);
-        assert.ok(
-          typeof p.reason === "string" && p.reason.trim().length > 0,
-          `${who}: an unresolved phase must say why`,
-        );
         // Unresolved and not-applicable are different claims and the
         // distinction must be stated, never used to soften the harder one.
         assert.match(
           p.unresolvedNotApplicable,
           /UNRESOLVED, not NOT-APPLICABLE/,
           `${who}: say which of the two this is`,
+        );
+      }
+      if (p.status === "published-by-band") {
+        assert.ok(Array.isArray(p.bands) && p.bands.length > 0, `${who}: no bands`);
+        assert.ok(p.bands.some((b) => b.runs > 0), `${who}: every band is empty`);
+        let prevUpper = 0;
+        for (const b of p.bands) {
+          const bwho = `${who} band ${b.band}`;
+          assert.equal(b.lowerBoundTokens, prevUpper, `${bwho}: bands must be contiguous`);
+          prevUpper = b.upperBoundTokens;
+          assert.ok(
+            ["short", "medium", "long"].includes(b.band),
+            `${bwho}: unexpected band name`,
+          );
+          if (b.runs === 0) continue;
+          assert.ok(Number.isFinite(b.medianWhPerMillionTokens), `${bwho}: median`);
+          assert.ok(Number.isFinite(b.q1WhPerMillionTokens), `${bwho}: q1`);
+          assert.ok(Number.isFinite(b.q3WhPerMillionTokens), `${bwho}: q3`);
+          assert.ok(
+            b.q1WhPerMillionTokens <= b.medianWhPerMillionTokens &&
+              b.medianWhPerMillionTokens <= b.q3WhPerMillionTokens,
+            `${bwho}: median outside its own IQR`,
+          );
+          assert.ok(
+            b.minWhPerMillionTokens <= b.q1WhPerMillionTokens &&
+              b.q3WhPerMillionTokens <= b.maxWhPerMillionTokens,
+            `${bwho}: IQR outside its own min/max`,
+          );
+          assert.ok(
+            b.promptTokensObservedMin >= b.lowerBoundTokens &&
+              (b.upperBoundTokens === null || b.promptTokensObservedMax < b.upperBoundTokens),
+            `${bwho}: an observed prompt token count falls outside its own band`,
+          );
+        }
+        assert.equal(
+          p.bands[p.bands.length - 1].upperBoundTokens,
+          null,
+          `${who}: the last band must have no upper bound`,
         );
       }
     }
@@ -303,31 +354,71 @@ test("Table 4 in methodology.md matches the published measured entries", () => {
   });
 });
 
-test("the unresolved list names every unpublished phase, and only those", () => {
-  const rows = tableRows("#### Table 4 unresolved");
+test("Table 4b matches the published prefill band entries", () => {
+  // Table 4b exists only if some entry actually has band data. Currently both
+  // measured models do (RK-124); a future device without one would need no
+  // table, so this test only runs the comparison when there is something to
+  // compare.
   const expected = [];
   for (const e of factors.measuredDevices.entries) {
-    for (const phase of PHASES) {
-      if (e.phases[phase].status === "published") continue;
+    const p = e.phases.prefill;
+    if (p.status !== "published-by-band") continue;
+    for (const b of p.bands) {
       expected.push({
         hardware: e.hardware,
         model: e.model,
         quantization: e.quantization,
-        phase,
-        runs: e.phases[phase].runs,
+        band: b.band,
+        runs: b.runs,
+        median: b.medianWhPerMillionTokens,
+        q1: b.q1WhPerMillionTokens,
+        q3: b.q3WhPerMillionTokens,
       });
     }
   }
-  assert.equal(rows.length, expected.length, "unresolved row count differs");
+  if (expected.length === 0) return;
+  const rows = tableRows("### Table 4b");
+  assert.equal(rows.length, expected.length, "Table 4b row count differs");
   rows.forEach((cells, i) => {
-    const [hardware, model, quantization, phase, runsCell] = cells;
+    const [hardware, model, quantization, band, , runsCell, medianCell, iqrCell] = cells;
     const e = expected[i];
-    assert.equal(hardware, e.hardware, `unresolved row ${i + 1} hardware`);
-    assert.equal(model, e.model, `unresolved row ${i + 1} model`);
-    assert.equal(quantization, e.quantization, `unresolved row ${i + 1} quantization`);
-    assert.equal(phase, e.phase, `unresolved row ${i + 1} phase`);
-    assert.equal(num(runsCell), e.runs, `unresolved row ${i + 1} runs`);
+    assert.equal(hardware, e.hardware, `Table 4b row ${i + 1} hardware`);
+    assert.equal(model, e.model, `Table 4b row ${i + 1} model`);
+    assert.equal(quantization, e.quantization, `Table 4b row ${i + 1} quantization`);
+    assert.equal(band, e.band, `Table 4b row ${i + 1} band`);
+    assert.equal(num(runsCell), e.runs, `Table 4b row ${i + 1} runs`);
+    assert.equal(num(medianCell), e.median, `Table 4b row ${i + 1} median`);
+    const m = norm(iqrCell).match(/^(-?[\d.]+)\s+to\s+(-?[\d.]+)$/);
+    assert.ok(m, `Table 4b row ${i + 1} IQR cell "${iqrCell}" not "<q1> to <q3>"`);
+    assert.equal(Number(m[1]), e.q1, `Table 4b row ${i + 1} q1`);
+    assert.equal(Number(m[2]), e.q3, `Table 4b row ${i + 1} q3`);
   });
+});
+
+test("the unresolved list, where present, names only genuinely unresolved phases", () => {
+  // 2.3.0: neither measured model has a genuinely unresolved phase (prefill
+  // moved to published-by-band, decode was already published), so the
+  // "Table 4 unresolved" heading is absent from methodology.md and this test
+  // only checks the JSON side of the claim. A future device with a phase
+  // that fails the curvature test AND has no usable band data would be
+  // "unresolved" here and would need that heading restored, with its own
+  // table gate mirroring Table 4b's above.
+  const unresolved = [];
+  for (const e of factors.measuredDevices.entries) {
+    for (const phase of PHASES) {
+      if (e.phases[phase].status === "unresolved") unresolved.push(`${e.id} ${phase}`);
+    }
+  }
+  assert.equal(
+    unresolved.length,
+    0,
+    `unexpected unresolved phase(s): ${unresolved.join(", ")}; add the ` +
+      `"Table 4 unresolved" section and its row-matching test back`,
+  );
+  assert.ok(
+    !doc.includes("#### Table 4 unresolved"),
+    "methodology.md carries a Table 4 unresolved heading but no phase is unresolved",
+  );
 });
 
 test("no hosted profile was granted a measured provenance or an intercept", () => {
@@ -356,5 +447,5 @@ test("the measured entries do not disturb the class-estimated tables", () => {
 test("the published table declares the methodology it belongs to", () => {
   const docVersion = doc.match(/\*\*Version:\*\*\s*([\d.]+)/)[1];
   assert.equal(factors.methodologyVersion, docVersion);
-  assert.equal(docVersion, "2.2.0");
+  assert.equal(docVersion, "2.3.0");
 });

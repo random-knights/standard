@@ -32,6 +32,8 @@ import {
   MODELED_GRID_INTENSITY_GRAMS_PER_KWH,
   PHONE_CHARGE_WH,
   energyProfileForModel,
+  measuredDeviceById,
+  measuredPrefillBandFor,
 } from "./factors.js";
 import { provenanceForSchema } from "./factors.js";
 import type {
@@ -53,6 +55,7 @@ export {
   MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR,
   METHODOLOGY_VERSION,
   MINUTES_PER_YEAR,
+  MEASURED_DEVICES,
   MODEL_ENERGY_PROFILES,
   MODELED_GRID_INTENSITY_GRAMS_PER_KWH,
   PHONE_CHARGE_WH,
@@ -60,6 +63,8 @@ export {
   TABLE_GLOBAL_AVERAGE_GRAMS_PER_KWH,
   UNKNOWN_MODEL_PROFILE,
   energyProfileForModel,
+  measuredDeviceById,
+  measuredPrefillBandFor,
   provenanceForSchema,
 } from "./factors.js";
 export type {
@@ -67,6 +72,8 @@ export type {
   AiedsConfidenceTier,
   AiedsProvenance,
   AiedsSchemaProvenance,
+  MeasuredDeviceEntry,
+  MeasuredPrefillBand,
   ModelEnergyProfile,
 } from "./factors.js";
 

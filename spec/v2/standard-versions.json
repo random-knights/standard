@@ -15,8 +15,8 @@
     {
       "id": "aieds",
       "name": "AiEDs",
-      "version": "v2.2.0",
-      "semver": "2.2.0",
+      "version": "v2.3.0",
+      "semver": "2.3.0",
       "status": "Ratified",
       "description": "AI Energy Disclosure",
       "canonicalText": "spec/methodology.md"

@@ -206,6 +206,50 @@
           "curvatureNote": "No significant quadratic term, so the affine two-term model is not contradicted by these data."
         }
       },
+      "prefillBands": [
+        {
+          "band": "short",
+          "lowerBoundTokens": 0,
+          "upperBoundTokens": 256,
+          "runs": 12,
+          "promptTokensObservedMin": 252,
+          "promptTokensObservedMax": 252,
+          "medianWhPerMillionTokens": 2.474,
+          "q1WhPerMillionTokens": 1.163,
+          "q3WhPerMillionTokens": 3.591,
+          "iqrWhPerMillionTokens": 2.429,
+          "minWhPerMillionTokens": 0.485,
+          "maxWhPerMillionTokens": 4.185
+        },
+        {
+          "band": "medium",
+          "lowerBoundTokens": 256,
+          "upperBoundTokens": 2048,
+          "runs": 12,
+          "promptTokensObservedMin": 1528,
+          "promptTokensObservedMax": 1528,
+          "medianWhPerMillionTokens": 2.848,
+          "q1WhPerMillionTokens": 2.7,
+          "q3WhPerMillionTokens": 2.894,
+          "iqrWhPerMillionTokens": 0.194,
+          "minWhPerMillionTokens": 1.987,
+          "maxWhPerMillionTokens": 3.129
+        },
+        {
+          "band": "long",
+          "lowerBoundTokens": 2048,
+          "upperBoundTokens": null,
+          "runs": 12,
+          "promptTokensObservedMin": 4370,
+          "promptTokensObservedMax": 4370,
+          "medianWhPerMillionTokens": 5.897,
+          "q1WhPerMillionTokens": 5.722,
+          "q3WhPerMillionTokens": 6.015,
+          "iqrWhPerMillionTokens": 0.293,
+          "minWhPerMillionTokens": 5.579,
+          "maxWhPerMillionTokens": 6.143
+        }
+      ],
       "runs": [
         {
           "runId": "llama3.2-1b-load",
@@ -1888,6 +1932,50 @@
           "curvatureNote": "No significant quadratic term, so the affine two-term model is not contradicted by these data."
         }
       },
+      "prefillBands": [
+        {
+          "band": "short",
+          "lowerBoundTokens": 0,
+          "upperBoundTokens": 256,
+          "runs": 12,
+          "promptTokensObservedMin": 251,
+          "promptTokensObservedMax": 251,
+          "medianWhPerMillionTokens": 3.207,
+          "q1WhPerMillionTokens": 2.908,
+          "q3WhPerMillionTokens": 4.416,
+          "iqrWhPerMillionTokens": 1.508,
+          "minWhPerMillionTokens": 1.827,
+          "maxWhPerMillionTokens": 6.518
+        },
+        {
+          "band": "medium",
+          "lowerBoundTokens": 256,
+          "upperBoundTokens": 2048,
+          "runs": 12,
+          "promptTokensObservedMin": 1527,
+          "promptTokensObservedMax": 1527,
+          "medianWhPerMillionTokens": 11.282,
+          "q1WhPerMillionTokens": 10.696,
+          "q3WhPerMillionTokens": 11.409,
+          "iqrWhPerMillionTokens": 0.713,
+          "minWhPerMillionTokens": 10.369,
+          "maxWhPerMillionTokens": 12.165
+        },
+        {
+          "band": "long",
+          "lowerBoundTokens": 2048,
+          "upperBoundTokens": null,
+          "runs": 12,
+          "promptTokensObservedMin": 4369,
+          "promptTokensObservedMax": 4369,
+          "medianWhPerMillionTokens": 15.261,
+          "q1WhPerMillionTokens": 15.04,
+          "q3WhPerMillionTokens": 15.651,
+          "iqrWhPerMillionTokens": 0.611,
+          "minWhPerMillionTokens": 15.013,
+          "maxWhPerMillionTokens": 15.85
+        }
+      ],
       "runs": [
         {
           "runId": "llama3.2-latest-load",
