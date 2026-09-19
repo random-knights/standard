@@ -6,8 +6,8 @@
     {
       "id": "eplus",
       "name": "Earth+",
-      "version": "v1.0.0-draft",
-      "semver": "1.0.0",
+      "version": "v1.1.0-draft",
+      "semver": "1.1.0",
       "status": "Draft, awaiting owner ratification",
       "description": "Earth Health Scoring",
       "canonicalText": "eplus/v1/methodology.md"
