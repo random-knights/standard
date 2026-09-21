@@ -21,6 +21,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| Proposed | 2026-09-21 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Section 6 gains 6.2, the averaging window for a live control value: the atmospheric-aerosol-loading entry evaluates the mean of the trailing 12 monthly interhemispheric AOD differences, published only when all 12 months are present, never one month (RK-135, RK-136). The version stays 1.1.0 until the owner ratifies, so no consumer README fans out for a rule that is still a proposal. |
 | 1.1.0   | 2026-09-18 | **PENDING ADR 0018 AMENDMENT RATIFICATION.** Section 6 gains 6.1, a second breach-panel evaluation mode: `live` (the existing feed-driven mode) and `assessed` (a value taken from the pinned published edition, cited with edition and year, never presented as live), under an amendment to ADR 0018 that is Proposed, not yet Accepted. Adds the conformance rule the reference implementation's tests follow once the amendment is Accepted: every entry carries `mode` in `{live, assessed, unknown}`; an assessed entry carries a non-empty edition, year and citation; the breach count publishes as `liveBreachCount` and `assessedBreachCount`, two fields, never summed. No published number moves and no existing rule (1 through 5) changes; this is a minor version because the schema of the published panel gains new fields. |
 | 1.0.0   | 2026-09-13 | **DRAFT. First assembled text.** Nine domains and weights as frozen by ADR 0008 and amended by ADR 0012; every normalizer including the v0.7 protected-area saturation and humility ceiling; the coverage-normalized region mean and the v0.8 exposure-weighted headline; the five-rung provenance ladder with the rule that a document MUST NOT declare live for a synthetic or carried-forward input; the non-averageable breach panel under owner decision D2; conformance requirements for documents and implementations; governance. Owner decisions D4 to D7 (2026-09-13) applied in the same draft: `meta.eplusVersion` is a conformance requirement (D4); the `air`, `ocean` and `biodiversity` basis relabel to `contextual-proxy` is decided and waits on its ADR (D5); the conformance checker is published from this repository as its single canonical home at `eplus/v1/conformance/`, runnable by a third party with no producer checkout, and the reference implementation consumes it pinned to a commit rather than keeping a copy (D6); the `global` pseudo-region defect is dated with a resolution plan (D7). The six remaining open questions are listed in section 10 and none of them is answered here. |
 
@@ -543,6 +544,38 @@ Derived requirements a conforming panel satisfies (these become the tests):
   "assessed"` carries a non-empty edition, year and citation; the panel
   publishes `liveBreachCount` and `assessedBreachCount` as two separate
   fields and no expression sums them into one.
+
+
+### 6.2 The averaging window of a live control value (Proposed, pending owner ratification)
+
+This subsection is Proposed, not yet ratified, as this text is written
+(RK-135, RK-136, 2026-09-21). Until the owner ratifies it, sections 6 and 6.1
+govern alone.
+
+A live entry evaluates the control variable ON THE BASIS ITS THRESHOLD IS
+STATED ON. A value on a shorter basis is a different quantity and is not
+compared against that threshold.
+
+- **Atmospheric aerosol loading.** The control variable is the interhemispheric
+  difference in aerosol optical depth, and the boundary (0.10) and the
+  high-risk line (0.25) the panel cites, like the Planetary Health Check 2025
+  value (0.063), are stated on its ANNUAL mean. A conforming live entry
+  therefore evaluates the mean of the trailing 12 monthly differences (the 12
+  most recent published months, consecutive, ending at the newest), each month
+  computed as northern-hemisphere mean minus southern-hemisphere mean of that
+  month's published AOD field. It is published only when all 12 months are
+  present. When a month is missing, the entry keeps its last complete 12-month
+  value with its staleness, or is `unknown` if none exists; it never falls back
+  to fewer months. A single month is never evaluated alone: one boreal-summer
+  month is biased high by the Northern Hemisphere fire and dust season (the
+  reference implementation's July 2026 month alone read 0.1118, which would
+  have shown the boundary crossed on a seasonal artifact), and a winter month
+  is biased the other way.
+- The entry names the window it evaluated ("12-month mean ending YYYY-MM"),
+  and the source object records the 12 months used with each month's two
+  hemispheric means and difference, so the mean can be recomputed from the
+  published record.
+- Staleness (section 5.4) is measured from the newest month in the window.
 
 Worked reading, on the 2026-09-11 document, under the proposed panel:
 ocean acidification at Omega 2.7 is transgressed under both threshold editions
