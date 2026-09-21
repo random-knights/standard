@@ -21,6 +21,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| Proposed | 2026-09-21 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Section 3.7 gains 3.7.1, the cryosphere domain from published observations (RK-136): cryosphere = 0.5 sea ice + 0.5 glaciers. Sea ice is the NSIDC Sea Ice Index daily extent per hemisphere against the day-of-year 1981 to 2010 median, health = clamp(100 x (1 - max(0, (median - extent) / median) / F), 0, 100) with F = 0.40, averaged over the Arctic and the Antarctic. Glaciers keep improving 80 / stable 60 / worsening 25, the category taken from the latest 10-year mean of the WGMS reference-glacier balance against the prior 10-year mean with a +-100 mm w.e. band. The glacier half is exempt from the 48 h freshness window and is stale 18 months after its newest hydrological year ends; a missing or stale half leaves the other half alone, and the reading says so; never a synthetic input. F and the band are Random Knights parameters with no framework citation, added as OQ-11. The reference implementation builds this behind an input pin that stays off until ratification. |
 | Proposed | 2026-09-21 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Section 6 gains 6.2, the averaging window for a live control value: the atmospheric-aerosol-loading entry evaluates the mean of the trailing 12 monthly interhemispheric AOD differences, published only when all 12 months are present, never one month (RK-135, RK-136). The version stays 1.1.0 until the owner ratifies, so no consumer README fans out for a rule that is still a proposal. |
 | 1.1.0   | 2026-09-18 | **PENDING ADR 0018 AMENDMENT RATIFICATION.** Section 6 gains 6.1, a second breach-panel evaluation mode: `live` (the existing feed-driven mode) and `assessed` (a value taken from the pinned published edition, cited with edition and year, never presented as live), under an amendment to ADR 0018 that is Proposed, not yet Accepted. Adds the conformance rule the reference implementation's tests follow once the amendment is Accepted: every entry carries `mode` in `{live, assessed, unknown}`; an assessed entry carries a non-empty edition, year and citation; the breach count publishes as `liveBreachCount` and `assessedBreachCount`, two fields, never summed. No published number moves and no existing rule (1 through 5) changes; this is a minor version because the schema of the published panel gains new fields. |
 | 1.0.0   | 2026-09-13 | **DRAFT. First assembled text.** Nine domains and weights as frozen by ADR 0008 and amended by ADR 0012; every normalizer including the v0.7 protected-area saturation and humility ceiling; the coverage-normalized region mean and the v0.8 exposure-weighted headline; the five-rung provenance ladder with the rule that a document MUST NOT declare live for a synthetic or carried-forward input; the non-averageable breach panel under owner decision D2; conformance requirements for documents and implementations; governance. Owner decisions D4 to D7 (2026-09-13) applied in the same draft: `meta.eplusVersion` is a conformance requirement (D4); the `air`, `ocean` and `biodiversity` basis relabel to `contextual-proxy` is decided and waits on its ADR (D5); the conformance checker is published from this repository as its single canonical home at `eplus/v1/conformance/`, runnable by a third party with no producer checkout, and the reference implementation consumes it pinned to a commit rather than keeping a copy (D6); the `global` pseudo-region defect is dated with a resolution plan (D7). The six remaining open questions are listed in section 10 and none of them is answered here. |
@@ -258,6 +259,66 @@ reference input is regenerated from ten compile-time anchors, so its mean is a
 fixed 78.0 and the trend arrow could never read anything but one value; the
 producer therefore gates the published trend on a non-synthetic, fresh
 cryosphere source (section 4.5).
+
+### 3.7.1 Cryosphere from published observations (Proposed, pending owner ratification)
+
+This subsection is Proposed, not yet ratified, as this text is written
+(RK-136, 2026-09-21). Until the owner ratifies it, section 3.7 governs alone.
+It replaces the reference input of 3.7 with two published series and keeps the
+categorical glacier scores; it does not change the domain's weight (0.10),
+direction (burden), basis (contextual-proxy) or applicability mask (4.1).
+
+The domain health is
+
+```
+cryosphere = 0.5 x seaIce + 0.5 x glaciers
+```
+
+- **Sea ice.** For each hemisphere, the newest daily extent of the NSIDC Sea
+  Ice Index (G02135, Version 4) is compared with the median (50th percentile)
+  of the NSIDC 1981 to 2010 climatology for the same calendar day of year:
+
+  ```
+  deficit = max(0, (median - extent) / median)
+  health  = clamp(100 x (1 - deficit / F), 0, 100),   F = 0.40
+  ```
+
+  An extent at or above the median reads 100; a deficit of 40 percent of the
+  median reads 0. `seaIce` is the mean of the Arctic and the Antarctic health.
+  F is a Random Knights parameter with no framework citation (OQ-11).
+- **Glaciers.** The categories of 3.7 are kept (improving 80, stable 60,
+  worsening 25). The category comes from the WGMS reference-glacier annual
+  mass balance (regional average, mm w.e.): the mean of the latest 10
+  hydrological years against the mean of the 10 before. More negative by more
+  than 100 mm w.e. is worsening, less negative by more than 100 mm w.e. is
+  improving, otherwise stable. Both windows must be complete; a missing year
+  never shrinks a window. The band is a Random Knights parameter with no
+  framework citation (OQ-11). This category also drives `trendBasis`
+  `cryosphere` (4.5).
+- **Freshness.** The sea-ice half sits under the 48 h window of 5.3. The
+  glacier half is annual, so it is exempt from that window and carries its own
+  rule: it is stale when its newest hydrological year ended more than 18
+  months ago. A document whose cryosphere reading rests on the glacier half
+  alone measures the domain's freshness on that rule.
+- **One half missing.** A half that is absent or stale is left out and the
+  domain uses the other half alone; the reading names its basis
+  (`sea-ice+glaciers`, `sea-ice only` or `glaciers only`). One hemisphere
+  alone stands for the sea-ice half the same way. With neither half the domain
+  is absent, never estimated.
+- **Never synthetic.** No generated, representative or in-repo value enters
+  either half. A source that declares itself generated reads as absent.
+- **Sources and citations.** Fetterer, F., Knowles, K., Meier, W. N., Savoie,
+  M., Windnagel, A. K. & Stafford, T. (2025). Sea Ice Index. (G02135,
+  Version 4). [Data Set]. National Snow and Ice Data Center.
+  https://doi.org/10.7265/a98x-0f50 (citation is a condition of use; NSIDC
+  names no license and states no commercial-use restriction). WGMS (2026):
+  Fluctuations of Glaciers (FoG) Database. World Glacier Monitoring Service,
+  Zurich, Switzerland. https://doi.org/10.5904/wgms-fog-2026-02-10 (CC BY 4.0).
+
+Worked reading, on 2026-09-20 data: Arctic 4.709 million km2 against a median
+of 6.412 (health 33.6), Antarctic 17.386 against 18.593 (83.8), sea-ice half
+58.7; glaciers 2016-2025 mean -950.4 mm w.e. against 2006-2015 -665.2 (change
+-285.2, worsening, 25); cryosphere 0.5 x 58.7 + 0.5 x 25 = 41.8.
 
 ### 3.8 Biodiversity, conservation, human
 
@@ -859,6 +920,13 @@ item moves between lists only by a dated owner decision recorded here.
   conditions the owner has already given.
 - **OQ-10 The uncertainty interval.** No published number carries one. The
   audits' PM predictions named this; no decision exists.
+- **OQ-11 Cryosphere parameters without a framework source (Proposed 3.7.1).**
+  The sea-ice full scale F = 0.40 (a deficit of 40 percent of the 1981 to 2010
+  median reads 0), the +-100 mm w.e. glacier band, the 10-year windows, the
+  equal 0.5 / 0.5 split and the 18-month glacier staleness rule are Random
+  Knights parameters. No planetary-boundary framework defines a sea-ice or
+  glacier control variable, and none of these values carries a citation. They
+  are stated as what is computed, not as endorsed thresholds.
 
 ---
 
