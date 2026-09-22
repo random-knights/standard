@@ -1,0 +1,73 @@
+# Publish @randomknights/aieds or @randomknights/k13 to npm with npm trusted
+# publishing (OIDC) and provenance. Manual dispatch only, from main only.
+#
+# DISABLED until the owner links each package to this workflow on npmjs.com.
+# The job runs only when the repository variable NPM_TRUSTED_PUBLISHING is
+# "enabled"; until then every dispatch is skipped and publishes nothing. There
+# is no NPM_TOKEN: trusted publishing exchanges this job's OIDC token for a
+# short-lived publish credential, and only for a package whose npmjs.com
+# settings name this repository, this workflow file and this environment.
+#
+# Owner steps, once per package, after the first manual publish (a trusted
+# publisher can only be added to a package that already exists):
+#   npmjs.com -> the package -> Settings -> Trusted publishing -> GitHub Actions
+#     Organization or user:  random-knights
+#     Repository:            standard
+#     Workflow filename:     npm-publish.yml
+#     Environment name:      npm-publish
+# Then set the repository variable (Settings -> Secrets and variables ->
+# Actions -> Variables): NPM_TRUSTED_PUBLISHING = enabled.
+#
+# A version is published once. Bump the version in packages/<name>/package.json
+# on main first; npm refuses to publish over an existing version.
+name: npm publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to publish
+        required: true
+        type: choice
+        options:
+          - aieds
+          - k13
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish-${{ inputs.package }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish @randomknights/${{ inputs.package }}
+    if: vars.NPM_TRUSTED_PUBLISHING == 'enabled' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      # Trusted publishing needs npm 11.5.1 or newer.
+      - name: npm with trusted publishing support
+        run: npm install -g npm@^11.5.1 && npm --version
+
+      - name: K13 checker tests
+        run: cd packages/k13 && npm test
+
+      # The same tarball gate CI runs on every change: exact file list, no
+      # tests, fixtures, secrets or .env files, installed and smoke tested.
+      - name: Check the tarballs
+        run: node scripts/check-npm-packages.mjs
+
+      - name: Publish with provenance
+        run: cd "packages/${{ inputs.package }}" && npm publish --provenance --access public

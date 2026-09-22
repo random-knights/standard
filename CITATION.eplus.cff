@@ -8,8 +8,12 @@ title: "E+ - Earth Health Score Methodology"
 type: software
 version: 1.2.0
 date-released: 2026-09-22
-license: CC-BY-4.0
-license-url: https://creativecommons.org/licenses/by/4.0/
+# Two licenses (see NOTICE): the E+ methodology text is CC BY 4.0; the E+
+# conformance checker code is Apache 2.0. CFF 1.2.0 accepts a list of SPDX
+# identifiers here.
+license:
+  - CC-BY-4.0
+  - Apache-2.0
 repository-code: https://github.com/random-knights/standard
 url: https://standard.rand0m.ai/eplus/v1/methodology.md
 abstract: >-

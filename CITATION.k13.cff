@@ -8,8 +8,12 @@ title: "K13 - AI Response Standard"
 type: software
 version: 2.0.0
 date-released: 2026-09-11
-license: CC-BY-4.0
-license-url: https://creativecommons.org/licenses/by/4.0/
+# Two licenses (see NOTICE): the K13 text is CC BY 4.0; the reference report
+# templates and the @randomknights/k13 checker code are Apache 2.0. CFF 1.2.0
+# accepts a list of SPDX identifiers here.
+license:
+  - CC-BY-4.0
+  - Apache-2.0
 repository-code: https://github.com/random-knights/standard
 url: https://randomknights.xyz/k13/
 abstract: >-

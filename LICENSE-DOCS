@@ -1,5 +1,5 @@
 AiEDs specification text, coefficient tables, and K13
-Copyright 2026 rand0m.ai / Random Knights
+Copyright 2026 Random Knights, LLC
 
 Licensed under CC BY 4.0 (Creative Commons Attribution 4.0 International).
 
@@ -31,14 +31,22 @@ privacy, or moral rights may limit how you use the material.
 
 Scope in this repository
 
-This license applies to the specification prose and the published
-coefficient tables:
+This license applies to the standards' prose and to the documents and data
+that describe or parameterize them:
 
-  spec/methodology.md          the AiEDs methodology text
-  spec/examples/                the bundled conformance examples
-  spec/v2/aieds-factors.json    the published coefficient tables
-  K13.md                        the K13 - AI Response Standard text
+  K13.md                            the K13 - AI Response Standard text
+  spec/methodology.md               the AiEDs methodology text
+  spec/v2/aieds-factors.json        the published AiEDs coefficient tables
+  spec/v2/standard-versions.json    the published standard version index
+  spec/examples/*.json              the bundled AiEDs example records
+  spec/measurements/                method documents, configuration, raw
+                                    samples and summaries (not harness/)
+  eplus/v1/methodology.md           the E+ methodology text
+  eplus/v1/conformance/README.md    the E+ conformance checker guide
+  README.md, CONTRIBUTING.md,       repository documentation
+  docs/, mcp/README.md,
+  packages/*/README.md
 
-It does not apply to the reference library, the MCP server, or the JSON
-Schema. Those are licensed Apache 2.0 under LICENSE; see that file and
-README.md for the exact path list.
+It does not apply to the reference library, the MCP server, the JSON Schema,
+the K13 reference templates, or any other code. Those are licensed Apache 2.0
+under LICENSE; see that file, NOTICE, and README.md for the exact path list.

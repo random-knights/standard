@@ -25,7 +25,8 @@ const TEXT = /\.(json|ts|md|mjs|yml|yaml|html)$/;
 // a broad no-extension rule would also try to read a future binary asset as
 // text. LICENSE and LICENSE-DOCS slipped past the extension-based rule above
 // until this line; both were checked by hand when added.
-const EXTENSIONLESS_TEXT = new Set(["LICENSE", "LICENSE-DOCS"]);
+// NOTICE joined with the npm packages (lane standard--npm-packages-0922).
+const EXTENSIONLESS_TEXT = new Set(["LICENSE", "LICENSE-DOCS", "NOTICE"]);
 
 /** Files allowed to carry a non-ASCII character, each with a stated reason. */
 const ALLOWED = new Map([

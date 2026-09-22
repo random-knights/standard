@@ -1,0 +1,53 @@
+{
+  "name": "@randomknights/k13",
+  "version": "2.0.0",
+  "description": "K13 - AI Response Standard 2.0.0: the standard text and a checker (k13 check <file>) for the machine-gate rules that are implemented in code",
+  "type": "module",
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./K13.md": "./K13.md",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "k13": "bin/k13.mjs"
+  },
+  "files": [
+    "src/index.mjs",
+    "bin/k13.mjs",
+    "K13.md",
+    "LICENSE",
+    "LICENSE-DOCS",
+    "NOTICE"
+  ],
+  "scripts": {
+    "prepack": "node ../../scripts/stage-npm-package.mjs k13",
+    "test": "node --test test/k13.test.mjs"
+  },
+  "keywords": [
+    "k13",
+    "ai",
+    "response-standard",
+    "reading-level",
+    "em-dash",
+    "lint",
+    "standard"
+  ],
+  "license": "Apache-2.0 AND CC-BY-4.0",
+  "author": "Random Knights, LLC",
+  "homepage": "https://randomknights.xyz/k13/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/random-knights/standard.git",
+    "directory": "packages/k13"
+  },
+  "bugs": {
+    "url": "https://github.com/random-knights/standard/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
