@@ -443,7 +443,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Schema               | `spec/aieds.schema.json`     | Apache 2.0 | JSON Schema 2020-12 for one disclosure                                                                                                                       |
 | Methodology          | `spec/methodology.md`        | CC BY 4.0  | 2.2.0: energy-first path + per-model coefficients + factor tables + the provenance ladder + two-term measured device coefficients                            |
 | Coefficient tables   | `spec/v2/aieds-factors.json` | CC BY 4.0  | The published factor data every surface reads                                                                                                                |
-| Measurements         | `spec/measurements/`         | CC BY 4.0  | Measurement harnesses, method documents and raw power samples. EVIDENCE, not coefficients: nothing here is in a factor table unless a factor table cites it. |
+| Measurements         | `spec/measurements/`         | CC BY 4.0  | Measurement harnesses (their code is Apache 2.0), method documents and raw power samples. EVIDENCE, not coefficients: nothing here is in a factor table unless a factor table cites it. |
 | Examples             | `spec/examples/`             | CC BY 4.0  | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script                                                               |
 | Reference library    | `lib/`                       | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested)                                       |
 | MCP server           | `mcp/`                       | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose                                                                                                           |
@@ -521,17 +521,26 @@ CC BY 4.0.
 
 <div align="center">
   
-| Path                         | License                   |
-| ---------------------------- | ------------------------- |
-| `lib/`                       | [Apache 2.0](LICENSE)     |
-| `mcp/`                       | [Apache 2.0](LICENSE)     |
-| `spec/aieds.schema.json`     | [Apache 2.0](LICENSE)     |
-| `spec/methodology.md`        | [CC BY 4.0](LICENSE-DOCS) |
-| `spec/examples/`             | [CC BY 4.0](LICENSE-DOCS) |
-| `spec/v2/aieds-factors.json` | [CC BY 4.0](LICENSE-DOCS) |
-| `K13.md`                     | [CC BY 4.0](LICENSE-DOCS) |
-| `templates/`                 | [Apache 2.0](LICENSE)     |
-| `eplus/v1/methodology.md`    | [CC BY 4.0](LICENSE-DOCS) |
+| Path                                      | License                   |
+| ----------------------------------------- | ------------------------- |
+| `lib/`                                    | [Apache 2.0](LICENSE)     |
+| `mcp/` (code)                             | [Apache 2.0](LICENSE)     |
+| `spec/aieds.schema.json`                  | [Apache 2.0](LICENSE)     |
+| `spec/examples/validate.mjs`              | [Apache 2.0](LICENSE)     |
+| `spec/test/`                              | [Apache 2.0](LICENSE)     |
+| `spec/measurements/*/harness/`            | [Apache 2.0](LICENSE)     |
+| `eplus/v1/conformance/` (code)            | [Apache 2.0](LICENSE)     |
+| `templates/`                              | [Apache 2.0](LICENSE)     |
+| `scripts/`, `.github/`                    | [Apache 2.0](LICENSE)     |
+| `packages/` (manifests and code)          | [Apache 2.0](LICENSE)     |
+| `K13.md`                                  | [CC BY 4.0](LICENSE-DOCS) |
+| `spec/methodology.md`                     | [CC BY 4.0](LICENSE-DOCS) |
+| `spec/v2/aieds-factors.json`              | [CC BY 4.0](LICENSE-DOCS) |
+| `spec/v2/standard-versions.json`          | [CC BY 4.0](LICENSE-DOCS) |
+| `spec/examples/*.json`                    | [CC BY 4.0](LICENSE-DOCS) |
+| `spec/measurements/` (not `harness/`)     | [CC BY 4.0](LICENSE-DOCS) |
+| `eplus/v1/methodology.md`                 | [CC BY 4.0](LICENSE-DOCS) |
+| READMEs, `CONTRIBUTING.md`, `docs/`       | [CC BY 4.0](LICENSE-DOCS) |
 
 <\div>
 
@@ -541,7 +550,15 @@ friction. The REQUIREMENT those files render, the ordered section list in
 K13.md under "The report template", is specification text and stays CC BY 4.0.
 Fork the markup freely; cite the standard.
 
-See [LICENSE](LICENSE) and [LICENSE-DOCS](LICENSE-DOCS) for full terms.
+A file not in the table follows the same split: code is Apache 2.0, prose and
+data are CC BY 4.0. The two npm packages built from this repository,
+`@randomknights/aieds` and `@randomknights/k13`, each carry both licenses and
+declare `Apache-2.0 AND CC-BY-4.0`; [NOTICE](NOTICE) says which part of each
+is which. Nothing in this repository is third-party material under another
+license.
+
+See [LICENSE](LICENSE), [LICENSE-DOCS](LICENSE-DOCS) and [NOTICE](NOTICE) for
+full terms.
 
 <!----------- BADGES ----------->
 

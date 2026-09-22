@@ -1,0 +1,29 @@
+Random Knights standards: AiEDs, K13 and E+
+Copyright 2026 Random Knights, LLC
+
+This repository and the npm packages built from it carry two licenses, split
+by what a file is, not by which directory it sits in:
+
+  Code and the AiEDs JSON Schema    Apache License 2.0, see LICENSE
+  Standards text, tables and data   CC BY 4.0, see LICENSE-DOCS
+
+LICENSE and LICENSE-DOCS each end with the exact path list they cover.
+README.md, section LICENSE, carries the same list as a table.
+
+npm packages built from this repository:
+
+  @randomknights/aieds   the AiEDs reference library (Apache 2.0), the AiEDs
+                         JSON Schema (Apache 2.0) and the published coefficient
+                         tables (CC BY 4.0). SPDX: Apache-2.0 AND CC-BY-4.0
+  @randomknights/k13     the K13 checker code (Apache 2.0) and the K13 standard
+                         text, K13.md (CC BY 4.0). SPDX: Apache-2.0 AND CC-BY-4.0
+
+Attribution for the CC BY 4.0 material: "Random Knights, LLC", the title of the
+standard and its version, and a link to https://github.com/random-knights/standard
+or https://standard.rand0m.ai. The CITATION files give the preferred citation.
+
+Third-party material: none is bundled in this repository or in the packages.
+Dependencies are installed from the npm registry under their own licenses and
+are not redistributed here. The AiEDs coefficient tables state published
+figures as numbers with their citations; they are not copies of the cited
+works.

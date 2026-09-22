@@ -186,7 +186,7 @@ file or class name and description of purpose be included on the
 same "printed page" as the copyright notice for easier
 identification within third-party archives.
 
-Copyright 2026 rand0m.ai / Random Knights
+Copyright 2026 Random Knights, LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -206,11 +206,23 @@ Scope in this repository
 
 This LICENSE (Apache 2.0) applies to the code and the schema:
 
-  lib/                        reference library (TypeScript)
-  mcp/                        MCP server (TypeScript)
-  spec/aieds.schema.json      the JSON Schema
+  lib/                              AiEDs reference library (TypeScript)
+  mcp/                              AiEDs MCP server (TypeScript), except
+                                    its README.md
+  spec/aieds.schema.json            the AiEDs JSON Schema
+  spec/examples/validate.mjs        the example conformance script
+  spec/test/                        the spec and site gates
+  spec/measurements/*/harness/      the measurement harness code
+  eplus/v1/conformance/             the E+ conformance checker, except its
+                                    README.md
+  templates/                        the K13 reference report templates
+  scripts/                          build and release scripts
+  packages/                         the npm package manifests and the K13
+                                    checker code, except the README files
+  .github/                          CI and release workflows
 
-It does not apply to the specification prose or the published coefficient
-tables. Those are licensed CC BY 4.0 under LICENSE-DOCS; see that file and
-README.md for the exact path list. K13 is decided to join this repository
-under LICENSE-DOCS but has not moved in yet; see LICENSE-DOCS for status.
+It does not apply to the standards' prose, the published coefficient tables,
+or the other documents and data that describe or parameterize the standards.
+Those are licensed CC BY 4.0 under LICENSE-DOCS; see that file, NOTICE, and
+README.md for the exact path list. A file not listed in either file follows
+the same split: code is Apache 2.0, prose and data are CC BY 4.0.
