@@ -30,6 +30,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| Proposed | 2026-09-22 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Proposed version 1.3.0. Section 3.3 gains 3.3.1, a second numerator source where the reference source does not retrieve (R8, RK-136). MODIS MOD44B v061 writes zero where it does not estimate, and the 2025 band proves it: of 29,729 cells reading 15 percent canopy or more, 5,136 read zero forest area and every one is at or above 60 N. The rule declares a NON-RETRIEVAL ZONE as a published geometry (cells at or above 60 N, MODIS sinusoidal tile rows v00 to v02) rather than testing single cells for zeros; sets per-cell source precedence with no blending and a common 15 percent quantity; requires a per-cell source code, a `sources` array and `secondarySourceShare` on every sub-score; declares a merged input at its weakest rung, oldest vintage and oldest source's freshness window, with no exemption for a closed series; and, when a second source is missing, drops the zone from BOTH numerator and denominator and publishes NO land-cover sub-score for a region that cannot read more than 5 percent of its potential forest (a Random Knights parameter, OQ-13). Proposes CGLS-LC100 collection 3 epoch 2019 tree cover fraction (CC BY 4.0, no credential, verified to retrieve across the whole zone) as the second source, with a normative seam check that disqualifies a source whose mean signed difference from the reference source over the five degrees south of the zone exceeds 10 percentage points. NUMBERS: nothing moves. Land cover is absent today and stays absent; the rule makes it absent by measurement instead of by pin. |
 | 1.2.0   | 2026-09-22 | **RATIFIED. The document leaves Draft.** The owner ratified every Proposed rule on 2026-09-22 (RK-136, RK-125; ADR 0018 amendment Accepted; xyz-docs ADR 0019 "E+ 1.2.0 data program"). Seven rules become normative: **R1** assessed mode for the breach panel (6.1; `mode` on every entry, `liveBreachCount` and `assessedBreachCount` never summed). **R2** a live control value is evaluated on the basis its threshold is stated on; the aerosol entry is the trailing 12-month mean, never one month (6.2). **R3** fire is scored by the trailing self-sourced percentile and its input is on; with fewer than 30 baseline days it publishes no weight-carrying sub-score, and a new visible-but-no-weight representation (`warmUpDomains`, `warmUpReadings`) is defined (3.6, 4.2). **R4** land cover is forest remaining as a share of POTENTIAL forest (RESOLVE Ecoregions 2017, forest biomes 1 to 6), canopy threshold 15 percent, high-risk floor 54 (was 30), decision D8 lifted (2, 3.3). **R5** cryosphere = 0.5 sea ice + 0.5 glaciers with F 0.40 and the +-100 mm w.e. band (3.7, replacing the reference-table input). **R6** a synthetic input never feeds the score; biodiversity and conservation are absent until a commercially usable source exists (3.8, 5.2, 7.1). **R7** freshness by source cadence: a domain's window is its publication interval plus its stated lag, 48 h for daily sources (5.3). Section 10: OQ-2, OQ-3 and OQ-8 move to Decided, the fire cross-processing calibration moves to Dated, OQ-12 (biodiversity and conservation sources) is added, and OQ-11 stays open as the list of Random Knights parameters. Conformance checker: new check 10 (R3 warm-up), check 7 applies per-domain windows (R7), new check 11 (R6), check 9 gains the mode rules (R1). NUMBERS: the reference implementation still publishes under the 1.1.0 draft rules until its code lane flips the input flags; the would-be moves are stated in the implementation changelog below and in ADR 0019, and each flip gets its own changelog line with the old and new headline. The two Proposed rows below are the proposals this version ratifies; they are kept as written. |
 | Proposed | 2026-09-21 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Section 3.7 gains 3.7.1, the cryosphere domain from published observations (RK-136): cryosphere = 0.5 sea ice + 0.5 glaciers. Sea ice is the NSIDC Sea Ice Index daily extent per hemisphere against the day-of-year 1981 to 2010 median, health = clamp(100 x (1 - max(0, (median - extent) / median) / F), 0, 100) with F = 0.40, averaged over the Arctic and the Antarctic. Glaciers keep improving 80 / stable 60 / worsening 25, the category taken from the latest 10-year mean of the WGMS reference-glacier balance against the prior 10-year mean with a +-100 mm w.e. band. The glacier half is exempt from the 48 h freshness window and is stale 18 months after its newest hydrological year ends; a missing or stale half leaves the other half alone, and the reading says so; never a synthetic input. F and the band are Random Knights parameters with no framework citation, added as OQ-11. The reference implementation builds this behind an input pin that stays off until ratification. |
 | Proposed | 2026-09-21 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Section 6 gains 6.2, the averaging window for a live control value: the atmospheric-aerosol-loading entry evaluates the mean of the trailing 12 monthly interhemispheric AOD differences, published only when all 12 months are present, never one month (RK-135, RK-136). The version stays 1.1.0 until the owner ratifies, so no consumer README fans out for a rule that is still a proposal. |
@@ -260,6 +261,178 @@ africa 77.7, north-america 67.5, asia 64.3, oceania 61.9, arctic 69.1, europe
 52.2, middle-east 14.4. The Planetary Health Check 2025 reports 59 percent
 globally; the gap is method (a different land-cover source and year), not a
 disagreement about the forest.
+
+### 3.3.1 Second source where the reference source does not retrieve (R8, proposed 2026-09-22)
+
+> **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.**
+> Proposed version 1.3.0. No published number may be derived from this rule
+> until the owner ratifies it. Until then the land-cover numerator is the
+> reference source alone and the missing-source rule below applies to the whole
+> non-retrieval zone.
+
+**The problem.** The reference numerator source, MODIS MOD44B v061, does not
+estimate tree cover everywhere. Where its training samples are sparse it does
+not retrieve, and it writes zero rather than a gap. Its Collection 6.1 user
+guide states this and gives the high latitudes as its example, and its own
+global mosaic shows the band. A zero written for that reason is not a
+measurement of a treeless cell, and re-running the producer over the same
+granules reproduces it exactly.
+
+**Confirmed against the published band, 2026-09-22.** In the 2025 forest-area
+band (object `earth/forest/forest-grid.json`, sha256
+`1cd47b32d7597625224a3e1c56b6465101dec74b472605891863e4219489e710`, 291 tiles),
+29,729 cells of the canopy grid on the same object read 15 percent canopy or
+more. 5,136 of them read exactly zero forest area, and **every one of them lies
+at or above 60 N**. Not one lies south of it. Comparing the band with that
+canopy grid by 10 degree latitude band, the ratio of mean forest area to mean
+canopy is 0.00 above 70 N and 0.14 between 60 and 70 N, against 1.2 to 1.8 in
+every other band on Earth, including 50 to 60 S. The deficit is complete at
+62.5 N and above, tapers to nothing between 60.0 N and 62.5 N, and is absent
+below 60 N. That southern edge is the edge of MODIS sinusoidal tile row v02,
+which is the geometry of the product, not a property of the forest.
+
+**The zone is declared, never detected per cell.** A NON-RETRIEVAL ZONE is a
+set of grid cells that a source's own documentation excludes from retrieval.
+The producer declares it as a geometry, publishes it in the band metadata, and
+records with the band the measurement that grounds it. For MOD44B v061 the zone
+is every cell whose center is at or above 60 N, which is MODIS sinusoidal tile
+rows v00 to v02.
+
+A per-cell test of the form "the band reads zero where a canopy grid reads
+forest" MUST NOT be used to decide what to replace. It fails in both
+directions. It misses a partially retrieved cell, which is non-zero and still
+wrong: between 60.0 N and 62.5 N the band returns a non-zero value in 1,232 of
+the affected cells while returning a mean of 8 to 34 percent forest area where
+the canopy grid reads dense boreal forest. And it cannot tell a non-retrieval
+zero from a true zero, so outside the zone it would silently overwrite real
+measurements of cleared land.
+
+**Per-cell source precedence.**
+
+1. Outside the zone the reference source is the only source. A cell outside the
+   zone is never taken from a second source, whatever the second source says.
+2. Inside the zone the second source is the only source. The reference value
+   inside the zone is discarded, including where it is non-zero.
+3. **No cell blends two sources.** No averaging of two readings, no scaling of
+   one to the other, no filling from neighboring cells.
+4. Before the merge both sources are reduced to the SAME quantity: the share of
+   the cell's area whose per-pixel tree canopy cover is 15 percent or more,
+   thresholded per pixel before aggregation (3.3). A source that cannot produce
+   that quantity at that threshold is not eligible as a second source, however
+   good its coverage.
+5. Precedence is fixed and published. It is not chosen per run, and it is never
+   chosen by which source returns the higher value.
+
+**How a merged cell and a merged grid are declared.**
+
+- The band carries a per-cell SOURCE CODE of the same dimensions as its values,
+  one integer per cell: 0 the reference source, 1 the second source, 255 no
+  data. Every cell says which source it came from. A band without this array is
+  not a merged band and MUST NOT be scored as one.
+- The band metadata carries a `sources` array. Each entry names its label,
+  dataset, doi or url, license, native resolution, the year it represents, and
+  the share of the grid's potential-forest area it supplied.
+- Every published land-cover sub-score, in `global` and in each region, carries
+  `secondarySourceShare`: the share of that region's potential forest area read
+  from a source other than the reference one. A reader of one number can then
+  see how much of it is not the reference source. On the zone declared above
+  those shares are global 13.8 percent, arctic 100, asia 23.6, europe 20.4,
+  north-america 13.2 and zero in the rest.
+- A merged band is never described by a single source label, in the document or
+  in the app.
+
+**Provenance and freshness (5.2, 5.3).** A merged band is one domain input with
+more than one source, and it is declared at the level of its weakest part.
+
+- The domain's rung is the WEAKEST rung among the contributing sources.
+- `synthetic` is true if ANY contributing source is synthetic. A merged band
+  with a generated part is generated in whole, and under R6 it does not feed the
+  score at all.
+- `vintage` is the OLDEST contributing vintage and names the source it came
+  from. `ageHours` is measured from the end of the period that oldest source
+  covers, as 5.3 requires for any period product.
+- `freshnessWindowHours` is the window of that same oldest source, its own
+  cadence plus its own stated or observed lag. It is never an average of the
+  contributing windows and never the newest source's window.
+- A closed series is not exempt. A second source whose publisher has stopped
+  releasing new editions keeps the cadence it was published on while it ran, and
+  it goes stale on that window like any other source. Being discontinued is a
+  reason to replace it, not a reason to call it fresh.
+
+**When the second source is missing, fails or is not yet ratified.** The zone's
+cells are NO DATA. They leave BOTH the numerator and the denominator. They are
+never read as zero forest.
+
+Dropping the zone is not a neutral operation and MUST NOT be presented as one.
+The zone is boreal, and boreal forest is more intact than the world average, so
+dropping it moves the reading up. Measured on the 2025 band: global forest
+remaining reads 66.1 percent with the zone counted as zero forest and 75.5
+percent with the zone dropped, while the true value must lie between 66.1 and
+78.9 percent. Through the 54 floor those two rules give a global forest health
+of 57.6 and of 100.0. A domain whose answer moves that far on a bookkeeping
+choice is not being measured.
+
+So: **a region publishes no land-cover sub-score when the potential forest it
+cannot read exceeds 5 percent of its potential forest.** The domain is ABSENT
+there, its weight counts as missing in `confidence` (4.2), and the region's
+land-cover entry publishes `unreadPotentialShare` either way. On the zone
+declared above that ceiling leaves land cover absent in `global`, arctic, asia,
+europe and north-america, and present in africa, south-america, middle-east and
+oceania. Because the headline reads land cover from the `global` pseudo-region,
+land cover carries no weight in the headline until a second source lands. That
+is the same state decision D8 held, reached by measurement instead of by pin.
+
+The 5 percent ceiling is a Random Knights parameter with no framework source
+(OQ-13).
+
+**The proposed second source.** Copernicus Global Land Service CGLS-LC100
+Collection 3, version 3.0.1, epoch 2019, tree cover fraction layer, 100 m
+(Buchhorn, M., Smets, B., Bertels, L., De Roo, B., Lesiv, M., Tsendbazar, N.,
+Herold, M., Fritz, S. 2020. Copernicus Global Land Service: Land Cover 100m:
+collection 3: epoch 2019: Globe. doi:10.5281/zenodo.3939050). CC BY 4.0, which allows
+commercial use with attribution. It needs no account and no credential: the
+layer is a public BigTIFF on Zenodo that answers HTTP range requests, so the
+producer reads only the latitudes it needs.
+
+Verified by reading the layer on 2026-09-22, not by reading its documentation:
+it spans 80 N to 60 S at 362,880 by 141,120 pixels, and six 512 by 512 pixel
+windows sampled across the zone between 63 N and 70 N (central Siberia,
+Yakutia, northern Siberian taiga, Canadian Northwest Territories,
+Fennoscandia, interior Alaska) returned no no-data pixels at all, with tree
+cover falling from 80 percent to 10 percent northward as boreal forest does.
+Its values are per-pixel tree cover percent, so the 15 percent threshold of 3.3
+applies to it unchanged and rule 4 above is satisfied.
+
+Its cost is honest and should be weighed: its epoch is 2019 against the
+reference source's 2025, and Collection 3 is the last collection of that
+service, so under the closed-series rule it will go stale and need replacing.
+
+**The seam check (normative).** A second source is eligible only if it agrees
+with the reference source where both retrieve. Each run recomputes the same
+quantity from both sources over the five degrees of latitude immediately south
+of the zone, area-weighted, and publishes in the band metadata both the mean
+signed difference and the mean absolute difference. **If the mean signed
+difference exceeds 10 percentage points in either direction the second source
+is not eligible and the missing-source rule above applies.** The mean absolute
+difference is published as a disclosure and does not gate: the two sources
+differ per cell for real reasons, including six years of fire and harvest
+between their epochs.
+
+On a 14 cell sample of that strip read on 2026-09-22 the mean signed difference
+was -1.4 percentage points and the median -4.8, while individual cells differed
+from -37 to +66 points. The merge is therefore defensible for a region
+aggregate and MUST NOT be presented as per-cell comparable.
+
+**Rejected alternatives.** ESA WorldCover v200 (2021) is CC BY 4.0, needs no
+credential, and its tiles cover the zone to 84 N, but its tree class is a
+discrete class drawn at a 10 percent canopy definition, not a per-pixel canopy
+percent at 15 percent, so rule 4 excludes it: it would apply a different forest
+definition in exactly the cells where the definition decides the answer. The
+C3S annual land cover maps are the closest relative of the maps the framework's
+own assessments use, but they are distributed through the Copernicus Climate
+Data Store, which needs an account and an API key the workspace does not hold,
+and the store offers them under a licence set whose commercial terms are an
+owner decision rather than an agent one.
 
 ### 3.4 Ocean warming
 
@@ -1174,6 +1347,10 @@ item moves between lists only by a dated owner decision recorded here.
   methodology change under section 9 and needs its own ADR. A permission
   granted does not by itself put a domain back in the score.
 
+- **OQ-13 The unreadable-share ceiling.** The 5 percent of a region's
+  potential forest that may go unread before its land-cover sub-score is
+  withheld (3.3.1, R8) is a Random Knights parameter with no framework source.
+  It is stated as what is computed, not as an endorsed threshold.
 ---
 
 ## 11. Out of Scope (v1)
