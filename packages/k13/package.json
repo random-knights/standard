@@ -1,7 +1,7 @@
 {
   "name": "@randomknights/k13",
-  "version": "2.0.0",
-  "description": "K13 - AI Response Standard 2.0.0: the standard text and a checker (k13 check <file>) for the machine-gate rules that are implemented in code",
+  "version": "2.1.0",
+  "description": "K13 - AI Response Standard 2.1.0: the standard text and a checker (k13 check <file>) for the machine-gate rules that are implemented in code",
   "type": "module",
   "main": "./src/index.mjs",
   "exports": {
