@@ -11,3 +11,13 @@ Thumbs.db
 
 # Local agent config (local only)
 .claude/
+
+# npm packages: files staged at pack time by scripts/stage-npm-package.mjs from
+# their canonical places in this repository. Never committed as copies.
+packages/*/LICENSE
+packages/*/LICENSE-DOCS
+packages/*/NOTICE
+packages/aieds/lib/
+packages/aieds/spec/
+packages/k13/K13.md
+*.tgz

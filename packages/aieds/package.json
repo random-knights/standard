@@ -1,0 +1,55 @@
+{
+  "name": "@randomknights/aieds",
+  "version": "2.3.0",
+  "description": "AiEDs (AI Energy Disclosure Standard) 2.3.0: the reference library that turns tokens and a model into an energy-first disclosure, the JSON Schema for one disclosure, and the published coefficient tables",
+  "type": "module",
+  "main": "./lib/dist/index.js",
+  "types": "./lib/dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/dist/index.d.ts",
+      "default": "./lib/dist/index.js"
+    },
+    "./schema.json": "./spec/aieds.schema.json",
+    "./factors.json": "./spec/v2/aieds-factors.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/dist/*.js",
+    "lib/dist/*.d.ts",
+    "spec/aieds.schema.json",
+    "spec/v2/aieds-factors.json",
+    "LICENSE",
+    "LICENSE-DOCS",
+    "NOTICE"
+  ],
+  "scripts": {
+    "prepack": "node ../../scripts/stage-npm-package.mjs aieds"
+  },
+  "keywords": [
+    "aieds",
+    "ai",
+    "energy",
+    "carbon",
+    "disclosure",
+    "json-schema",
+    "standard"
+  ],
+  "license": "Apache-2.0 AND CC-BY-4.0",
+  "author": "Random Knights, LLC",
+  "homepage": "https://standard.rand0m.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/random-knights/standard.git",
+    "directory": "packages/aieds"
+  },
+  "bugs": {
+    "url": "https://github.com/random-knights/standard/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

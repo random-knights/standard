@@ -104,7 +104,35 @@ jobs:
       - name: Unit tests
         run: npm test
 
-  # Aggregating gate: one check that is green only when all four jobs above
+  # The npm packages (packages/aieds, packages/k13) on every change: the K13
+  # checker's own tests, then pack each package, hold its tarball to an exact
+  # file list (no tests, fixtures, secrets or .env files), install the real
+  # tarball into an empty project and use it, then npm publish --dry-run. No
+  # credential is used or needed; a dry run publishes nothing.
+  packages:
+    name: npm packages (pack + publish dry run)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: K13 checker tests
+        run: cd packages/k13 && npm test
+
+      - name: Pack, check tarball file lists, install and smoke test
+        run: node scripts/check-npm-packages.mjs
+
+      - name: npm publish --dry-run
+        run: |
+          (cd packages/aieds && npm publish --dry-run)
+          (cd packages/k13 && npm publish --dry-run)
+
+  # Aggregating gate: one check that is green only when all five jobs above
   # pass. Named "CI Gate" so the org ci-gate-required ruleset can pin a single
   # context for this repo. Does no work of its own; it only depends on the jobs.
   ci-gate:
@@ -112,7 +140,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    needs: [spec, mcp, lib, conformance]
+    needs: [spec, mcp, lib, conformance, packages]
+    # always(), then check every result: without it a failed dependency SKIPS
+    # this job, and GitHub counts a skipped required check as passing.
+    if: always()
     steps:
       - name: All required jobs passed
-        run: echo "spec, mcp, lib and conformance all passed."
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for r in $RESULTS; do
+            if [ "$r" != "success" ]; then echo "a required job did not succeed"; exit 1; fi
+          done
+          echo "spec, mcp, lib, conformance and packages all passed."
