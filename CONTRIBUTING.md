@@ -53,18 +53,45 @@ AiEDs uses two independent version numbers:
 
 Schema-only changes (documentation, stricter patterns) can be merged by any maintainer after CI passes.
 
-## Deploying the site
+## Releasing
 
-Nothing auto-deploys. Publishing is deliberate and manual:
+Two things are released from this repository: the npm packages and the
+standard.rand0m.ai site. Merging to `main` deploys only the staging site;
+npm packages and the production site are released separately.
 
-1. Land the change on `main` via PR with CI green.
-2. Bump the version in the surface you are releasing (`lib/package.json` or
-   `mcp/package.json`) and the methodology version in `spec/methodology.md` if
-   the model changed.
-3. Publish from a clean checkout of `main`, from inside that surface:
-   `npm publish`. Requires an npm token; see Secrets below.
+### npm packages
 
-There is no staging. The spec IS the artifact.
+Three packages are built from `packages/`, each staged at pack time from its
+canonical files by `scripts/stage-npm-package.mjs`:
+
+| Package | Version source | Contents |
+|---------|----------------|----------|
+| `@randomknights/aieds` | `spec/methodology.md` | reference library, JSON Schema, coefficient tables |
+| `@randomknights/k13` | `K13.md` | K13 text and the `k13 check` CLI |
+| `@randomknights/earth-plus` | `eplus/v1/methodology.md` | E+ conformance checker (library and `eplus-conformance` CLI) and the E+ methodology text |
+
+Nothing else is published. The repository root, `lib/` and `mcp/` are marked
+`"private": true` and are never published; `lib/` and `spec/` reach npm only
+inside `@randomknights/aieds`, and the E+ checker only inside
+`@randomknights/earth-plus`. The old `@random-knights/*` scope is retired.
+
+1. Land the change on `main` via PR with CI green. The `packages` CI job packs
+   every package, holds each tarball to an exact file list, installs it into
+   an empty project, smoke tests it, and runs `npm publish --dry-run`.
+2. Bump the version in `packages/<name>/package.json` to the version of the
+   standard it carries, on `main`, via PR. npm refuses to publish over an
+   existing version.
+3. Publish with the `npm publish` workflow
+   (`.github/workflows/npm-publish.yml`, manual dispatch from `main`, choose
+   the package). It uses npm trusted publishing with provenance; there is no
+   npm token anywhere. It runs only once the repository variable
+   `NPM_TRUSTED_PUBLISHING` is `enabled` and the package on npmjs.com names
+   this repository, that workflow file and the `npm-publish` environment as
+   its trusted publisher. A package's very first version is published by the
+   owner by hand, because a trusted publisher can only be added to a package
+   that already exists.
+
+Publishing is owner-only.
 
 ### The standard.rand0m.ai site
 
@@ -109,4 +136,19 @@ The MCP server (`mcp/`) must never require an API key, auth token, environment s
 
 ## License of contributions
 
-By contributing you agree that your contributions to `spec/aieds.schema.json`, `lib/`, and `mcp/` are licensed Apache 2.0 under [LICENSE](LICENSE), and contributions to `spec/methodology.md`, `spec/examples/`, and `spec/v2/aieds-factors.json` are licensed CC BY 4.0 under [LICENSE-DOCS](LICENSE-DOCS).
+By contributing you agree that your contribution is licensed under the file
+that covers the path you changed, as listed at the end of
+[LICENSE](LICENSE) and [LICENSE-DOCS](LICENSE-DOCS) and summarized in
+[NOTICE](NOTICE):
+
+- Apache 2.0 under [LICENSE](LICENSE): code and the schema, including `lib/`,
+  `mcp/` (except its README), `spec/aieds.schema.json`, the E+ conformance
+  checker in `eplus/v1/conformance/` (except its README), `templates/`,
+  `scripts/`, `packages/` (except the READMEs) and `.github/`.
+- CC BY 4.0 under [LICENSE-DOCS](LICENSE-DOCS): the standards' text and data,
+  including `K13.md`, `spec/methodology.md`, `spec/v2/aieds-factors.json`,
+  `spec/v2/standard-versions.json`, `spec/examples/*.json`,
+  `eplus/v1/methodology.md`, and the repository documentation.
+
+A path listed in neither file follows the same split: code is Apache 2.0,
+prose and data are CC BY 4.0.

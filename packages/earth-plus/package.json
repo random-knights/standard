@@ -1,0 +1,56 @@
+{
+  "name": "@randomknights/earth-plus",
+  "version": "1.2.0",
+  "description": "Earth+ (E+) 1.2.0, the Earth Health Score standard: the conformance checker (library and eplus-conformance CLI) that recomputes every number and liveness claim in a published earth.healthscore.v1 document, and the ratified methodology text",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./methodology.md": "./methodology.md",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "eplus-conformance": "dist/cli.js"
+  },
+  "files": [
+    "dist/index.js",
+    "dist/index.d.ts",
+    "dist/cli.js",
+    "methodology.md",
+    "LICENSE",
+    "LICENSE-DOCS",
+    "NOTICE"
+  ],
+  "scripts": {
+    "prepack": "node ../../scripts/stage-npm-package.mjs earth-plus"
+  },
+  "keywords": [
+    "earth-plus",
+    "eplus",
+    "earth-health-score",
+    "conformance",
+    "provenance",
+    "planetary-boundaries",
+    "standard"
+  ],
+  "license": "Apache-2.0 AND CC-BY-4.0",
+  "author": "Random Knights, LLC",
+  "homepage": "https://standard.rand0m.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/random-knights/standard.git",
+    "directory": "packages/earth-plus"
+  },
+  "bugs": {
+    "url": "https://github.com/random-knights/standard/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
