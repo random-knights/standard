@@ -307,13 +307,14 @@ cryosphere = 0.5 x seaIce + 0.5 x glaciers
   is absent, never estimated.
 - **Never synthetic.** No generated, representative or in-repo value enters
   either half. A source that declares itself generated reads as absent.
-- **Sources and citations.** Fetterer, F., Knowles, K., Meier, W. N., Savoie,
-  M., Windnagel, A. K. & Stafford, T. (2025). Sea Ice Index. (G02135,
-  Version 4). [Data Set]. National Snow and Ice Data Center.
-  https://doi.org/10.7265/a98x-0f50 (citation is a condition of use; NSIDC
-  names no license and states no commercial-use restriction). WGMS (2026):
-  Fluctuations of Glaciers (FoG) Database. World Glacier Monitoring Service,
-  Zurich, Switzerland. https://doi.org/10.5904/wgms-fog-2026-02-10 (CC BY 4.0).
+- **Sources and citations.** Sea ice: the National Snow and Ice Data Center's
+  Sea Ice Index, Version 4 (data set G02135), prepared by F. Fetterer, K.
+  Knowles, W. N. Meier, M. Savoie, A. K. Windnagel and T. Stafford, 2025,
+  https://doi.org/10.7265/a98x-0f50. NSIDC asks for a citation as a condition
+  of use; it names no license and states no commercial-use restriction.
+  Glaciers: the World Glacier Monitoring Service (Zurich) Fluctuations of
+  Glaciers database, version of 2026-02-10,
+  https://doi.org/10.5904/wgms-fog-2026-02-10, under CC BY 4.0.
 
 Worked reading, on 2026-09-20 data: Arctic 4.709 million km2 against a median
 of 6.412 (health 33.6), Antarctic 17.386 against 18.593 (83.8), sea-ice half
