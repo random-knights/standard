@@ -2,7 +2,7 @@
   "name": "standard",
   "private": true,
   "version": "1.0.0",
-  "description": "Workspace root of the random-knights/standard repository. Never published: it only builds and tests the E+ conformance checker in eplus/v1/conformance. The checker ships on npm as @randomknights/earth-plus (packages/earth-plus).",
+  "description": "Workspace root of the random-knights/standard repository. Never published: it only builds and tests the E+ conformance checker in eplus/v1/conformance. The checker ships on npm as @randomknights/earthplus (packages/earthplus).",
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc -p eplus/v1/conformance",

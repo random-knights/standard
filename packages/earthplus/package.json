@@ -1,5 +1,5 @@
 {
-  "name": "@randomknights/earth-plus",
+  "name": "@randomknights/earthplus",
   "version": "1.2.0",
   "description": "Earth+ (E+) 1.2.0, the Earth Health Score standard: the conformance checker (library and eplus-conformance CLI) that recomputes every number and liveness claim in a published earth.healthscore.v1 document, and the ratified methodology text",
   "main": "./dist/index.js",
@@ -25,10 +25,10 @@
     "NOTICE"
   ],
   "scripts": {
-    "prepack": "node ../../scripts/stage-npm-package.mjs earth-plus"
+    "prepack": "node ../../scripts/stage-npm-package.mjs earthplus"
   },
   "keywords": [
-    "earth-plus",
+    "earthplus",
     "eplus",
     "earth-health-score",
     "conformance",
@@ -42,7 +42,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/random-knights/standard.git",
-    "directory": "packages/earth-plus"
+    "directory": "packages/earthplus"
   },
   "bugs": {
     "url": "https://github.com/random-knights/standard/issues"

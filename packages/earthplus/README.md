@@ -1,4 +1,4 @@
-# @randomknights/earth-plus
+# @randomknights/earthplus
 
 Earth+ (E+), the Earth Health Score standard, version 1.2.0 (ratified
 2026-09-22), as an npm package.
@@ -23,9 +23,9 @@ It carries three things, each built from its one canonical file in
 
 | What | Import or command | Source in the repository |
 | --- | --- | --- |
-| The conformance checker, as a library | `@randomknights/earth-plus` | `eplus/v1/conformance/` |
+| The conformance checker, as a library | `@randomknights/earthplus` | `eplus/v1/conformance/` |
 | The same checker as a command | `eplus-conformance` | `eplus/v1/conformance/src/cli.ts` |
-| The ratified methodology text | `@randomknights/earth-plus/methodology.md` | `eplus/v1/methodology.md` |
+| The ratified methodology text | `@randomknights/earthplus/methodology.md` | `eplus/v1/methodology.md` |
 
 There is no JSON Schema for `earth.healthscore.v1`: the checker reads the
 document field by field as section 7 describes, and it bundles no schema.
@@ -33,7 +33,7 @@ document field by field as section 7 describes, and it bundles no schema.
 ## Install
 
 ```
-npm install @randomknights/earth-plus
+npm install @randomknights/earthplus
 ```
 
 Node 20 or newer. CommonJS, with TypeScript types. No runtime dependencies,
@@ -42,9 +42,9 @@ no keys, no account.
 ## Check a score document
 
 ```
-npx @randomknights/earth-plus ./health-score.json
-npx @randomknights/earth-plus https://example.test/health-score.json
-npx @randomknights/earth-plus --strict ./health-score.json
+npx @randomknights/earthplus ./health-score.json
+npx @randomknights/earthplus https://example.test/health-score.json
+npx @randomknights/earthplus --strict ./health-score.json
 ```
 
 With no argument it checks the reference implementation's live document,
@@ -63,7 +63,7 @@ in a document that claims a pre-1.2.0 draft.
 const {
   verifyPublishedScoreDoc,
   formatConformanceReport,
-} = require("@randomknights/earth-plus");
+} = require("@randomknights/earthplus");
 
 const result = verifyPublishedScoreDoc(doc); // or (doc, { strict: true })
 console.log(formatConformanceReport(result));

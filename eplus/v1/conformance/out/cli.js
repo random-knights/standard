@@ -12,15 +12,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * it and every liveness claim it makes.
  *
  *   # the reference implementation's live document (the default target)
- *   npx @randomknights/earth-plus
+ *   npx @randomknights/earthplus
  *
  *   # a local copy, or any other implementation's document
- *   npx @randomknights/earth-plus ./some-health-score.json
- *   npx @randomknights/earth-plus https://example.test/health-score.json
+ *   npx @randomknights/earthplus ./some-health-score.json
+ *   npx @randomknights/earthplus https://example.test/health-score.json
  *
  *   # promote every standard requirement that is currently a warning into a
  *   # failure. This is the 1.0.0 gate.
- *   npx @randomknights/earth-plus --strict
+ *   npx @randomknights/earthplus --strict
  *
  * Exit code 0 = conformant, 1 = not conformant (every mismatch is printed with
  * the published value, the recomputed value, and why it matters), 2 = the

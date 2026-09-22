@@ -20,6 +20,6 @@ packages/*/NOTICE
 packages/aieds/lib/
 packages/aieds/spec/
 packages/k13/K13.md
-packages/earth-plus/dist/
-packages/earth-plus/methodology.md
+packages/earthplus/dist/
+packages/earthplus/methodology.md
 *.tgz
