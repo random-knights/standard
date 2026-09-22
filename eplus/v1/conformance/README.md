@@ -80,20 +80,23 @@ lockfile then disagrees with what you wrote.
 
 ## What it checks
 
-Section numbers are sections of the [E+ methodology](../methodology.md).
+Section numbers are sections of the [E+ methodology](../methodology.md),
+version 1.2.0 (ratified 2026-09-22).
 
 | Check | What it proves |
 |---|---|
 | 1 (7.2) | every `subScores[].weight` equals `meta.weights` for that domain |
 | 2 (7.2) | every region `score` is `round1( sum(normalized x weight) / sum(weight) )` |
-| 3 (7.2) | every region `confidence` is `round2( availWeight / applicableWeight )`, and a document with no per-region `notApplicableDomains` is rejected |
+| 3 (7.2, 4.2) | every region `confidence` is `round2( availWeight / applicableWeight )`, where the applicable weight excludes `notApplicableDomains` and `warmUpDomains`, and a document with no per-region `notApplicableDomains` is rejected |
 | 4 (7.2) | `global.score` is `round1( sum(score x exposure) / sum(exposure) )` over the published regions |
 | 5 (7.2) | `global.confidence` and `global.measuredCoverage` are the same exposure weighting |
 | 6 (7.2) | every `global.subScores[].normalized` is the exposure-weighted mean of the regional values |
-| 7 (7.2, 5.2, 5.3) | `meta.isLive`, `meta.notLiveDomains` and every per-domain `fresh` flag follow from the document's own provenance block, and every sub-score repeats the provenance its domain declares |
+| 7 (7.2, 5.2, 5.3) | `meta.isLive`, `meta.notLiveDomains` and every per-domain `fresh` flag follow from the document's own provenance block, each domain measured on its own freshness window (a non-daily source's published `freshnessWindowHours`, which must equal `cadenceHours + lagHours`), and every sub-score repeats the provenance its domain declares |
 | 8 (7.2) | any altered published number is rejected |
 | 1a (7.1) | `meta.eplusVersion` names the standard version the document conforms to (a warning by default, see below) |
-| 9 (6) | the breach panel: nine entries always, state recomputed from the published control value against the published threshold, `breachCount` equal to the transgressed entries and nothing else, `unknown` published rather than omitted, a citation on every entry, and a provisional entry marked as one (a warning only when the document publishes no panel at all, see below) |
+| 9 (6, 6.1) | the breach panel: nine entries always, state recomputed from the published control value against the published threshold, `breachCount` equal to the transgressed entries and nothing else, `unknown` published rather than omitted, a citation on every entry, and a provisional entry marked as one (a warning only when the document publishes no panel at all, see below). With modes: every entry states `live`, `assessed` or `unknown`; an assessed entry carries an `assessment` with edition, year and citation, and its state is recomputed from the edition's value; `liveBreachCount` and `assessedBreachCount` are each recomputed over their own mode; a `breachCount` beside them is the live count, and one that equals their sum is rejected by name |
+| 10 (3.6) | fire warm-up: no weight-carrying fire sub-score rests on a baseline of fewer than 30 days; a visible warm-up reading is in `warmUpReadings`, not `subScores`, is declared synthetic, carries no weight, and names a domain in `warmUpDomains` |
+| 11 (3.8) | a synthetic input never feeds the score: a finding for a document that claims standard 1.2.0 or later, a warning (a finding under `--strict`) for one that claims an earlier draft or no version |
 
 Check 9 is what makes the breach panel worth publishing. Section 6 says an
 entry's state comes from the published control VALUE against the published
@@ -124,7 +127,8 @@ Check 7 is the one that makes provenance checkable rather than promised.
 Section 5.3 states liveness as arithmetic:
 
 ```
-fresh(domain)  = not synthetic AND ageHours <= freshnessWindowHours AND ageHours >= -1
+window(domain) = domainProvenance[domain].freshnessWindowHours, else meta.freshnessWindowHours
+fresh(domain)  = not synthetic AND ageHours <= window(domain) AND ageHours >= -1
 live(domain)   = not synthetic AND available AND rung in {measured, vendor-published} AND fresh
 meta.isLive    = every weight-carrying domain is live
 ```
@@ -136,14 +140,16 @@ that is honest about partial live data, `isLive: false` with the reasons
 listed, PASSES. Conformance is about whether the document tells the truth about
 its inputs, not about whether the inputs are good.
 
-The freshness window is read from the document's own
-`meta.freshnessWindowHours`. The checker will not assume a value: assuming one
-would be importing a producer constant, which section 7.2 forbids.
+The freshness window is read from the document itself: a domain's own
+`freshnessWindowHours` when it publishes one (a monthly or annual source,
+section 5.3), otherwise `meta.freshnessWindowHours`, the window for daily
+sources. The checker will not assume a value: assuming one would be importing
+a producer constant, which section 7.2 forbids.
 
 ## Warnings
 
 A warning is a requirement of the standard that this document does not meet and
-that does not fail the run by default. There are two today.
+that does not fail the run by default. There are three today.
 
 `meta.eplusVersion` (section 7.1 item 1a). The reference implementation does
 not emit it yet, so making it fatal would mean the checker could not ship until
@@ -156,9 +162,13 @@ the live reference one. A panel that IS published is checked as a failure in
 every mode: a document cannot publish a panel and then be graded leniently on
 it.
 
+A synthetic input in `subScores` (check 11, section 3.8), in a document that
+claims an earlier draft or names no version. Those drafts allowed it; standard
+1.2.0 does not, so a document that claims 1.2.0 fails on it.
+
 So the gap is printed on every single run, `--strict` turns it into a failure,
-and the strict run is the gate that will prove 1.0.0 conformance the day the
-field is emitted. The default run does not pretend 1.0.0 conformance exists.
+and the strict run is the gate that proves conformance the day the producer
+meets it. The default run does not pretend conformance exists.
 
 ## Where this lives, and why there is only one copy
 

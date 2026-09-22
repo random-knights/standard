@@ -997,3 +997,290 @@ test("check 9: a threshold with no high-risk line reads as the zone of uncertain
   assert.deepEqual(result.findings, []);
   assert.equal(result.breachCountRecomputed, 4);
 });
+
+// -- check 9, section 6.1 (R1): the two evaluation modes ---------------------
+//
+// The mode panel is the panel above with modes stated. Worked by hand:
+//
+//   climate change        live      423 vs PB 350 / HR 450  ->  transgressed
+//   ocean acidification   live      2.70 vs PB 2.86 / HR 2.75 -> transgressed
+//   land-system change    assessed  edition value 62 vs PB 75 / HR 54
+//                                   ->  Zone of uncertainty, transgressed
+//   the other six         unknown
+//
+//   liveBreachCount 2, assessedBreachCount 1, breachCount (the live count) 2.
+//   A breachCount of 3 would be the forbidden sum.
+function modePanelDoc(mutate) {
+  return panelDoc((d) => {
+    d.boundaries.schema = "earth.boundaries.v2";
+    for (const e of d.boundaries.panel) {
+      e.mode = e.state === "unknown" ? "unknown" : "live";
+    }
+    const land = d.boundaries.panel.find((x) => x.id === "land-system-change");
+    land.mode = "assessed";
+    land.value = null;
+    land.assessment = {
+      edition: "planetary-health-check-2025",
+      year: 2025,
+      citation: CITE,
+      value: 62,
+    };
+    d.boundaries.liveBreachCount = 2;
+    d.boundaries.assessedBreachCount = 1;
+    d.boundaries.breachCount = 2;
+    d.boundaries.breachedIds = ["climate-change", "ocean-acidification"];
+    if (mutate) mutate(d);
+  });
+}
+
+test("check 9 (6.1): a conforming mode panel passes, and each mode is counted apart", () => {
+  const result = verifyPublishedScoreDoc(modePanelDoc());
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.ok, true);
+  assert.equal(result.breachCountRecomputed, 2);
+});
+
+test("check 9 (6.1): a breachCount that sums the two modes is rejected", () => {
+  const result = verifyPublishedScoreDoc(
+    modePanelDoc((d) => {
+      d.boundaries.breachCount = 3;
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.match(noteFor(result, "boundaries.breachCount"), /SUM of the live and the assessed/);
+});
+
+test("check 9 (6.1): a mode panel may omit breachCount but not the two mode counts", () => {
+  const omitted = verifyPublishedScoreDoc(
+    modePanelDoc((d) => {
+      delete d.boundaries.breachCount;
+      delete d.boundaries.breachedIds;
+    }),
+  );
+  assert.deepEqual(omitted.findings, []);
+  const result = verifyPublishedScoreDoc(
+    modePanelDoc((d) => {
+      delete d.boundaries.assessedBreachCount;
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.ok(paths(result).includes("boundaries.assessedBreachCount"));
+});
+
+test("check 9 (6.1): a wrong mode count is rejected", () => {
+  const result = verifyPublishedScoreDoc(
+    modePanelDoc((d) => {
+      d.boundaries.liveBreachCount = 3;
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.ok(paths(result).includes("boundaries.liveBreachCount"));
+});
+
+test("check 9 (6.1): every entry states its mode, and unknown means unknown", () => {
+  const missing = verifyPublishedScoreDoc(
+    modePanelDoc((d) => {
+      delete d.boundaries.panel[0].mode;
+    }),
+  );
+  assert.ok(paths(missing).includes("boundaries.panel[0].climate-change.mode"));
+  const wrong = verifyPublishedScoreDoc(
+    modePanelDoc((d) => {
+      d.boundaries.panel.find((x) => x.id === "novel-entities").mode = "assessed";
+    }),
+  );
+  assert.ok(paths(wrong).includes("boundaries.panel[8].novel-entities.mode"));
+});
+
+test("check 9 (6.1): an assessed entry names its edition, year and citation", () => {
+  const result = verifyPublishedScoreDoc(
+    modePanelDoc((d) => {
+      delete d.boundaries.panel.find((x) => x.id === "land-system-change")
+        .assessment.year;
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.ok(paths(result).includes("boundaries.panel[2].land-system-change.assessment"));
+});
+
+test("check 9 (6.1): an assessed state follows the edition's value, not a label", () => {
+  const result = verifyPublishedScoreDoc(
+    modePanelDoc((d) => {
+      // 80 is inside the 75 boundary, so the entry is safe and not transgressed.
+      d.boundaries.panel.find((x) => x.id === "land-system-change").assessment.value = 80;
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.ok(paths(result).includes("boundaries.panel[2].land-system-change.state"));
+});
+
+// -- check 10, section 3.6 (R3): fire warm-up carries no weight --------------
+//
+// fire is added to meta.weights at 0.25, so rawWeightSum is 1.25. Worked by
+// hand:
+//   region a   fire in warm-up (12 of 30 days): its weight leaves the
+//              denominator, confidence = 1.0 / (1.25 - 0.25) = 1
+//   region b   no fire reading at all: confidence = 1.0 / 1.25 = 0.8
+//   global confidence = (1 x 40 + 0.8 x 60) / 100 = 0.88
+function warmUpDoc(mutate) {
+  return variant((d) => {
+    d.meta.weights.fire = 0.25;
+    d.regions.a.warmUpDomains = ["fire"];
+    d.regions.a.warmUpReadings = [
+      {
+        layerId: "fire",
+        controlValue: 247,
+        weight: 0,
+        provenance: "synthetic",
+        synthetic: true,
+        baseline: { method: "midrank percentile", n: 12, warmUp: true, minDays: 30 },
+      },
+    ];
+    d.regions.b.confidence = 0.8;
+    d.global.confidence = 0.88;
+    if (mutate) mutate(d);
+  });
+}
+
+test("check 10: a visible warm-up reading carries no weight and leaves the denominator", () => {
+  const result = verifyPublishedScoreDoc(warmUpDoc());
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.ok, true);
+});
+
+test("check 10: without warmUpDomains the same weight counts as missing", () => {
+  const result = verifyPublishedScoreDoc(
+    warmUpDoc((d) => {
+      delete d.regions.a.warmUpDomains;
+      delete d.regions.a.warmUpReadings;
+    }),
+  );
+  assert.equal(result.ok, false);
+  const f = result.findings.find((x) => x.path === "regions.a.confidence");
+  assert.ok(f);
+  assert.equal(f.recomputed, 0.8);
+});
+
+test("check 10: a warm-up fire sub-score that carries weight is rejected", () => {
+  const result = verifyPublishedScoreDoc(
+    warmUpDoc((d) => {
+      d.regions.a.subScores.push({
+        layerId: "fire",
+        normalized: 50,
+        direction: "burden",
+        weight: 0.25,
+        provenance: "vendor-published",
+        synthetic: false,
+        baseline: { n: 12, warmUp: true, minDays: 30 },
+      });
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.ok(paths(result).includes("regions.a.subScores.fire.baseline"));
+  assert.ok(paths(result).includes("regions.a.warmUpDomains"));
+});
+
+test("check 10: a warm-up reading that is not declared synthetic is rejected", () => {
+  const result = verifyPublishedScoreDoc(
+    warmUpDoc((d) => {
+      d.regions.a.warmUpReadings[0].provenance = "vendor-published";
+      d.regions.a.warmUpReadings[0].synthetic = false;
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.ok(paths(result).includes("regions.a.warmUpReadings[0].provenance"));
+});
+
+test("check 10: a warm-up reading with a full baseline is rejected", () => {
+  const result = verifyPublishedScoreDoc(
+    warmUpDoc((d) => {
+      d.regions.a.warmUpReadings[0].baseline.n = 216;
+    }),
+  );
+  assert.equal(result.ok, false);
+  assert.ok(paths(result).includes("regions.a.warmUpReadings[0].baseline.n"));
+});
+
+// -- check 11, section 3.8 (R6): a synthetic input never feeds the score -----
+
+function syntheticLandCover(version) {
+  return variant((d) => {
+    d.meta.eplusVersion = version;
+    setProvenance(d, "land-cover", {
+      provenance: "synthetic",
+      synthetic: true,
+      ageHours: null,
+      fresh: false,
+    });
+    d.meta.isLive = false;
+    d.meta.notLiveDomains = ["land-cover"];
+  });
+}
+
+test("check 11: a 1.2.0 document that scores a synthetic input is rejected, by domain", () => {
+  const result = verifyPublishedScoreDoc(syntheticLandCover("1.2.0"));
+  assert.equal(result.ok, false);
+  assert.match(
+    noteFor(result, "regions.a.subScores.land-cover"),
+    /synthetic input never feeds the score/,
+  );
+});
+
+test("check 11: a document written against an earlier draft warns, and fails under strict", () => {
+  const lenient = verifyPublishedScoreDoc(syntheticLandCover("1.1.0"));
+  assert.equal(lenient.ok, true);
+  assert.ok(
+    lenient.warnings.some((w) => w.path === "regions.a.subScores.land-cover"),
+  );
+  const strict = verifyPublishedScoreDoc(syntheticLandCover("1.1.0"), {
+    strict: true,
+  });
+  assert.equal(strict.ok, false);
+  assert.ok(paths(strict).includes("regions.a.subScores.land-cover"));
+});
+
+// -- check 7, section 5.3 (R7): freshness by source cadence ------------------
+//
+// ocean becomes a monthly source: cadence 744 h (31 days) plus a stated lag of
+// 240 h (10 days) gives a window of 984 h. At ageHours 700 it is fresh and
+// live, where the daily 48 h window would have called it stale.
+function monthlyOcean(patch) {
+  return variant((d) => {
+    setProvenance(d, "ocean", {
+      cadenceHours: 744,
+      lagHours: 240,
+      freshnessWindowHours: 984,
+      ageHours: 700,
+      fresh: true,
+      ...patch,
+    });
+  });
+}
+
+test("check 7 (R7): a monthly source inside its own window is fresh and live", () => {
+  const result = verifyPublishedScoreDoc(monthlyOcean({}));
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.isLiveRecomputed, true);
+});
+
+test("check 7 (R7): a monthly source past its own window is stale", () => {
+  const result = verifyPublishedScoreDoc(monthlyOcean({ ageHours: 1000 }));
+  assert.equal(result.ok, false);
+  assert.ok(paths(result).includes("meta.domainProvenance.ocean.fresh"));
+  assert.match(
+    noteFor(result, "meta.domainProvenance.ocean"),
+    /against a window of 984/,
+  );
+});
+
+test("check 7 (R7): a window wider than cadence plus lag is rejected", () => {
+  const result = verifyPublishedScoreDoc(
+    monthlyOcean({ freshnessWindowHours: 2000 }),
+  );
+  assert.equal(result.ok, false);
+  const f = result.findings.find(
+    (x) => x.path === "meta.domainProvenance.ocean.freshnessWindowHours",
+  );
+  assert.ok(f);
+  assert.equal(f.recomputed, 984);
+});

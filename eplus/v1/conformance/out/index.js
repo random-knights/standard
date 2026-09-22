@@ -24,12 +24,17 @@
  *   - `meta.isLive` and `meta.notLiveDomains` against the per-domain
  *     provenance block, by the rules of methodology section 5.3
  *
- * It implements checks 1 to 8 of E+ methodology section 7.2, plus the
- * `meta.eplusVersion` requirement of section 7.1 item 1a and check 9, the
- * section 6 BREACH PANEL. Both of those are reported as a WARNING when the
- * document omits them entirely, and as findings under `{ strict: true }`; a
- * panel that IS published is checked as a finding in every mode. See the
- * README beside this file for why.
+ * It implements checks 1 to 11 of E+ methodology section 7.2 (standard
+ * 1.2.0), plus the `meta.eplusVersion` requirement of section 7.1 item 1a.
+ * Check 9 is the section 6 BREACH PANEL, including the two evaluation modes of
+ * section 6.1. Check 10 is the fire warm-up rule of section 3.6 (R3). Check 11
+ * is R6, section 3.8: a synthetic input never feeds the score. Check 7 applies
+ * each domain's own freshness window (R7, section 5.3). A missing version
+ * stamp and a missing panel are reported as a WARNING, and as findings under
+ * `{ strict: true }`; a panel that IS published is checked as a finding in
+ * every mode. Check 11 is a finding for a document that claims standard 1.2.0
+ * or later and a warning for one that claims an earlier draft. See the README
+ * beside this file for why.
  *
  * Check 9 is the one that makes the panel worth publishing. Section 6 requires
  * that an entry's state be computed from the published control VALUE against
@@ -94,8 +99,33 @@ function strList(v) {
 }
 /** Semver, loosely: three dot-separated numbers with an optional suffix. */
 const SEMVER = /^\d+\.\d+\.\d+(?:[-+].*)?$/;
+/**
+ * True when [version] names standard 1.2.0 or later, the first ratified
+ * version and the first to forbid a synthetic input in the score (R6). A
+ * missing or unreadable version is not 1.2.0.
+ */
+function atLeast120(version) {
+    if (version === null)
+        return false;
+    const m = version.match(/^(\d+)\.(\d+)\.(\d+)/);
+    if (!m)
+        return false;
+    const [major, minor] = [Number(m[1]), Number(m[2])];
+    return major > 1 || (major === 1 && minor >= 2);
+}
+/** Section 3.6: the fewest baseline days a weight-carrying fire reading has. */
+const FIRE_MIN_BASELINE_DAYS = 30;
 /** The two rungs of the section 5.1 ladder that can carry a live claim. */
 const LIVE_RUNGS = new Set(["measured", "vendor-published"]);
+/** Reads the `baseline` block of section 3.6 off a sub-score or reading. */
+function readBaseline(o) {
+    const b = o?.baseline;
+    if (b === null || typeof b !== "object" || Array.isArray(b)) {
+        return { baselineN: null, baselineWarmUp: null };
+    }
+    const r = b;
+    return { baselineN: num(r.n), baselineWarmUp: bool(r.warmUp) };
+}
 function readSubScores(raw) {
     if (!Array.isArray(raw))
         return [];
@@ -113,9 +143,24 @@ function readSubScores(raw) {
             weight,
             provenance: str(o?.provenance),
             synthetic: bool(o?.synthetic),
+            ...readBaseline(o),
         });
     }
     return out;
+}
+function readWarmUpReadings(raw) {
+    if (!Array.isArray(raw))
+        return [];
+    return raw.map((e) => {
+        const o = (e ?? {});
+        return {
+            layerId: str(o.layerId),
+            provenance: str(o.provenance),
+            synthetic: bool(o.synthetic),
+            weight: num(o.weight),
+            ...readBaseline(o),
+        };
+    });
 }
 function readRegions(raw) {
     const regions = raw?.regions;
@@ -136,6 +181,8 @@ function readRegions(raw) {
             notApplicableDomains: Array.isArray(na)
                 ? na.filter((d) => typeof d === "string")
                 : null,
+            warmUpDomains: strList(r?.warmUpDomains) ?? [],
+            warmUpReadings: readWarmUpReadings(r?.warmUpReadings),
             subScores: readSubScores(r?.subScores),
         };
     });
@@ -152,6 +199,9 @@ function readDomainProvenance(raw) {
             available: bool(o.available),
             ageHours: num(o.ageHours),
             fresh: bool(o.fresh),
+            freshnessWindowHours: num(o.freshnessWindowHours),
+            cadenceHours: num(o.cadenceHours),
+            lagHours: num(o.lagHours),
         });
     }
     return out;
@@ -198,6 +248,8 @@ const NON_CONTROL_DOMAINS = new Set([
 ]);
 /** The two provenance rungs that do not force `provisional` (section 6). */
 const NON_PROVISIONAL_RUNGS = new Set(["measured", "vendor-published"]);
+/** Section 6.1: the three modes. Nothing else is a mode. */
+const PANEL_MODES = ["live", "assessed", "unknown"];
 function readPanel(raw) {
     if (!Array.isArray(raw))
         return [];
@@ -207,6 +259,13 @@ function readPanel(raw) {
         const valueRaw = o.value;
         const hasValue = valueRaw !== null && valueRaw !== undefined && typeof valueRaw === "object";
         const value = (hasValue ? valueRaw : {});
+        const assessmentRaw = o.assessment;
+        const hasAssessment = assessmentRaw !== null &&
+            assessmentRaw !== undefined &&
+            typeof assessmentRaw === "object" &&
+            !Array.isArray(assessmentRaw);
+        const assessment = (hasAssessment ? assessmentRaw : {});
+        const year = assessment.year;
         return {
             index,
             id: str(o.id),
@@ -224,6 +283,16 @@ function readPanel(raw) {
             valueProvenance: hasValue ? str(value.provenance) : null,
             provisional: hasValue ? bool(value.provisional) : null,
             evaluationNote: str(o.evaluationNote),
+            mode: str(o.mode),
+            hasAssessment,
+            assessmentEdition: str(assessment.edition),
+            assessmentYear: typeof year === "number" && Number.isFinite(year)
+                ? year
+                : typeof year === "string" && year !== ""
+                    ? year
+                    : null,
+            assessmentCitation: str(assessment.citation),
+            assessmentValue: num(assessment.value),
         };
     });
 }
@@ -358,7 +427,10 @@ function verifyPublishedScoreDoc(raw, options = {}) {
         else if (!same(r.score, recomputedScore)) {
             fail(`regions.${r.id}.score`, r.score, recomputedScore, "region score is not the coverage-weighted mean of its published subScores");
         }
-        // step 3: confidence = round2(availWeight / (rawWeightSum - notApplicable)).
+        // step 3: confidence = round2(availWeight / (rawWeightSum - notApplicable
+        // - warmUp)). Standard 1.2.0 (section 4.2): a domain in warm-up is
+        // published visible but carries no weight, and its weight leaves the
+        // denominator so a baseline still building does not depress confidence.
         if (r.confidence !== null && declaredWeights.size > 0) {
             if (r.notApplicableDomains === null) {
                 fail(`regions.${r.id}.confidence`, r.confidence, null, "confidence is not derivable: the document does not publish " +
@@ -369,13 +441,88 @@ function verifyPublishedScoreDoc(raw, options = {}) {
             }
             else {
                 const naWeight = r.notApplicableDomains.reduce((a, d) => a + (declaredWeights.get(d) ?? 0), 0);
-                const applicable = rawWeightSum - naWeight;
+                const warmUpWeight = r.warmUpDomains
+                    .filter((d) => !r.notApplicableDomains?.includes(d))
+                    .reduce((a, d) => a + (declaredWeights.get(d) ?? 0), 0);
+                const applicable = rawWeightSum - naWeight - warmUpWeight;
                 const recomputedConfidence = applicable > 0 ? round2(availWeight / applicable) : 0;
                 checked += 1;
                 if (!same(r.confidence, recomputedConfidence)) {
                     fail(`regions.${r.id}.confidence`, r.confidence, recomputedConfidence, "confidence is not availableWeight / applicableWeight");
                 }
             }
+        }
+        // -- check 10: warm-up carries no weight (section 3.6, R3) ---------------
+        // A percentile over fewer than 30 baseline days is too coarse to rank a
+        // day against its own season, so it never carries weight. Two outputs
+        // conform: nothing, or a visible reading in warmUpReadings (never in
+        // subScores) that is declared synthetic and whose weight has left the
+        // confidence denominator above.
+        for (const s of r.subScores) {
+            if (s.layerId !== "fire")
+                continue;
+            if (s.baselineN === null && s.baselineWarmUp === null)
+                continue;
+            checked += 1;
+            if (s.baselineWarmUp === true ||
+                (s.baselineN !== null && s.baselineN < FIRE_MIN_BASELINE_DAYS)) {
+                fail(`regions.${r.id}.subScores.fire.baseline`, s.baselineN, FIRE_MIN_BASELINE_DAYS, "a fire sub-score in warm-up carries weight. With fewer than " +
+                    `${FIRE_MIN_BASELINE_DAYS} baseline days the region publishes no ` +
+                    "weight-carrying fire sub-score; a visible reading goes in " +
+                    "warmUpReadings, not in subScores (section 3.6, R3)");
+            }
+        }
+        const scoredIds = new Set(r.subScores.map((s) => s.layerId));
+        for (const d of r.warmUpDomains) {
+            if (scoredIds.has(d)) {
+                fail(`regions.${r.id}.warmUpDomains`, d, null, `${d} is listed in warm-up and also carries weight in subScores; a ` +
+                    "warm-up domain carries no weight (sections 3.6 and 4.2)");
+            }
+            if (r.notApplicableDomains?.includes(d)) {
+                fail(`regions.${r.id}.warmUpDomains`, d, null, `${d} is both not applicable and in warm-up; a domain is never in ` +
+                    "both lists (section 4.2)");
+            }
+        }
+        r.warmUpReadings.forEach((w, i) => {
+            const where = `regions.${r.id}.warmUpReadings[${i}]`;
+            checked += 1;
+            if (w.layerId === null || !r.warmUpDomains.includes(w.layerId)) {
+                fail(`${where}.layerId`, w.layerId, "a domain listed in warmUpDomains", "a warm-up reading names a domain the region lists in warmUpDomains, " +
+                    "so its weight is visibly out of the confidence denominator " +
+                    "(section 4.2)");
+            }
+            if (w.synthetic !== true || w.provenance !== "synthetic") {
+                fail(`${where}.provenance`, w.provenance, "synthetic", "a warm-up reading is declared synthetic, because the baseline it " +
+                    "needs does not exist yet (section 3.6)");
+            }
+            if (w.weight !== null && w.weight !== 0) {
+                fail(`${where}.weight`, w.weight, 0, "a warm-up reading carries no weight (section 3.6)");
+            }
+            if (w.layerId === "fire" &&
+                (w.baselineN === null || w.baselineN >= FIRE_MIN_BASELINE_DAYS)) {
+                fail(`${where}.baseline.n`, w.baselineN, `under ${FIRE_MIN_BASELINE_DAYS}`, "a fire warm-up reading publishes its baseline block with n under " +
+                    `${FIRE_MIN_BASELINE_DAYS}; at ${FIRE_MIN_BASELINE_DAYS} or more ` +
+                    "days the reading carries its weight (section 3.6)");
+            }
+        });
+    }
+    // -- check 11: a synthetic input never feeds the score (section 3.8, R6) ---
+    // Standard 1.2.0 forbids it. A document written against an earlier draft
+    // was allowed to, so for such a document this is a warning (a finding under
+    // strict), and for a 1.2.0 document it is a finding.
+    const r6Binding = atLeast120(str(meta.eplusVersion));
+    for (const r of regions) {
+        for (const s of r.subScores) {
+            if (s.synthetic !== true && s.provenance !== "synthetic")
+                continue;
+            (r6Binding ? fail : warn)(`regions.${r.id}.subScores.${s.layerId}`, s.provenance ?? "synthetic", "no sub-score", `${s.layerId} is scored from a synthetic input. Under E+ 1.2.0 a ` +
+                "synthetic input never feeds the score: the domain publishes no " +
+                "sub-score and its weight counts as missing in confidence " +
+                "(section 3.8, R6)." +
+                (r6Binding
+                    ? ""
+                    : " This document claims an earlier draft, so this is a warning " +
+                        "by default and a finding under strict mode."));
         }
     }
     // -- step 4: the headline ---------------------------------------------------
@@ -504,15 +651,32 @@ function verifyPublishedScoreDoc(raw, options = {}) {
                 continue;
             }
             const synthetic = p.synthetic === true || p.provenance === "synthetic";
+            // R7 (section 5.3): a non-daily source is fresh within its own
+            // publication interval plus its stated lag, published on its own entry;
+            // every other source uses the document's daily window.
+            const window = p.freshnessWindowHours ?? freshnessWindowHours;
+            if (p.freshnessWindowHours !== null) {
+                checked += 1;
+                if (p.freshnessWindowHours <= 0) {
+                    fail(`meta.domainProvenance.${domain}.freshnessWindowHours`, p.freshnessWindowHours, null, "a per-domain freshness window is a positive number of hours " +
+                        "(section 5.3)");
+                }
+                if (p.cadenceHours !== null &&
+                    p.lagHours !== null &&
+                    !same(p.freshnessWindowHours, p.cadenceHours + p.lagHours)) {
+                    fail(`meta.domainProvenance.${domain}.freshnessWindowHours`, p.freshnessWindowHours, p.cadenceHours + p.lagHours, "a source's freshness window is its publication interval plus its " +
+                        "stated lag and nothing more (section 5.3, R7)");
+                }
+            }
             const freshRecomputed = !synthetic &&
                 p.ageHours !== null &&
-                p.ageHours <= freshnessWindowHours &&
+                p.ageHours <= window &&
                 p.ageHours >= -1;
             checked += 1;
             if (p.fresh !== null && p.fresh !== freshRecomputed) {
                 fail(`meta.domainProvenance.${domain}.fresh`, p.fresh, freshRecomputed, "published freshness disagrees with the section 5.3 rule applied to " +
-                    "this domain's own synthetic flag, ageHours and the published " +
-                    `freshnessWindowHours of ${freshnessWindowHours}`);
+                    "this domain's own synthetic flag, ageHours and its freshness " +
+                    `window of ${window} hours`);
             }
             const rung = p.provenance;
             const liveRecomputed = !synthetic &&
@@ -544,7 +708,7 @@ function verifyPublishedScoreDoc(raw, options = {}) {
                         reason =
                             `it is carried forward past the freshness window: ageHours ` +
                                 `${p.ageHours === null ? "absent" : p.ageHours} against a window ` +
-                                `of ${freshnessWindowHours}`;
+                                `of ${window}`;
                     }
                     fail(`meta.domainProvenance.${domain}`, true, false, `THIS DOCUMENT CLAIMS meta.isLive TRUE WHILE THE WEIGHT-CARRYING ` +
                         `DOMAIN "${domain}" IS NOT LIVE: ${reason}. Section 5.3: a ` +
@@ -652,6 +816,16 @@ function verifyPublishedScoreDoc(raw, options = {}) {
         let recomputedBreaches = 0;
         let recomputedUnknown = 0;
         const recomputedBreachedIds = [];
+        // Section 6.1 (R1): a panel is read with modes when any entry states one
+        // or when it publishes either mode count. Then each count is recomputed
+        // over its own mode, and breachCount keeps its 1.0.0 meaning: this
+        // product's own (live) measurement, never the sum of the two.
+        const modesInEffect = panel.some((e) => e.mode !== null) ||
+            boundariesRaw.liveBreachCount !== undefined ||
+            boundariesRaw.assessedBreachCount !== undefined;
+        let liveBreaches = 0;
+        let assessedBreaches = 0;
+        const liveBreachedIds = [];
         for (const e of panel) {
             const where = `boundaries.panel[${e.index}]${e.id === null ? "" : "." + e.id}`;
             if (e.id === null) {
@@ -670,6 +844,54 @@ function verifyPublishedScoreDoc(raw, options = {}) {
                     "(section 6, condition 2)");
             }
             checked += 1;
+            // 9i: every entry states its mode, and an assessed entry names its
+            // edition, year and citation on the entry itself (section 6.1).
+            if (modesInEffect) {
+                checked += 1;
+                if (e.mode === null || !PANEL_MODES.includes(e.mode)) {
+                    fail(`${where}.mode`, e.mode, PANEL_MODES.join(" | "), "every entry states which evaluation mode produced it (section 6.1)");
+                }
+                else if ((e.mode === "unknown") !== (e.state === UNKNOWN)) {
+                    fail(`${where}.mode`, e.mode, e.state === UNKNOWN ? "unknown" : "live | assessed", "mode is unknown exactly when the state is unknown (section 6.1)");
+                }
+                if (e.mode === "assessed") {
+                    if (!e.hasAssessment ||
+                        e.assessmentEdition === null ||
+                        e.assessmentEdition === "" ||
+                        e.assessmentYear === null ||
+                        e.assessmentCitation === null ||
+                        e.assessmentCitation === "") {
+                        fail(`${where}.assessment`, "(incomplete)", "edition, year and citation", "an assessed entry carries a non-empty edition, the year its " +
+                            "value is for and a non-empty citation on the entry itself, " +
+                            "so a quotation is never mistaken for a measurement (section " +
+                            "6.1)");
+                    }
+                    // State from the edition's value against the published threshold,
+                    // the same rule as a live entry (section 6.1).
+                    if (e.assessmentValue !== null && e.thresholdBoundary !== null) {
+                        const expect = stateFromValue(e.assessmentValue, e.thresholdBoundary, e.thresholdHighRisk, e.thresholdDirection);
+                        if (expect !== null) {
+                            checked += 2;
+                            if (e.state !== expect.state) {
+                                fail(`${where}.state`, e.state, expect.state, "an assessed entry's state is computed from the edition's " +
+                                    "value against the published threshold (section 6.1)");
+                            }
+                            if (e.transgressed !== expect.transgressed) {
+                                fail(`${where}.transgressed`, e.transgressed, expect.transgressed, "transgressed does not follow from the edition's value and " +
+                                    "the published threshold (section 6.1)");
+                            }
+                        }
+                    }
+                }
+                if (e.transgressed === true) {
+                    if (e.mode === "assessed")
+                        assessedBreaches += 1;
+                    else if (e.mode === "live") {
+                        liveBreaches += 1;
+                        liveBreachedIds.push(e.id);
+                    }
+                }
+            }
             // 9c: the state vocabulary is closed.
             if (e.state === null || !PANEL_STATES.includes(e.state)) {
                 fail(`${where}.state`, e.state, PANEL_STATES.join(" | "), "state is not one of the four states of section 6");
@@ -745,16 +967,50 @@ function verifyPublishedScoreDoc(raw, options = {}) {
                 recomputedBreachedIds.push(e.id);
             }
         }
-        breachCountRecomputed = recomputedBreaches;
+        // With modes, breachCount (when published) is the live count, and each
+        // mode count is its own mode's transgressed entries (section 6.1).
+        const expectedBreachCount = modesInEffect ? liveBreaches : recomputedBreaches;
+        const expectedBreachedIds = modesInEffect
+            ? liveBreachedIds
+            : recomputedBreachedIds;
+        breachCountRecomputed = expectedBreachCount;
+        if (modesInEffect) {
+            const pairs = [
+                ["liveBreachCount", liveBreaches],
+                ["assessedBreachCount", assessedBreaches],
+            ];
+            for (const [key, recomputed] of pairs) {
+                const published = num(boundariesRaw[key]);
+                checked += 1;
+                if (published === null) {
+                    fail(`boundaries.${key}`, null, recomputed, "a panel with modes publishes liveBreachCount and " +
+                        "assessedBreachCount as two separate fields (section 6.1)");
+                }
+                else if (!same(published, recomputed)) {
+                    fail(`boundaries.${key}`, published, recomputed, `${key} is the count of transgressed entries of its own mode and ` +
+                        "nothing else (section 6.1)");
+                }
+            }
+        }
         // 9h: the counts. breachCount is the count of transgressed entries and
         // nothing else, and the denominator is published beside it so the number
         // cannot read as a claim about the whole framework.
         if (breachCountPublished === null) {
-            fail("boundaries.breachCount", null, recomputedBreaches, "the panel publishes no breachCount (section 6)");
+            if (!modesInEffect) {
+                fail("boundaries.breachCount", null, recomputedBreaches, "the panel publishes no breachCount (section 6)");
+            }
+        }
+        else if (modesInEffect &&
+            assessedBreaches > 0 &&
+            same(breachCountPublished, liveBreaches + assessedBreaches) &&
+            !same(breachCountPublished, liveBreaches)) {
+            fail("boundaries.breachCount", breachCountPublished, liveBreaches, "breachCount is the SUM of the live and the assessed counts. The two " +
+                "are never summed: one is this product's measurement and the other " +
+                "a published assessment it quotes (section 6.1)");
         }
         else {
             checked += 1;
-            if (!same(breachCountPublished, recomputedBreaches)) {
+            if (!same(breachCountPublished, expectedBreachCount)) {
                 // The framework's own count is context published in its own object and
                 // is never our measurement, so a breachCount that IS that number gets
                 // the specific message rather than the general one.
@@ -762,7 +1018,7 @@ function verifyPublishedScoreDoc(raw, options = {}) {
                 const reportedBreached = framework === null ? null : num(framework.reportedBreached);
                 const tookTheFrameworkCount = reportedBreached !== null &&
                     same(breachCountPublished, reportedBreached);
-                fail("boundaries.breachCount", breachCountPublished, recomputedBreaches, tookTheFrameworkCount
+                fail("boundaries.breachCount", breachCountPublished, expectedBreachCount, tookTheFrameworkCount
                     ? "breachCount equals the framework's own reported count rather " +
                         "than the count of this document's transgressed entries. The " +
                         "framework count is context published in its own object and " +
@@ -795,7 +1051,7 @@ function verifyPublishedScoreDoc(raw, options = {}) {
         const breachedIds = strList(boundariesRaw.breachedIds);
         if (breachedIds !== null) {
             const a = [...breachedIds].sort().join(",");
-            const b = [...recomputedBreachedIds].sort().join(",");
+            const b = [...expectedBreachedIds].sort().join(",");
             if (a !== b) {
                 fail("boundaries.breachedIds", a === "" ? "(empty)" : a, b === "" ? "(empty)" : b, "breachedIds is not the set of entries with transgressed true");
             }

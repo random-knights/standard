@@ -6,7 +6,8 @@ title: "E+ - Earth Health Score Methodology"
 # same choice CITATION.cff makes for AiEDs. GitHub reads only CITATION.cff, so
 # this file is for humans and for tools pointed at it directly.
 type: software
-version: 1.1.0
+version: 1.2.0
+date-released: 2026-09-22
 license: CC-BY-4.0
 license-url: https://creativecommons.org/licenses/by/4.0/
 repository-code: https://github.com/random-knights/standard
@@ -17,9 +18,11 @@ abstract: >-
   exposure-weighted headline, a five-rung provenance ladder that forbids
   claiming live for a synthetic input, a non-averageable breach panel with
   cited thresholds, and the conformance test that recomputes every published
-  number from the published document alone. Version 1.1.0 is a DRAFT awaiting
-  owner ratification; the canonical text is eplus/v1/methodology.md in this
-  repository.
+  number from the published document alone. Version 1.2.0 is the first
+  ratified version (2026-09-22): it adds per-source freshness, the fire
+  percentile, the potential-forest land-cover quantity, cryosphere from sea ice
+  and glaciers, and the rule that a synthetic input never feeds the score. The
+  canonical text is eplus/v1/methodology.md in this repository.
 keywords:
   - Earth health score
   - planetary boundaries
