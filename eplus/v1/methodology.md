@@ -1,26 +1,36 @@
 # E+ Methodology
 
-> **STATUS: DRAFT 1.0.0, NOT RATIFIED.** This is the first assembled text of the
-> E+ (Earth Health Score) methodology. It describes what the reference
-> implementation computes today (implementation methodology 0.8), and it states
-> the normative requirements a v1 document and a v1 implementation must meet.
-> Nothing in it is new science. Every constant, weight, threshold and number was
-> taken from a ratified ADR, from the producer source, from the four independent
-> audits of 2026-09-10, or from a recorded owner decision, and each one says
-> where it came from. Where something is undecided this text says so in an
-> open question rather than filling the gap with a value.
+> **CURRENT VERSION: 1.2.0, RATIFIED 2026-09-22.** This is the first ratified
+> text of the E+ (Earth Health Score) methodology. The owner ratified it on
+> 2026-09-22 with the instruction "i approve the scoring-rule changes. if we're
+> going to do all this work on Earth+ to make it an official standard let's do
+> it right now." Versions 1.0.0 and 1.1.0 were drafts and were never ratified;
+> implement 1.2.0. It states the normative requirements a v1 document and a v1
+> implementation must meet. Nothing in it is new science. Every constant,
+> weight, threshold and number was taken from a ratified ADR, from the producer
+> source, from the four independent audits of 2026-09-10, from a named
+> published dataset, or from a recorded owner decision, and each one says where
+> it came from. Where something is undecided this text says so in an open
+> question rather than filling the gap with a value. Where a value is a Random
+> Knights parameter with no framework source, this text says that too.
+>
+> A rule in this text can be ahead of the reference implementation. Where it
+> is, the implementation publishes what it computes, declares it honestly, and
+> is read against this text by the conformance checker (section 7); the text is
+> not bent to match the code.
 
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 1.1.0 (E+ standard semver - distinct from the implementation's `methodologyVersion`, see section 9)
-**Status:** Draft, awaiting owner ratification
-**Effective:** not yet
+**Version:** 1.2.0 (E+ standard semver - distinct from the implementation's `methodologyVersion`, see section 9)
+**Status:** Ratified
+**Effective:** 2026-09-22
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
 ## CHANGELOG
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 1.2.0   | 2026-09-22 | **RATIFIED. The document leaves Draft.** The owner ratified every Proposed rule on 2026-09-22 (RK-136, RK-125; ADR 0018 amendment Accepted; xyz-docs ADR 0019 "E+ 1.2.0 data program"). Seven rules become normative: **R1** assessed mode for the breach panel (6.1; `mode` on every entry, `liveBreachCount` and `assessedBreachCount` never summed). **R2** a live control value is evaluated on the basis its threshold is stated on; the aerosol entry is the trailing 12-month mean, never one month (6.2). **R3** fire is scored by the trailing self-sourced percentile and its input is on; with fewer than 30 baseline days it publishes no weight-carrying sub-score, and a new visible-but-no-weight representation (`warmUpDomains`, `warmUpReadings`) is defined (3.6, 4.2). **R4** land cover is forest remaining as a share of POTENTIAL forest (RESOLVE Ecoregions 2017, forest biomes 1 to 6), canopy threshold 15 percent, high-risk floor 54 (was 30), decision D8 lifted (2, 3.3). **R5** cryosphere = 0.5 sea ice + 0.5 glaciers with F 0.40 and the +-100 mm w.e. band (3.7, replacing the reference-table input). **R6** a synthetic input never feeds the score; biodiversity and conservation are absent until a commercially usable source exists (3.8, 5.2, 7.1). **R7** freshness by source cadence: a domain's window is its publication interval plus its stated lag, 48 h for daily sources (5.3). Section 10: OQ-2, OQ-3 and OQ-8 move to Decided, the fire cross-processing calibration moves to Dated, OQ-12 (biodiversity and conservation sources) is added, and OQ-11 stays open as the list of Random Knights parameters. Conformance checker: new check 10 (R3 warm-up), check 7 applies per-domain windows (R7), new check 11 (R6), check 9 gains the mode rules (R1). NUMBERS: the reference implementation still publishes under the 1.1.0 draft rules until its code lane flips the input flags; the would-be moves are stated in the implementation changelog below and in ADR 0019, and each flip gets its own changelog line with the old and new headline. The two Proposed rows below are the proposals this version ratifies; they are kept as written. |
 | Proposed | 2026-09-21 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Section 3.7 gains 3.7.1, the cryosphere domain from published observations (RK-136): cryosphere = 0.5 sea ice + 0.5 glaciers. Sea ice is the NSIDC Sea Ice Index daily extent per hemisphere against the day-of-year 1981 to 2010 median, health = clamp(100 x (1 - max(0, (median - extent) / median) / F), 0, 100) with F = 0.40, averaged over the Arctic and the Antarctic. Glaciers keep improving 80 / stable 60 / worsening 25, the category taken from the latest 10-year mean of the WGMS reference-glacier balance against the prior 10-year mean with a +-100 mm w.e. band. The glacier half is exempt from the 48 h freshness window and is stale 18 months after its newest hydrological year ends; a missing or stale half leaves the other half alone, and the reading says so; never a synthetic input. F and the band are Random Knights parameters with no framework citation, added as OQ-11. The reference implementation builds this behind an input pin that stays off until ratification. |
 | Proposed | 2026-09-21 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Section 6 gains 6.2, the averaging window for a live control value: the atmospheric-aerosol-loading entry evaluates the mean of the trailing 12 monthly interhemispheric AOD differences, published only when all 12 months are present, never one month (RK-135, RK-136). The version stays 1.1.0 until the owner ratifies, so no consumer README fans out for a rule that is still a proposal. |
 | 1.1.0   | 2026-09-18 | **PENDING ADR 0018 AMENDMENT RATIFICATION.** Section 6 gains 6.1, a second breach-panel evaluation mode: `live` (the existing feed-driven mode) and `assessed` (a value taken from the pinned published edition, cited with edition and year, never presented as live), under an amendment to ADR 0018 that is Proposed, not yet Accepted. Adds the conformance rule the reference implementation's tests follow once the amendment is Accepted: every entry carries `mode` in `{live, assessed, unknown}`; an assessed entry carries a non-empty edition, year and citation; the breach count publishes as `liveBreachCount` and `assessedBreachCount`, two fields, never summed. No published number moves and no existing rule (1 through 5) changes; this is a minor version because the schema of the published panel gains new fields. |
@@ -35,6 +45,28 @@ derived, with the OLD number, the NEW number, and why it moved. The rule this
 section enforces: **a reader must always be able to tell a change in the
 METHOD from a change in the WORLD.** They are not the same event and they must
 never look alike.
+
+### Pending under standard 1.2.0 (no published number has moved yet)
+
+Standard 1.2.0 changes how four domains are derived (fire, land cover,
+cryosphere, and the removal of the synthetic biodiversity and conservation
+inputs). None of those changes is published yet: the reference implementation
+builds each one behind an input flag that stays off until its code lane flips
+it, and each flip gets its OWN entry here, with the old headline, the new
+headline, and the words "a change in the method". The evidence already in hand,
+stated so nobody reads the coming moves as planetary events:
+
+- Removing the synthetic biodiversity and conservation inputs, nothing added:
+  headline 63.2 to 59.3 on the staging document of 2026-09-22T01:57Z (the
+  recompute reproduced the published 63.2 exactly). Oceania rises from 79.6 to
+  92.2 in the same step, the section 4.2 effect of a missing domain.
+- Fire, would-be on the last seed day (2025-12-31, 216 baseline days):
+  north-america 8.8, south-america 82.9, europe 2.3, africa 78.7, middle-east
+  24.5, asia 63.0, oceania 93.3, arctic 43.8, antarctic 50.9, global 85.6.
+- Land cover, would-be on a 2019 prototype of the potential-forest quantity:
+  global forest remaining 68.1 percent; with the 54 floor, global forest
+  health moves from 84.7 (30 floor) to 67.2 and Europe from 49.3 to 0.
+- Cryosphere, would-be on 2026-09-20 data: 41.8 (worked in section 3.7).
 
 ### Implementation 0.8 (2026-09-12): the headline is derivable from the published document
 
@@ -115,21 +147,27 @@ v2 goal and does not gate v1.
 
 ## 2. The Nine Domains
 
-Weights, directions and bases are frozen by ADR 0008 (methodology 0.6,
-2026-06-25) and carried forward unchanged by ADR 0012 (0.7, ratified as
-amended 2026-09-12). A change to any of them is a methodology version bump and
-requires an Accepted ADR BEFORE the default changes (section 9).
+Weights and directions are frozen by ADR 0008 (methodology 0.6, 2026-06-25)
+and carried forward unchanged by ADR 0012 (0.7, ratified as amended
+2026-09-12). Bases are as relabeled by ADR 0018 (Accepted 2026-09-16). A change
+to any of them is a methodology version bump and requires an Accepted ADR
+BEFORE the default changes (section 9). Standard 1.2.0 changes no weight and no
+direction. It changes the control variable and anchors of `land-cover`, `fire`
+and `cryosphere` (sections 3.3, 3.6, 3.7) and removes the synthetic inputs of
+`biodiversity` and `conservation` (section 3.8); those domains keep their
+declared weights and publish no sub-score, so their weight counts as missing
+in `confidence`.
 
 | Domain | Weight | Direction | Basis | Control variable | Units | Safe | High risk | Citation |
 |---|---|---|---|---|---|---|---|---|
-| `land-cover` | 0.25 | benefit | boundary | Forest cover remaining (land-system change) | % cover remaining | >= 75 | <= 30 | Steffen et al. 2015; Richardson et al. 2023 |
-| `fire` | 0.20 | burden | contextual-proxy | Wildfire active-fire burden | detections | 0 | >= 50 | NASA FIRMS active fire (contextual signal) |
-| `air` | 0.15 | burden | boundary | PM2.5, atmospheric aerosol loading | ug/m3 | <= 5 (WHO 2021 annual guideline) | >= 50 | WHO 2021 Global Air Quality Guidelines; Steffen et al. 2015 |
-| `ocean` | 0.10 | burden | boundary | Sea-surface temperature anomaly (climate-change proxy) | deg C vs 1991-2020 | 0 | +2 warm (or -4 cold) | Hobday et al. 2016; IPCC AR6 |
+| `land-cover` | 0.25 | benefit | boundary | Forest remaining as a share of potential forest (land-system change) | % of potential forest remaining | >= 75 | <= 54 | Steffen et al. 2015; Richardson et al. 2023; Planetary Health Check 2025; Dinerstein et al. 2017 (RESOLVE Ecoregions) |
+| `fire` | 0.20 | burden | contextual-proxy | Active-fire detections against the region's own same-season baseline | midrank percentile | calmest baseline day (p 0) | worst baseline day (p 1) | NASA FIRMS VIIRS NOAA-20 active fire (contextual signal) |
+| `air` | 0.15 | burden | contextual-proxy | PM2.5, atmospheric aerosol loading | ug/m3 | <= 5 (WHO 2021 annual guideline) | >= 50 | WHO 2021 Global Air Quality Guidelines; Steffen et al. 2015 |
+| `ocean` | 0.10 | burden | contextual-proxy | Sea-surface temperature anomaly (climate-change proxy) | deg C vs 1991-2020 | 0 | +2 warm (or -4 cold) | Hobday et al. 2016; IPCC AR6 |
 | `ocean-acidification` | 0.10 | benefit | boundary | Surface-ocean aragonite saturation, Omega_arag | Omega | >= 2.75 | 1.0 | Richardson et al. 2023; Steffen et al. 2015; Planetary Health Check 2025 |
-| `cryosphere` | 0.10 | burden | contextual-proxy | Glacier mass-balance trend | categorical | improving | worsening | glacier mass-balance (contextual signal) |
-| `biodiversity` | 0.10 | benefit | boundary | Species-richness index (biosphere-integrity proxy) | 0 to 100 index | 100 | 0 | Richardson et al. 2023 |
-| `conservation` | 0.08 | benefit | contextual-proxy | Protected-area coverage vs the 30x30 target | % area protected | >= 30 (GBF Target 3) | 0 | Kunming-Montreal GBF Target 3 |
+| `cryosphere` | 0.10 | burden | contextual-proxy | Sea-ice extent deficit (half) and glacier mass-balance trend (half) | health per half | extent at or above the 1981 to 2010 median; glaciers improving | deficit of 40 percent of the median; glaciers worsening | NSIDC Sea Ice Index G02135 v4; WGMS Fluctuations of Glaciers (contextual signal) |
+| `biodiversity` | 0.10 | benefit | contextual-proxy | Species-richness index (biosphere-integrity proxy); ABSENT until a commercially usable source exists (3.8) | 0 to 100 index | 100 | 0 | Richardson et al. 2023 |
+| `conservation` | 0.08 | benefit | contextual-proxy | Protected-area coverage vs the 30x30 target; ABSENT until a commercially usable source exists (3.8) | % area protected | >= 30 (GBF Target 3) | 0 | Kunming-Montreal GBF Target 3 |
 | `human` | 0.10 | burden | contextual-proxy | Global Human Modification (Anthroposphere pressure) | gHM x 100 | <= 5 | >= 40 | Kennedy et al. 2019; Venter et al. 2016 |
 
 **The weights sum to 1.18, not to 1.** They are never used as absolute shares.
@@ -148,12 +186,9 @@ variables are atmospheric CO2 and radiative forcing) and `biodiversity`
 (richness is not extinction rate or HANPP). Only `land-cover` and
 `ocean-acidification` use the accepted control variable. This is why the
 breach panel (section 6) admits two domains and names the exclusions. The
-three labels are DECIDED to become `contextual-proxy` (owner decision D5,
-2026-09-13). The relabel is a methodology change under section 9, so it needs
-an Accepted ADR before the default changes, and it ships in the same lane as
-the breach panel because both change what a client renders. Until that lane
-lands, an implementation MAY still publish `boundary` for the three, and a
-document that does so is read against this section. See section 10.
+three labels are `contextual-proxy` as of ADR 0018, Accepted 2026-09-16 (owner
+decision D5, 2026-09-13), shipped in the same release as the breach panel
+because both change what a client renders.
 
 ---
 
@@ -185,12 +220,46 @@ fallback only: `100 - (usAqi / 200) x 100`.
 
 ### 3.3 Land cover
 
-Two signals: forest at 0.75 and tree-cover vitality at 0.25. Forest is boundary
-distance on `remaining = coverPct - max(0, lossDeltaPct)` with safe 75 and high
-risk 30. The tree-vitality input is pinned to absent in the reference
-implementation, so forest carries the domain today. The land-cover reading in
-the reference implementation is a constant table (consensus C3) and is declared
-`synthetic` (section 5); the live NASA forest grid is fetched and not yet used.
+Two signals: forest at 0.75 and tree-cover vitality at 0.25. The tree-vitality
+input is pinned to absent in the reference implementation, so forest carries
+the domain.
+
+**The quantity (R4, ratified 2026-09-22).** Forest is the land-system-change
+control variable: forest area remaining as a percent of POTENTIAL forest area,
+computed over the cells where potential forest exists, so deserts, tundra and
+ice sheets drop out of both the numerator and the denominator.
+
+- **Denominator.** Potential forest is the extent of forest biomes 1 to 6 of
+  RESOLVE Ecoregions 2017 (Dinerstein et al. 2017, BioScience 67(6):534-545,
+  doi:10.1093/biosci/bix014, CC BY 4.0). The reference implementation vendors
+  it as a 0.5 degree grid pinned by sha256: 55.8 million km2 of potential
+  forest. Hengl et al. 2018 gives the same global result and was used as a
+  cross-check only.
+- **Numerator.** A cell counts as forest where tree canopy cover is 15 percent
+  or more, applied per pixel BEFORE aggregation to the cell. 15 percent is the
+  forest threshold of the land-cover classification behind the maps the
+  framework's own assessments use (Richardson et al. 2023; Planetary Health
+  Check 2025). The reference source is MODIS MOD44B v061 percent tree cover
+  (doi:10.5067/MODIS/MOD44B.061), newest complete year. Only a declared
+  forest-area band is accepted as the numerator; a canopy-percent grid is not
+  forest area and does not stand in for it.
+- **Normalizer.** Boundary distance (3.1) on forest remaining with safe 75 and
+  high risk **54**, the framework's own high-risk line (Planetary Health Check
+  2025), so the score's normalizer and the breach panel's land-system entry
+  read against the same two lines. The 1.1.0 floor of 30 had no framework
+  source and is retired.
+- **Decision D8 is lifted.** The owner pin that kept the tree-canopy grid out
+  of the score because canopy percent is not forest remaining is answered by
+  this quantity. The domain is `vendor-published` once the numerator band is
+  published; until then it is absent, never read from a constant table (R6,
+  section 3.8).
+
+Would-be reading, on a 2019 prototype of the numerator: global 68.1 percent of
+potential forest remaining (66.1 with exact cell overlap), south-america 75.2,
+africa 77.7, north-america 67.5, asia 64.3, oceania 61.9, arctic 69.1, europe
+52.2, middle-east 14.4. The Planetary Health Check 2025 reports 59 percent
+globally; the gap is method (a different land-cover source and year), not a
+disagreement about the forest.
 
 ### 3.4 Ocean warming
 
@@ -211,20 +280,22 @@ transgression is stated.
 
 ### 3.6 Fire
 
-The implementation formula is `health = 100 - (detections / 50) x 100`. It is
-pinned OFF by declaration (`FIRE_SCORE_INPUT_ENABLED = false`) because 50
-detections as full scale reads any continental box as burning at zero and
-would drop a 0.20-weighted zero over most of the populated world. The fire
-sub-score is therefore absent from every region today and the domain carries
-no weight (consensus C1, now a declared state rather than a key mismatch).
+**The normalizer (R3, ratified 2026-09-22).** Fire is scored by a **trailing
+self-sourced percentile** (owner selection: design S, 2026-09-12; built as
+lane B2), and the fire input is ON: the owner pin B1
+(`FIRE_SCORE_INPUT_ENABLED = false`) is lifted by this ratification. The
+1.1.0 formula `100 - (detections / 50) x 100` is retired: 50 detections as
+full scale read any continental box as burning at zero.
 
-The specified replacement is a **trailing self-sourced percentile** (owner
-selection: design S, 2026-09-12). For region `r` on UTC date `d`, with `c` the
-detection count in the region's box and `H` the baseline counts:
+For region `r`, the day scored is `d`, the latest WHOLE UTC day (a partial
+current day undercounts by an order of magnitude and MUST NOT be scored). With
+`c` the detection count in the region's box on `d` and `H` the baseline
+counts:
 
 ```
 below = count of h in H with h <  c
 equal = count of h in H with h == c
+N     = count of H
 p     = (below + 0.5 x equal) / N        midrank empirical percentile, 0..1
 fire  = round1( 100 x (1 - p) )          then the humility ceiling
 ```
@@ -232,41 +303,70 @@ fire  = round1( 100 x (1 - p) )          then the humility ceiling
 No fitted parameter, no cited constant. An all-zero baseline with today at zero
 gives p 0.5 and health 50.0: a never-burning region sits at its own median, not
 at pristine. The long-run mean of p is 0.5, so the long-run mean fire health is
-50.0. The baseline is same-season: for each day-of-year, the days within plus
-or minus 15 of it across the baseline years, plus the trailing 15 days of the
-current year. The baseline is VIIRS NOAA-20 standard processing, calendar years
-2019 to 2025 inclusive (seven complete years, partial years excluded so uneven
-per-day-of-year counts cannot read as a spring anomaly), computed once,
-versioned, and never recomputed rolling. The live reading is VIIRS NOAA-20 near
-real time. The two processing levels abut on 2026-05-31 / 2026-06-01 with no
-shared day, so the cross-processing gap cannot be quantified today and MUST NOT
-be described as small; it becomes measurable around 2026-12-22.
+50.0.
 
-Warm-up: with fewer than 30 baseline days the domain is published visible but
-non-weight-carrying (provenance `synthetic`, excluded from both the numerator
-and the confidence denominator), with the raw count still published. Missing
-versus zero is a hard rule: a successful fetch with no rows records 0; a failed
-fetch records nothing.
+- **Baseline.** Same-season: the days within plus or minus 15 of `d`'s day of
+  year across the baseline years, plus the 15 whole days before `d` (`d` itself
+  excluded). The baseline years are VIIRS NOAA-20 standard processing, calendar
+  years 2019 to 2025 inclusive (seven complete years; partial years are
+  excluded so uneven per-day-of-year counts cannot read as a seasonal anomaly),
+  computed once, versioned, and never recomputed rolling. The live reading is
+  VIIRS NOAA-20 near real time. Where a date is in both, the live whole day
+  wins, and the two are never mixed within one day.
+- **Cross-processing gap.** The two processing levels abut on 2026-05-31 /
+  2026-06-01 with no shared day, so the gap between them cannot be quantified
+  yet and MUST NOT be described as small. It is dated in section 10.
+- **Missing versus zero.** A successful fetch with no rows records 0; a failed
+  fetch records nothing, and nothing is never read as 0.
+- **Published with the sub-score.** Every fire sub-score carries its
+  `baseline` block: at least the method, `n` (N), `minDays` (30), `warmUp`, the
+  percentile, and the baseline and live source ids, so a reader can see what
+  the reading was ranked against.
+
+**Warm-up.** With N under 30 the percentile is coarser than 3.3 health points
+per rank step and does not yet measure seasonal position, so the region
+publishes NO weight-carrying fire sub-score. Two outputs conform:
+
+1. **Nothing** (what the reference implementation publishes today). The domain
+   is absent from that region, and its weight counts as missing in
+   `confidence`, exactly like any other absent domain.
+2. **Visible, carries no weight.** The region lists `fire` in
+   `warmUpDomains` and publishes the reading in `warmUpReadings`, NOT in
+   `subScores`: the raw count as `controlValue`, the `baseline` block with
+   `warmUp: true` and `n` under 30, and `provenance: "synthetic"`,
+   `synthetic: true`, because the baseline the reading needs does not exist
+   yet. It enters no score, no global chip and no rollup, and its weight is
+   removed from that region's confidence denominator (section 4.2), so a
+   baseline still building neither moves the score nor silently depresses
+   confidence. A surface can show "247 detections, baseline still building
+   (12 of 30 days)".
+
+A fire sub-score in `subScores` whose `baseline` block shows `n` under 30 or
+`warmUp: true` does not conform (check 10, section 7.3).
 
 Stated limitation, which a conforming document carries in `meta.domainScience`:
 this is NOT absolute fire burden. A region that burns catastrophically every
 day reads 50.
 
+Would-be reading on the last seed day (2025-12-31, N 216): north-america 8.8,
+south-america 82.9, europe 2.3, africa 78.7, middle-east 24.5, asia 63.0,
+oceania 93.3, arctic 43.8, antarctic 50.9, global 85.6.
+
 ### 3.7 Cryosphere
 
-Categorical: improving 80, stable 60, worsening 25, unknown absent. The
-reference input is regenerated from ten compile-time anchors, so its mean is a
-fixed 78.0 and the trend arrow could never read anything but one value; the
-producer therefore gates the published trend on a non-synthetic, fresh
-cryosphere source (section 4.5).
+Through 1.1.0 the domain was one categorical glacier reading (improving 80,
+stable 60, worsening 25, unknown absent) taken from a reference input
+regenerated from ten compile-time anchors, so its mean was a fixed 78.0 and the
+trend arrow could never read anything but one value. That input is synthetic
+and, under R6 (section 3.8), it no longer feeds the score. Section 3.7.1
+replaces it.
 
-### 3.7.1 Cryosphere from published observations (Proposed, pending owner ratification)
+### 3.7.1 Cryosphere from published observations (R5, ratified 2026-09-22)
 
-This subsection is Proposed, not yet ratified, as this text is written
-(RK-136, 2026-09-21). Until the owner ratifies it, section 3.7 governs alone.
-It replaces the reference input of 3.7 with two published series and keeps the
-categorical glacier scores; it does not change the domain's weight (0.10),
-direction (burden), basis (contextual-proxy) or applicability mask (4.1).
+Ratified by the owner on 2026-09-22 (RK-136). It replaces the reference input
+of 3.7 with two published series and keeps the categorical glacier scores; it
+does not change the domain's weight (0.10), direction (burden), basis
+(contextual-proxy) or applicability mask (4.1).
 
 The domain health is
 
@@ -295,25 +395,28 @@ cryosphere = 0.5 x seaIce + 0.5 x glaciers
   never shrinks a window. The band is a Random Knights parameter with no
   framework citation (OQ-11). This category also drives `trendBasis`
   `cryosphere` (4.5).
-- **Freshness.** The sea-ice half sits under the 48 h window of 5.3. The
-  glacier half is annual, so it is exempt from that window and carries its own
-  rule: it is stale when its newest hydrological year ended more than 18
-  months ago. A document whose cryosphere reading rests on the glacier half
-  alone measures the domain's freshness on that rule.
+- **Freshness (section 5.3, R7).** The sea-ice half is a daily source and sits
+  under the 48 h window. The glacier half is annual, so its window is its
+  cadence plus its lag: it is stale when its newest hydrological year ended
+  more than 18 months ago (12 months of cadence plus 6 months of publication
+  lag). A document whose cryosphere reading rests on the glacier half alone
+  measures the domain's freshness on that rule.
 - **One half missing.** A half that is absent or stale is left out and the
   domain uses the other half alone; the reading names its basis
   (`sea-ice+glaciers`, `sea-ice only` or `glaciers only`). One hemisphere
   alone stands for the sea-ice half the same way. With neither half the domain
-  is absent, never estimated.
+  is absent, never estimated. Section 4.5 gates the trend on the glacier half:
+  with no fresh glacier half the trend is `unknown`.
 - **Never synthetic.** No generated, representative or in-repo value enters
   either half. A source that declares itself generated reads as absent.
-- **Sources and citations.** Fetterer, F., Knowles, K., Meier, W. N., Savoie,
-  M., Windnagel, A. K. & Stafford, T. (2025). Sea Ice Index. (G02135,
-  Version 4). [Data Set]. National Snow and Ice Data Center.
-  https://doi.org/10.7265/a98x-0f50 (citation is a condition of use; NSIDC
-  names no license and states no commercial-use restriction). WGMS (2026):
-  Fluctuations of Glaciers (FoG) Database. World Glacier Monitoring Service,
-  Zurich, Switzerland. https://doi.org/10.5904/wgms-fog-2026-02-10 (CC BY 4.0).
+- **Sources.** Sea ice: the NSIDC Sea Ice Index, data set G02135, Version 4,
+  by Fetterer, Knowles, Meier, Savoie, Windnagel and Stafford (2025), National
+  Snow and Ice Data Center, doi:10.7265/a98x-0f50. NSIDC asks that the data
+  set be cited as a condition of use; it names no license and states no
+  commercial-use restriction, which is a stated risk rather than a grant.
+  Glaciers: the WGMS Fluctuations of Glaciers database, World Glacier
+  Monitoring Service, Zurich (2026 edition), doi:10.5904/wgms-fog-2026-02-10,
+  CC BY 4.0.
 
 Worked reading, on 2026-09-20 data: Arctic 4.709 million km2 against a median
 of 6.412 (health 33.6), Antarctic 17.386 against 18.593 (83.8), sea-ice half
@@ -321,6 +424,28 @@ of 6.412 (health 33.6), Antarctic 17.386 against 18.593 (83.8), sea-ice half
 -285.2, worsening, 25); cryosphere 0.5 x 58.7 + 0.5 x 25 = 41.8.
 
 ### 3.8 Biodiversity, conservation, human
+
+**R6, ratified 2026-09-22: a synthetic input never feeds the score.** No
+generated, representative, seeded or in-repo constant value may be published
+as a weight-carrying sub-score, in any domain. A domain whose only input is
+synthetic publishes NO sub-score: it is absent, its declared weight stays in
+`meta.weights`, and that weight counts as missing in `confidence` (section
+4.2). The input may still be declared in `meta.domainProvenance` as
+`synthetic`, so a reader can see what exists and why it is not scored. Removing
+a domain can raise a region's score (section 4.2); that is the stated cost of
+not scoring invented numbers, and `confidence` says so.
+
+Under this rule `biodiversity` and `conservation` are ABSENT, with no reading,
+until a commercially usable source exists for each. Their reference inputs
+were synthetic stand-ins. The sources examined are not usable today: the
+candidate biodiversity indices measure something other than the section 2
+control variable or are licensed for non-commercial use only, and the
+protected-area statistics (Protected Planet, UNEP-WCMC and IUCN) are published
+under terms that require written permission for commercial use. A permission
+request is pending with UNEP-WCMC for Protected Planet and with PIK for the
+Planetary Health Check biosphere-integrity figures (OQ-12). The normalizers
+below are the ones a
+domain uses the day it has a usable source; they are not in use today.
 
 - `biodiversity`: `(richness / 100) x 100`, read directly as health. A richness
   proxy, not a Biodiversity Intactness Index.
@@ -367,10 +492,16 @@ is not derivable.
 
 ```
 score              = round1( sum(normalized_i x weight_i) / sum(weight_i) )   over PUBLISHED sub-scores
-totalWeight        = 1.18 - sum(weight of notApplicableDomains)
+totalWeight        = 1.18 - sum(weight of notApplicableDomains) - sum(weight of warmUpDomains)
 confidence         = round2( sum(weight of published sub-scores) / totalWeight )
 measuredCoverage   = round2( sum(weight of published sub-scores with synthetic == false) / totalWeight )
 ```
+
+`warmUpDomains` (sorted, per region) lists the domains published visible but
+not weight-carrying under a warm-up rule (today only `fire`, section 3.6). A
+region that publishes no warm-up reading omits the list or publishes it empty,
+and then the formula is the 1.1.0 one. A domain is never in both
+`notApplicableDomains` and `warmUpDomains`.
 
 This is a compensatory mean. It has no breach term: all five boundary domains
 fully breached still yields 27.7, and fire at zero with everything else perfect
@@ -419,9 +550,12 @@ is explicable rather than looking like a planetary event.
 
 ### 4.5 Trend
 
-`trendBasis` is `cryosphere`. A direction is published only when the cryosphere
-source is non-synthetic AND fresh; otherwise the trend is `unknown` and
-`meta.trendGate` says why.
+`trendBasis` is `cryosphere`. The direction is the glacier category of section
+3.7.1 (improving, stable, worsening). It is published only when the glacier
+half is non-synthetic AND fresh under its own annual window (section 5.3);
+otherwise the trend is `unknown` and `meta.trendGate` says why. The sea-ice
+half never sets the trend: a daily extent against a day-of-year median is a
+level, not a direction.
 
 ### 4.6 The no-data guard
 
@@ -445,7 +579,7 @@ meaning per rung:
 | `vendor-published` | A third-party dataset the producer names and dates. |
 | `class-estimated` | Inferred from a class; no dataset figure exists. |
 | `synthetic` | The producer KNOWS it generated the input: a representative grid, a constant table, a seeded generator. |
-| `unknown` | The source cannot be characterised at all. |
+| `unknown` | The source cannot be characterized at all. |
 
 `synthetic` and `unknown` are not the same claim and MUST NOT be collapsed.
 "Unknown" is ignorance; "synthetic" is knowledge. Recording a generated input
@@ -461,23 +595,58 @@ region repeats `provenance` and `synthetic` so a reader of one number is not
 guessing. A source that self-declares as generated (kind, license or vintage
 reading `representative`) is `synthetic`. A source that is an in-repo constant
 is `synthetic` with `fresh: false`. A source with no object or no metadata is
-`unknown`.
+`unknown`. Under R6 (section 3.8) a `synthetic` domain is declared here and
+scored nowhere.
+
+A domain whose source is not daily also publishes, in its
+`meta.domainProvenance` entry, `cadenceHours` (its publication interval),
+`lagHours` (its stated publication lag) and `freshnessWindowHours` (their sum),
+per section 5.3.
 
 ### 5.3 Liveness is computed, never asserted
 
 ```
-fresh(domain)  = not synthetic AND ageHours <= freshnessWindowHours AND ageHours >= -1
+window(domain) = domainProvenance[domain].freshnessWindowHours   when published
+               = meta.freshnessWindowHours                       otherwise
+fresh(domain)  = not synthetic AND ageHours <= window(domain) AND ageHours >= -1
 live(domain)   = not synthetic AND available AND rung in {measured, vendor-published} AND fresh
 meta.isLive    = every weight-carrying domain is live
 ```
 
-`freshnessWindowHours` is a disclosed policy constant (48 in the reference
-implementation) and is published in the document. The document also publishes
-`weightCarryingDomains`, `notLiveDomains`, `staleDomains`,
-`oldestSourceVintage` with its domain, and `vintagelessDomains`.
+**Freshness by source cadence (R7, ratified 2026-09-22).** A source is fresh
+within its own publication interval plus its stated lag, and not within one
+window shared by every source. Through 1.1.0 a single 48 h window applied to
+every domain, so a monthly or annual source that was as current as its
+publisher allows read as stale every day of its life, and `isLive` could never
+be true for a document that used one.
+
+- `meta.freshnessWindowHours` stays the window for DAILY sources and stays 48
+  in the reference implementation (a 24 h cadence plus a 24 h lag). It is a
+  disclosed policy constant and is published in the document.
+- A source with a longer cadence publishes its own window in its
+  `meta.domainProvenance` entry: `freshnessWindowHours = cadenceHours +
+  lagHours`. The cadence is the LONGEST interval of the publisher's calendar,
+  so a source is never stale inside its own normal interval: a monthly source
+  uses 744 h (31 days) and an annual source 8784 h (366 days). The lag is the
+  publisher's own stated or observed delay between the end of a period and
+  its release, disclosed as a number.
+- For a period product (a monthly or annual value) `ageHours` is measured
+  from the END of the period its newest value covers, not from the fetch time
+  and not from the start of the period.
+- Worked windows: the glacier half of cryosphere is annual (8784 h) with a
+  6-month lag (4392 h), a window of 13176 h, so it is fresh for about 18
+  months after its newest hydrological year ends (section 3.7.1); the
+  ocean-acidification field is monthly (744 h) with a stated lag of about 10
+  days (240 h), a window of 984 h.
+- A window MUST NOT be widened past cadence plus lag to make a late source
+  read fresh. A source past its own window is stale, and `isLive` is false.
+
+The document also publishes `weightCarryingDomains`, `notLiveDomains`,
+`staleDomains`, `oldestSourceVintage` with its domain, and
+`vintagelessDomains`.
 
 **A document MUST NOT declare `isLive: true` when any weight-carrying domain is
-`synthetic`, carried forward past the freshness window, or of rung
+`synthetic`, carried forward past its freshness window, or of rung
 `class-estimated` or `unknown`.** This is the rule consensus C4 found violated:
 about 64 percent of delivered weight was generated while `isLive: true` was
 asserted unconditionally. Under this rule an implementation on partial live
@@ -496,8 +665,9 @@ never claims currency.
 
 Domains run at their real cadence with honest per-domain labels (owner
 decision, option A). Glaciers, biodiversity and human modification have no
-daily product anywhere; they are declared at their true cadence and provenance
-and the document stays conformant. If the bulk of inputs turn out to be
+daily product anywhere; they are declared at their true cadence and provenance,
+their freshness is measured on their own window (section 5.3, R7), and the
+document stays conformant. If the bulk of inputs turn out to be
 monthly, scoring moves to monthly. v1 does not wait for daily sources that do
 not exist.
 
@@ -525,7 +695,7 @@ that publishes one is checked against every requirement below.
    for the threshold. No boundary appears without a citation.
 3. **Only domains whose indicator IS the accepted control variable may
    appear.** Proxy domains are excluded and say so. Today that admits
-   `land-cover` (forested land remaining as a share of original cover) and
+   `land-cover` (forest remaining as a share of potential forest, section 3.3) and
    `ocean-acidification` (Omega_arag), and excludes `air` by name (PM2.5 is not
    the aerosol control variable), `ocean` (SST anomaly is not CO2 or radiative
    forcing) and `biodiversity` (richness is not extinction rate or HANPP), plus
@@ -536,44 +706,58 @@ that publishes one is checked against every requirement below.
 5. **The headline and the breach count sit together** wherever either is shown.
    The number never appears alone.
 
-### 6.1 Two evaluation modes (pending ADR 0018 amendment ratification)
+### 6.1 Two evaluation modes (R1, ratified 2026-09-22)
 
-RK-125 found that seven of the nine boundaries have no candidate input, live
+RK-125 found that five of the nine boundaries have no candidate input, live
 or otherwise: no public feed this product can ingest on a schedule reaches
 land-system change, freshwater change, biogeochemical flows, biosphere
 integrity or novel entities. The owner decided to publish those five from a
-pinned published edition rather than leave them `unknown` forever, under an
-amendment to ADR 0018 that is Proposed, not yet Accepted, as this text is
-written. The text below states what a conforming panel does once that
-amendment is Accepted; until then, section 6 above (conditions 1 through 5)
-governs alone and a document publishes no `mode` field.
+pinned published edition rather than leave them `unknown` forever. That is
+the ADR 0018 amendment of 2026-09-18, Accepted 2026-09-22, and this section is
+its normative text.
 
-Every entry, once the amendment is Accepted, states which of two evaluation
-modes produced it:
+Every entry states which of two evaluation modes produced it:
 
 - **live** - the control value is computed from a feed this product ingests on
-  a schedule, with provenance and staleness published. This is the mode every
-  entry uses today (condition 3 above still governs which domain, if any, is
-  the accepted control variable).
+  a schedule, with provenance and staleness published (condition 3 above still
+  governs which domain, if any, is the accepted control variable). A live
+  entry whose feed published nothing this refresh carries its last good value
+  with the date it was current and its staleness.
 - **assessed** - the control value and its state are taken from the published
-  edition already pinned in the panel (today the Planetary Health Check
-  2025), with the edition, the year of the cited value, and the citation
-  published on the entry itself. An assessed entry is refreshed only when a
-  new edition is pinned by decision, never on the product's own refresh
-  schedule, and it is never presented as live.
+  edition pinned in the panel (today the Planetary Health Check 2025). The
+  entry carries an `assessment` object with a non-empty `edition`, the `year`
+  the cited value is for, a non-empty `citation`, and the edition's `value`
+  (or `null` where the edition prints none). An assessed entry is refreshed
+  only when a new edition is pinned by decision, never on the product's own
+  refresh schedule, and it is never presented as live.
 
-Two further rules apply once assessed entries exist:
+`mode` is one of `live`, `assessed` or `unknown`, and it is `unknown` exactly
+when the state is `unknown`. Two further rules:
 
-- `breachCount` splits into `liveBreachCount` and `assessedBreachCount`,
-  counted separately over entries of each mode, and the two are never summed
-  into one figure. This is the same discipline condition 5 above already
-  applies to the framework's own count: a measurement and a citation are
-  never blended into one number.
-- A boundary with no numeric control variable in the pinned edition (novel
-  entities, per condition 2's citation rule) is published `mode: "assessed"`
-  with its qualitative state and `value: null`. This is the existing
-  null-value case conditions 2 and 4 already allow, now labeled with the mode
-  that produced it, not a sixth state.
+- The breach count is published as two numbers, `liveBreachCount` and
+  `assessedBreachCount`, counted over the transgressed entries of each mode,
+  and no expression in the document sums them. A reader who wants a total adds
+  them at read time and sees the two sources doing it. This is the same
+  discipline the framework's own count is held to: a measurement and a
+  citation are never blended into one number. A panel with modes MAY keep
+  `breachCount` for older readers; if it does, `breachCount` means what it
+  meant in 1.0.0, this product's own measurement, and equals
+  `liveBreachCount`.
+- State is computed from the value against the published threshold in both
+  modes: for an assessed entry, from `assessment.value`. A boundary with no
+  numeric control variable in the pinned edition (novel entities) is
+  published `mode: "assessed"` with the edition's qualitative state and
+  `assessment.value: null`. This is the null-value case conditions 2 and 4
+  already allow, labeled with the mode that produced it; it is not a fifth
+  state.
+
+The allocation of boundaries to modes is what feeds exist, not a rule. As
+ratified: live for climate change, ocean acidification, atmospheric aerosol
+loading and stratospheric ozone depletion; assessed for land-system change,
+freshwater change, biogeochemical flows, biosphere integrity and novel
+entities. A boundary moves to live the day a feed exists for it, with no
+amendment; land-system change moves when the section 3.3 forest-area input
+publishes.
 
 Derived requirements a conforming panel satisfies (these become the tests):
 
@@ -600,18 +784,18 @@ Derived requirements a conforming panel satisfies (these become the tests):
   Planetary Health Check 2025, as the audits cite it) MAY be published beside
   the panel as context, in its own object, and is never summed into
   `breachCount`.
-- **Once the ADR 0018 amendment in section 6.1 is Accepted:** every entry
-  carries `mode` in `{live, assessed, unknown}`; an entry with `mode:
-  "assessed"` carries a non-empty edition, year and citation; the panel
-  publishes `liveBreachCount` and `assessedBreachCount` as two separate
-  fields and no expression sums them into one.
+- Section 6.1: every entry carries `mode` in `{live, assessed, unknown}`,
+  `unknown` exactly when the state is; an entry with `mode: "assessed"`
+  carries an `assessment` with a non-empty edition, a year and a non-empty
+  citation; the panel publishes `liveBreachCount` and `assessedBreachCount`
+  as two separate fields, each equal to its mode's transgressed entries, and
+  a `breachCount` published beside them equals `liveBreachCount`, never the
+  sum.
 
 
-### 6.2 The averaging window of a live control value (Proposed, pending owner ratification)
+### 6.2 The averaging window of a live control value (R2, ratified 2026-09-22)
 
-This subsection is Proposed, not yet ratified, as this text is written
-(RK-135, RK-136, 2026-09-21). Until the owner ratifies it, sections 6 and 6.1
-govern alone.
+Ratified by the owner on 2026-09-22 (RK-135, RK-136).
 
 A live entry evaluates the control variable ON THE BASIS ITS THRESHOLD IS
 STATED ON. A value on a shorter basis is a different quantity and is not
@@ -638,19 +822,26 @@ compared against that threshold.
   published record.
 - Staleness (section 5.4) is measured from the newest month in the window.
 
-Worked reading, on the 2026-09-11 document, under the proposed panel:
-ocean acidification at Omega 2.7 is transgressed under both threshold editions
-in circulation (Richardson et al. 2023: boundary 2.75, uncertainty to 2.4;
-Planetary Health Check 2025: boundary 2.86, high-risk line 2.75); only the
-severity label moves. Land-system change at 62 percent remaining is transgressed
-against the framework's 75 percent boundary with a 54 percent high-risk line;
-the score's own 30 percent floor is NOT the framework's and is not used in the
-panel. Two evaluated, two transgressed, seven unknown.
+Worked reading of the panel as first specified, on the 2026-09-11 document
+(before modes existed): ocean acidification at Omega 2.7 is transgressed under
+both threshold editions in circulation (Richardson et al. 2023: boundary 2.75,
+uncertainty to 2.4; Planetary Health Check 2025: boundary 2.86, high-risk line
+2.75); only the severity label moves. Land-system change at 62 percent
+remaining is transgressed against the framework's 75 percent boundary with a
+54 percent high-risk line. Two evaluated, two transgressed, seven unknown. The
+1.1.0 score normalizer used a 30 percent floor that was not the framework's;
+under 1.2.0 (R4, section 3.3) the score and the panel read against the same 75
+and 54.
 
-The threshold values, the edition, the value path, whether the uncertainty zone
-counts as a breach, and whether the count enters the history are owner
-questions Q1 to Q10 of the panel proposal. They are listed as OQ-8 in section
-10 and this document does not answer them.
+Worked reading under 1.2.0, on the same inputs as the ocean-acidification
+lane's before-and-after (2026-09-21): the ocean-acidification entry moves from
+assessed 2.84 to live 2.83 (the monthly Copernicus Marine surface aragonite
+field, area-weighted global mean for 2026-08); live over-threshold entries 3 of
+4, assessed 5; headline 62.6, unchanged by the panel.
+
+The owner questions Q1 to Q10 of the panel proposal (OQ-8) are answered by
+ADR 0018 (Accepted 2026-09-16), its amendment (Accepted 2026-09-22) and R4;
+section 10 records each answer.
 
 ---
 
@@ -669,7 +860,8 @@ A conforming E+ document contains, at minimum:
    through 0.8 to date) and is a different thing: a consumer needs to know
    which rules a document was written against without inferring it from the
    producer's release history (owner decision D4, 2026-09-13). A document
-   without `meta.eplusVersion` does not conform to 1.0.0.
+   without `meta.eplusVersion` does not conform to 1.0.0. A document written
+   against this version names `1.2.0`.
 2. `meta.weights` for every domain, `meta.domainBasis`, `meta.domainScience`
    (control variable, units, safe, high risk, normalization, citation, basis
    per domain), and `meta.derivation.rawWeightSum`.
@@ -679,17 +871,22 @@ A conforming E+ document contains, at minimum:
 4. `regions` with, per region: `score`, `confidence`, `measuredCoverage`,
    `exposure`, `subScores[]` (each with `layerId`, `normalized`, `direction`,
    `weight`, `provenance`, `synthetic`, and `controlValue` where one exists),
-   and `notApplicableDomains`.
+   and `notApplicableDomains`; and, where a domain is in warm-up (section
+   3.6), `warmUpDomains` and `warmUpReadings[]`. No entry in `subScores` rests
+   on a synthetic input (R6, section 3.8).
 5. `global` with `score`, `trend`, `confidence`, `measuredCoverage` and
    `subScores[]`.
 6. The provenance block of section 5: the ladder, its source, the freshness
-   window, `domainProvenance`, `isLive`, `weightCarryingDomains`,
+   window for daily sources, `domainProvenance` (with `cadenceHours`,
+   `lagHours` and `freshnessWindowHours` for every domain whose source is not
+   daily), `isLive`, `weightCarryingDomains`,
    `notLiveDomains`, `stale`, `staleDomains`, `oldestSourceVintage`,
    `vintagelessDomains`, `measuredCoverage`.
 7. `meta.globalRingDiagnostic` (or an equivalent labeled diagnostic) wherever
    a superseded headline rule is retained for continuity.
-8. The breach panel of section 6, once built (OQ-8). Until then the document
-   MUST state in `meta.disclosure` that the aggregation has no breach term.
+8. The breach panel of section 6, with the modes of section 6.1 and the
+   averaging window of section 6.2. A document without a panel MUST state in
+   `meta.disclosure` that the aggregation has no breach term.
 
 A document that carries a history (`earth.healthscore.history.v1` in the
 reference implementation) that includes reconstructed days MUST carry
@@ -726,6 +923,23 @@ constant and no network call other than fetching the document:
    2026-09-13; the earlier note here that it was "not yet in that checker" is
    superseded by section 7.3.
 8. A tampered document (any published number altered) is REJECTED.
+9. The breach panel follows section 6 and, where entries carry modes, section
+   6.1: each mode count is recomputed from its own entries and no count is
+   their sum.
+10. No weight-carrying fire sub-score rests on a baseline of fewer than 30
+    days, and a warm-up reading (section 3.6) carries no weight: it is not in
+    `subScores`, its weight leaves the confidence denominator of item 3, and
+    it is declared synthetic.
+11. No weight-carrying sub-score rests on a synthetic input (R6, section 3.8).
+    A document that names `meta.eplusVersion` 1.2.0 or later and scores a
+    synthetic input is REJECTED, and the rejection names the domain. A
+    document that names an earlier version was written against a draft that
+    allowed it, so the checker reports it as a warning there.
+
+Item 3 reads, in full under 1.2.0: `round2( availWeight / (rawWeightSum -
+sum of notApplicable weights - sum of warmUp weights) )`. Item 7 applies each
+domain's own window (section 5.3, R7), and where a domain publishes both
+`cadenceHours` and `lagHours` its `freshnessWindowHours` MUST be their sum.
 
 The checker MUST read weights from `meta.weights`, never from the producer's
 constants, and MUST import nothing from the producer, so a producer bug cannot
@@ -746,7 +960,7 @@ REPOSITORY IS ITS SINGLE CANONICAL HOME, and it is NOT mirrored anywhere.
 It lives at `eplus/v1/conformance/` beside this document:
 
 ```
-eplus/v1/conformance/src/index.ts   the checker (zero imports; checks 1 to 8
+eplus/v1/conformance/src/index.ts   the checker (zero imports; checks 1 to 11
                                     above, plus 1a as a warning)
 eplus/v1/conformance/src/cli.ts     the command line (exit 0 conformant, 1 not,
                                     2 unreadable; default target the reference
@@ -777,8 +991,11 @@ it yet. Making it fatal would mean the published checker could not ship until
 the producer caught up; dropping it would mean this document and the checker
 said different things. So the checker prints the gap on every run, exits 0 on
 warnings alone, and promotes every warning to a failure under `--strict`. The
-strict run is the gate that proves 1.0.0 conformance, and it is not green for
-the reference implementation today.
+strict run is the gate that proves conformance, and it is not green for the
+reference implementation today. Check 11 (R6) follows the same logic by
+version: a finding for a document that claims 1.2.0 or later, a warning for
+one that claims an earlier draft or names no version, and a finding under
+`--strict` either way.
 
 THE PRODUCER CONSUMES THIS PACKAGE; IT DOES NOT COPY IT. The reference
 implementation (the private `ruok` repository) declares
@@ -841,7 +1058,7 @@ not compute does not.
    number, the new number, and whether it is a change in the method or in the
    world. The changelog is append-only.
 4. **Two version series, not one.** This document carries the E+ STANDARD
-   version (semver, 1.0.0 here). The reference implementation stamps its own
+   version (semver, 1.2.0 here). The reference implementation stamps its own
    `methodologyVersion` (0.4 through 0.8 to date) in every document. The
    implementation series predates the standard and is not renumbered. A
    document names the standard version it conforms to in `meta.eplusVersion`
@@ -867,14 +1084,42 @@ item moves between lists only by a dated owner decision recorded here.
 - **OQ-1 Standard version stamp. DECIDED (D4).** A published document carries
   `meta.eplusVersion`, first value `1.0.0`, beside `meta.methodologyVersion`.
   Normative in section 7.1, item 1a.
-- **OQ-5 Basis labels. DECIDED (D5).** `air`, `ocean` and `biodiversity` are
-  relabelled `contextual-proxy`. Needs an Accepted ADR under section 9 before
-  the default changes, and ships in the same lane as the breach panel because
-  both change client rendering. Section 2 records the interim reading.
+- **OQ-5 Basis labels. DECIDED (D5), DONE.** `air`, `ocean` and `biodiversity`
+  are `contextual-proxy`, under ADR 0018 (Accepted 2026-09-16), shipped with
+  the breach panel. Section 2 records the labels.
 - **OQ-9 Publishing the checker. DECIDED (D6).** The conformance checker is
   published from this repository as its single canonical home, consumed by
   ruok as a pinned dependency; not mirrored. Mechanism and reason in section
-  7.3. Its own lane, after the breach panel.
+  7.3.
+
+### Decided (owner ratification of 1.2.0, 2026-09-22)
+
+- **OQ-2 Fire percentile finalization. DECIDED (R3).** The percentile of
+  section 3.6 is the fire normalizer and the fire input is on; the field names
+  are the `baseline` block of section 3.6; warm-up (N under 30) publishes no
+  weight-carrying sub-score, with the visible, no-weight representation of
+  section 3.6 as the conforming alternative. The cross-processing calibration
+  is not decided by this and is listed under Dated.
+- **OQ-3 Land cover. DECIDED (R4).** The denominator is potential forest from
+  RESOLVE Ecoregions 2017 forest biomes 1 to 6, the canopy threshold is 15
+  percent, the high-risk floor is 54, and decision D8 is lifted (section 3.3).
+  The headline change is stated in the implementation changelog when the
+  input flips, before it publishes.
+- **OQ-8 Breach panel decisions. DECIDED.** Answered by ADR 0018 (Accepted
+  2026-09-16), its amendment (Accepted 2026-09-22) and R4: the zone of
+  uncertainty counts as a breach, with a separate high-risk sub-count; the
+  threshold edition is the Planetary Health Check 2025, with the superseded
+  Richardson et al. 2023 pair retained; the land-cover value evaluated is
+  forest remaining as a share of potential forest (section 3.3); a synthetic
+  input still produces a panel state, marked provisional (a panel reading is
+  not a score input, so R6 does not remove it); the basis labels were fixed in
+  the same release; the agent's zone wording reads the published panel; all
+  nine boundaries are enumerated; the framework's own count is published
+  beside ours in its own object and never summed; a threshold the source does
+  not print ships null with a note; the breach count enters the daily history
+  as one integer. The two evaluation modes are section 6.1.
+- **R2, R5, R6, R7** are recorded where they apply: sections 6.2, 3.7.1, 3.8
+  and 5.3.
 
 ### Dated (owner decision D7, 2026-09-13)
 
@@ -887,46 +1132,47 @@ item moves between lists only by a dated owner decision recorded here.
   already has one. A reader of this section sees a known defect with a plan,
   not an unanswered question.
 
+### Dated (from OQ-2, 2026-09-22)
+
+- **OQ-2a Fire cross-processing calibration. DATED.** The fire baseline is
+  VIIRS standard processing and the live reading is near real time; the two
+  abut on 2026-05-31 / 2026-06-01 with no shared day. The gap becomes
+  measurable once standard processing covers a live day, around 2026-12-22,
+  and is calibrated on or after 2026-12-20. Until then the gap is disclosed as
+  unquantified (section 3.6).
+
 ### Open
 
-- **OQ-2 Fire percentile finalization.** The window rules of section 3.6 are
-  the selected design; the exact field names, the warm-up flag and the
-  scheduler are lane B2's to define once the owner seed run (about 5110 GETs,
-  throttled across at least two quota windows) has completed. The
-  cross-processing calibration is due on or after 2026-12-20.
-- **OQ-3 Land cover.** When the fetched NASA forest grid replaces the constant
-  table (consensus C3), the denominator dataset and the resulting headline
-  change must be stated in the changelog before the flip.
 - **OQ-4 Ocean acidification threshold edition.** The score's normalizer uses
   the Richardson 2023 safe line (2.75); the citation string also names the
   Planetary Health Check 2025, whose boundary is 2.86 with a 2.75 high-risk
   line. Which edition the normalizer anchors to is a constant change under
-  section 9 and is not decided here.
-- **OQ-6 Normalizer anchors without a framework source.** The 30 percent
-  land-cover floor, the 50-detection fire full scale, the 200 AQI and 250
+  section 9 and is not decided here. (The panel's edition is decided: OQ-8.)
+- **OQ-6 Normalizer anchors without a framework source.** The 200 AQI and 250
   umol/m2 full scales, the 2 / 4 deg C SST scales and the categorical glacier
-  values are implementation constants with no framework citation (consensus
-  C7). They are stated here as what is computed, not as endorsed thresholds.
-- **OQ-8 Breach panel decisions.** The ten owner questions of the panel
-  proposal: whether the zone of uncertainty counts as a breach (with a
-  separate high-risk sub-count); the ocean-acidification threshold edition;
-  which published land-cover value is evaluated; whether synthetic inputs still
-  produce a state; whether the basis labels are fixed in the same lane; whether
-  the agent's zone wording reads the panel; whether all nine boundaries are
-  enumerated; whether the framework's own count is published beside ours;
-  whether the four boundaries with no numeric threshold in our sources publish
-  a null threshold or are sourced first; and whether the breach count enters
-  the daily history. Nothing in section 6 presumes an answer beyond the five
-  conditions the owner has already given.
+  values (80, 60, 25) are implementation constants with no framework citation
+  (consensus C7). They are stated here as what is computed, not as endorsed
+  thresholds. Under 1.2.0 two former members leave this list: the land-cover
+  floor is now the framework's 54 (R4), and the 50-detection fire full scale
+  is retired (R3).
 - **OQ-10 The uncertainty interval.** No published number carries one. The
   audits' PM predictions named this; no decision exists.
-- **OQ-11 Cryosphere parameters without a framework source (Proposed 3.7.1).**
-  The sea-ice full scale F = 0.40 (a deficit of 40 percent of the 1981 to 2010
-  median reads 0), the +-100 mm w.e. glacier band, the 10-year windows, the
-  equal 0.5 / 0.5 split and the 18-month glacier staleness rule are Random
-  Knights parameters. No planetary-boundary framework defines a sea-ice or
-  glacier control variable, and none of these values carries a citation. They
-  are stated as what is computed, not as endorsed thresholds.
+- **OQ-11 Cryosphere parameters without a framework source.** The sea-ice
+  full scale F = 0.40 (a deficit of 40 percent of the 1981 to 2010 median
+  reads 0), the +-100 mm w.e. glacier band, the 10-year windows, the equal
+  0.5 / 0.5 split and the 18-month glacier staleness rule are Random Knights
+  parameters. They are RATIFIED and in force (R5); what stays open is a
+  framework source for any of them. No planetary-boundary framework defines a
+  sea-ice or glacier control variable, and none of these values carries a
+  citation. They are stated as what is computed, not as endorsed thresholds.
+- **OQ-12 Biodiversity and conservation sources.** Both domains are absent
+  (R6, section 3.8) until a commercially usable source exists for each.
+  Permission requests are pending with UNEP-WCMC (Protected Planet coverage
+  statistics) and with PIK (the Planetary Health Check biosphere-integrity
+  figures). A biosphere-integrity source would measure a different control
+  variable from the section 2 richness index, so adopting one is a
+  methodology change under section 9 and needs its own ADR. A permission
+  granted does not by itself put a domain back in the score.
 
 ---
 
@@ -937,8 +1183,9 @@ Deferred, and stated so that nobody reads their absence as a claim:
 - Every domain on live daily data. Glaciers, biodiversity and human
   modification have no daily product anywhere (section 5.5).
 - Freshwater change, biogeochemical flows, stratospheric ozone and novel
-  entities as scored domains. They appear in the breach panel as `unknown`
-  with their control variables cited; they are not scored.
+  entities as scored domains. They appear in the breach panel, in the
+  assessed or live mode of section 6.1 or as `unknown`, with their control
+  variables cited; they are not scored.
 - A breach veto or any non-compensatory aggregation of the headline. D2
   selected the compensatory mean plus the panel over changing the mean.
 - Monthly scoring. Adopted only if the bulk of inputs prove monthly.

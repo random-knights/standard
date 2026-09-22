@@ -23,12 +23,17 @@
  *   - `meta.isLive` and `meta.notLiveDomains` against the per-domain
  *     provenance block, by the rules of methodology section 5.3
  *
- * It implements checks 1 to 8 of E+ methodology section 7.2, plus the
- * `meta.eplusVersion` requirement of section 7.1 item 1a and check 9, the
- * section 6 BREACH PANEL. Both of those are reported as a WARNING when the
- * document omits them entirely, and as findings under `{ strict: true }`; a
- * panel that IS published is checked as a finding in every mode. See the
- * README beside this file for why.
+ * It implements checks 1 to 11 of E+ methodology section 7.2 (standard
+ * 1.2.0), plus the `meta.eplusVersion` requirement of section 7.1 item 1a.
+ * Check 9 is the section 6 BREACH PANEL, including the two evaluation modes of
+ * section 6.1. Check 10 is the fire warm-up rule of section 3.6 (R3). Check 11
+ * is R6, section 3.8: a synthetic input never feeds the score. Check 7 applies
+ * each domain's own freshness window (R7, section 5.3). A missing version
+ * stamp and a missing panel are reported as a WARNING, and as findings under
+ * `{ strict: true }`; a panel that IS published is checked as a finding in
+ * every mode. Check 11 is a finding for a document that claims standard 1.2.0
+ * or later and a warning for one that claims an earlier draft. See the README
+ * beside this file for why.
  *
  * Check 9 is the one that makes the panel worth publishing. Section 6 requires
  * that an entry's state be computed from the published control VALUE against

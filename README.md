@@ -60,14 +60,14 @@ planetary health, and it is a draft.
 </div>
 
 K13 and AiEDs are published and free to read. Both are CC BY 4.0, so you can
-adopt either without asking. E+ is a DRAFT: its text is here so it can be read
-and checked, and it is not ratified. All three live in this repository.
+adopt either without asking. E+ 1.2.0 was ratified on 2026-09-22 and is
+published the same way, CC BY 4.0. All three live in this repository.
 
 | Standard                                  | Version                   | License                                              | Canonical text                                                          | Read it                                                                                                        |
 | ----------------------------------------- | ------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | **AiEDs - AI Energy Disclosure Standard** | methodology 2.3.0         | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai)                                                               |
 | **K13 - AI Response Standard**            | 2.0.0                     | CC BY 4.0 prose, Apache 2.0 reference templates      | [K13.md](K13.md) with `templates/`                                      | [randomknights.xyz/k13](https://randomknights.xyz/k13/)                                                        |
-| **E+ - Earth Health Score Methodology**   | 1.0.0 DRAFT, not ratified | CC BY 4.0 prose                                      | [eplus/v1/methodology.md](eplus/v1/methodology.md)                      | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md) once deployed |
+| **E+ - Earth Health Score Methodology**   | 1.2.0, ratified           | CC BY 4.0 prose, Apache 2.0 conformance checker      | [eplus/v1/methodology.md](eplus/v1/methodology.md)                      | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md)               |
 
 <!-- E+ -->
 
@@ -449,7 +449,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | MCP server           | `mcp/`                       | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose                                                                                                           |
 | K13                  | `K13.md`                     | CC BY 4.0  | K13 - AI Response Standard, 2.0.0. The canonical text.                                                                                                       |
 | K13 report templates | `templates/`                 | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement.                                                 |
-| E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth Health Score Methodology, 1.0.0 DRAFT. The canonical text, including the public implementation changelog.                                         |
+| E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth Health Score Methodology, 1.2.0, ratified 2026-09-22. The canonical text, including the public implementation changelog.                          |
 
 <!-- ROADMAP -->
 
