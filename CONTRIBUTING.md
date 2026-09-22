@@ -68,12 +68,12 @@ canonical files by `scripts/stage-npm-package.mjs`:
 |---------|----------------|----------|
 | `@randomknights/aieds` | `spec/methodology.md` | reference library, JSON Schema, coefficient tables |
 | `@randomknights/k13` | `K13.md` | K13 text and the `k13 check` CLI |
-| `@randomknights/earth-plus` | `eplus/v1/methodology.md` | E+ conformance checker (library and `eplus-conformance` CLI) and the E+ methodology text |
+| `@randomknights/earthplus` | `eplus/v1/methodology.md` | E+ conformance checker (library and `eplus-conformance` CLI) and the E+ methodology text |
 
 Nothing else is published. The repository root, `lib/` and `mcp/` are marked
 `"private": true` and are never published; `lib/` and `spec/` reach npm only
 inside `@randomknights/aieds`, and the E+ checker only inside
-`@randomknights/earth-plus`. The old `@random-knights/*` scope is retired.
+`@randomknights/earthplus`. The old `@random-knights/*` scope is retired.
 
 1. Land the change on `main` via PR with CI green. The `packages` CI job packs
    every package, holds each tarball to an exact file list, installs it into

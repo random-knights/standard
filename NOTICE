@@ -17,7 +17,7 @@ npm packages built from this repository:
                          tables (CC BY 4.0). SPDX: Apache-2.0 AND CC-BY-4.0
   @randomknights/k13     the K13 checker code (Apache 2.0) and the K13 standard
                          text, K13.md (CC BY 4.0). SPDX: Apache-2.0 AND CC-BY-4.0
-  @randomknights/earth-plus
+  @randomknights/earthplus
                          the E+ conformance checker (Apache 2.0) and the E+
                          methodology text, methodology.md (CC BY 4.0).
                          SPDX: Apache-2.0 AND CC-BY-4.0

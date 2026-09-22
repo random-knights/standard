@@ -1,4 +1,4 @@
-# Publish @randomknights/aieds, @randomknights/k13 or @randomknights/earth-plus
+# Publish @randomknights/aieds, @randomknights/k13 or @randomknights/earthplus
 # to npm with npm trusted publishing (OIDC) and provenance. Manual dispatch
 # only, from main only.
 #
@@ -33,7 +33,7 @@ on:
         options:
           - aieds
           - k13
-          - earth-plus
+          - earthplus
 
 permissions:
   contents: read

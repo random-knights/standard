@@ -43,7 +43,7 @@ const EXPECTED = {
     "package.json",
     "src/index.mjs",
   ],
-  "earth-plus": [
+  earthplus: [
     "LICENSE",
     "LICENSE-DOCS",
     "NOTICE",
@@ -57,7 +57,7 @@ const EXPECTED = {
 };
 
 // The E+ standard version the methodology text declares ("**Version:** x.y.z").
-// The earth-plus package version must equal it.
+// The earthplus package version must equal it.
 const EPLUS_VERSION = (() => {
   const m = readFileSync(join(repoRoot, "eplus", "v1", "methodology.md"), "utf8").match(
     /^\*\*Version:\*\* (\d+\.\d+\.\d+)/m,
@@ -106,14 +106,14 @@ if (checkText("a " + String.fromCharCode(0x2014) + " b").ok) throw new Error("em
 console.log("k13 smoke ok", K13_VERSION);
 `,
   // Both module systems, one conforming and one nonconforming sample document.
-  "earth-plus": `
-import { verifyPublishedScoreDoc, formatConformanceReport } from "@randomknights/earth-plus";
+  earthplus: `
+import { verifyPublishedScoreDoc, formatConformanceReport } from "@randomknights/earthplus";
 import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 const require = createRequire(import.meta.url);
-const cjs = require("@randomknights/earth-plus");
-const pkg = require("@randomknights/earth-plus/package.json");
-const methodology = readFileSync(require.resolve("@randomknights/earth-plus/methodology.md"), "utf8");
+const cjs = require("@randomknights/earthplus");
+const pkg = require("@randomknights/earthplus/package.json");
+const methodology = readFileSync(require.resolve("@randomknights/earthplus/methodology.md"), "utf8");
 if (!methodology.includes("**Version:** " + pkg.version)) throw new Error("package version " + pkg.version + " is not the bundled methodology version");
 if (pkg.version !== ${JSON.stringify(EPLUS_VERSION)}) throw new Error("package version " + pkg.version + " is not E+ ${EPLUS_VERSION}");
 if (cjs.verifyPublishedScoreDoc !== verifyPublishedScoreDoc) throw new Error("require and import disagree");
@@ -121,13 +121,13 @@ const good = verifyPublishedScoreDoc(JSON.parse(readFileSync("conforming.json", 
 if (!good.ok || good.findings.length) throw new Error("conforming sample failed: " + formatConformanceReport(good));
 const bad = verifyPublishedScoreDoc(JSON.parse(readFileSync("nonconforming.json", "utf8")));
 if (bad.ok || !bad.findings.some((f) => f.path === "global.score")) throw new Error("nonconforming sample passed");
-console.log("earth-plus smoke ok", pkg.version);
+console.log("earthplus smoke ok", pkg.version);
 `,
 };
 
-// Sample documents the earth-plus smoke test checks, copied into the app.
+// Sample documents the earthplus smoke test checks, copied into the app.
 const SAMPLES = {
-  "earth-plus": ["conforming.json", "nonconforming.json"],
+  earthplus: ["conforming.json", "nonconforming.json"],
 };
 
 const npm = (args, cwd) =>
@@ -177,7 +177,7 @@ for (const name of Object.keys(EXPECTED)) {
       fail(`k13: the installed k13 bin did not pass a clean file: ${err.message}`);
     }
   }
-  if (name === "earth-plus") {
+  if (name === "earthplus") {
     // The installed bin: exit 0 on the conforming sample, exit 1 on the other.
     const status = (file) => {
       try {
@@ -189,9 +189,9 @@ for (const name of Object.keys(EXPECTED)) {
     };
     const good = status("conforming.json");
     const bad = status("nonconforming.json");
-    if (good !== 0) fail(`earth-plus: eplus-conformance exited ${good} on the conforming sample`);
-    if (bad !== 1) fail(`earth-plus: eplus-conformance exited ${bad} on the nonconforming sample`);
-    if (good === 0 && bad === 1) console.log("earth-plus bin ok (exit 0 conforming, exit 1 nonconforming)");
+    if (good !== 0) fail(`earthplus: eplus-conformance exited ${good} on the conforming sample`);
+    if (bad !== 1) fail(`earthplus: eplus-conformance exited ${bad} on the nonconforming sample`);
+    if (good === 0 && bad === 1) console.log("earthplus bin ok (exit 0 conforming, exit 1 nonconforming)");
   }
 }
 

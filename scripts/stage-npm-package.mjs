@@ -12,7 +12,7 @@
 // `npm pack` and `npm publish` from packages/<name>/ always ship what is on the
 // checked-out commit.
 //
-// Usage: node scripts/stage-npm-package.mjs <aieds|k13|earth-plus>
+// Usage: node scripts/stage-npm-package.mjs <aieds|k13|earthplus>
 import { execSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -79,7 +79,7 @@ function stageEarthPlus(pkgDir) {
   copy(join(repoRoot, "eplus", "v1", "methodology.md"), join(pkgDir, "methodology.md"));
 }
 
-const STAGERS = { aieds: stageAieds, k13: stageK13, "earth-plus": stageEarthPlus };
+const STAGERS = { aieds: stageAieds, k13: stageK13, earthplus: stageEarthPlus };
 const stage = STAGERS[name];
 if (!stage) {
   console.error(`usage: node scripts/stage-npm-package.mjs <${Object.keys(STAGERS).join("|")}>`);

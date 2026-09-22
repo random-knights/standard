@@ -11,19 +11,19 @@ disagrees, what it should have been, and which rule was broken.
 ## Run it in under a minute
 
 The checker ships on npm as
-[`@randomknights/earth-plus`](https://www.npmjs.com/package/@randomknights/earth-plus),
+[`@randomknights/earthplus`](https://www.npmjs.com/package/@randomknights/earthplus),
 together with the methodology text it implements:
 
 ```
-npx @randomknights/earth-plus
+npx @randomknights/earthplus
 ```
 
 That checks the reference implementation's live document. To check a different
 one, local or remote:
 
 ```
-npx @randomknights/earth-plus ./my-health-score.json
-npx @randomknights/earth-plus https://example.test/health-score.json
+npx @randomknights/earthplus ./my-health-score.json
+npx @randomknights/earthplus https://example.test/health-score.json
 ```
 
 Or from a clone, with no network at all except fetching the document:
@@ -46,12 +46,12 @@ as a warning into a failure. See "Warnings" below.
 ## Use it as a library
 
 ```
-npm install @randomknights/earth-plus
+npm install @randomknights/earthplus
 ```
 
 ```js
 const { verifyPublishedScoreDoc, formatConformanceReport } =
-  require("@randomknights/earth-plus");
+  require("@randomknights/earthplus");
 
 const result = verifyPublishedScoreDoc(doc);          // or (doc, { strict: true })
 if (!result.ok) {

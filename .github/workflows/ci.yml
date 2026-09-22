@@ -104,10 +104,10 @@ jobs:
       - name: Unit tests
         run: npm test
 
-  # The npm packages (packages/aieds, packages/k13, packages/earth-plus) on
+  # The npm packages (packages/aieds, packages/k13, packages/earthplus) on
   # every change: the K13 checker's own tests, then pack each package, hold its
   # tarball to an exact file list (no tests, fixtures, secrets or .env files),
-  # install the real tarball into an empty project and use it (for earth-plus:
+  # install the real tarball into an empty project and use it (for earthplus:
   # a conforming sample passes and a nonconforming one fails, as a library and
   # through its bin), then npm publish --dry-run. No
   # credential is used or needed; a dry run publishes nothing.
@@ -133,7 +133,7 @@ jobs:
         run: |
           (cd packages/aieds && npm publish --dry-run)
           (cd packages/k13 && npm publish --dry-run)
-          (cd packages/earth-plus && npm publish --dry-run)
+          (cd packages/earthplus && npm publish --dry-run)
 
   # Aggregating gate: one check that is green only when all five jobs above
   # pass. Named "CI Gate" so the org ci-gate-required ruleset can pin a single
