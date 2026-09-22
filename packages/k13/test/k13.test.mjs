@@ -131,3 +131,13 @@ test("cli: exit 0 on a pass, 1 on a finding, 2 on bad usage", () => {
   const j = JSON.parse(run("check", "--json", bad).stdout);
   assert.equal(j.results[0].ok, false);
 });
+
+test("evidence: a hostile file cannot make the check slow", () => {
+  const hostile =
+    '<div id="pane-juice_box"><div data-tile="evidence-blocks">' +
+    '<div class="evidence">a'.repeat(50000) +
+    '<div data-tile="discrepancies"></div></div>';
+  const t0 = Date.now();
+  checkText(hostile, "html");
+  assert.ok(Date.now() - t0 < 2000, "the evidence check took too long");
+});

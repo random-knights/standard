@@ -256,40 +256,36 @@ export function checkHtmlStructure(text) {
       );
     }
 
-    // Machine gate 6: every evidence block carries its command and its result,
-    // and inside the evidence tile the two counts match.
-    const blocks = [
-      ...pane.matchAll(
-        /<div class="evidence">([\s\S]*?)<\/div>\s*(?=<div class="evidence">|<\/div>)/g,
-      ),
-    ];
+    // Machine gate 6: every evidence block in the evidence tile carries its
+    // command and its result, and the two counts match. Blocks are cut with
+    // string operations, not a regular expression, so a hostile file cannot
+    // make the check run in polynomial time.
+    const from = pane.indexOf('data-tile="evidence-blocks"');
+    const to = pane.indexOf('data-tile="discrepancies"');
+    const tile = from >= 0 && to > from ? pane.slice(from, to) : "";
+    const blocks = tile.split('<div class="evidence">').slice(1);
     if (blocks.length === 0) {
       out.push(finding("evidence", `pane-${level.id}: no evidence block`));
     }
     blocks.forEach((b, i) => {
-      if (!/class="ev-code"/.test(b[1])) {
+      if (!b.includes('class="ev-code"')) {
         out.push(finding("evidence", `pane-${level.id}: evidence block ${i + 1} has no command`));
       }
-      if (!/class="ev-result"/.test(b[1])) {
+      if (!b.includes('class="ev-result"')) {
         out.push(
           finding("evidence", `pane-${level.id}: evidence block ${i + 1} has a command with no result`),
         );
       }
     });
-    const from = pane.indexOf('data-tile="evidence-blocks"');
-    const to = pane.indexOf('data-tile="discrepancies"');
-    if (from >= 0 && to > from) {
-      const tile = pane.slice(from, to);
-      const codes = (tile.match(/class="ev-code"/g) || []).length;
-      const results = (tile.match(/class="ev-result"/g) || []).length;
-      if (codes !== results) {
-        out.push(
-          finding(
-            "evidence",
-            `pane-${level.id}: ${codes} commands and ${results} results in the evidence tile`,
-          ),
-        );
-      }
+    const codes = tile.split('class="ev-code"').length - 1;
+    const results = tile.split('class="ev-result"').length - 1;
+    if (codes !== results) {
+      out.push(
+        finding(
+          "evidence",
+          `pane-${level.id}: ${codes} commands and ${results} results in the evidence tile`,
+        ),
+      );
     }
 
     // The seventh check: What's next asks for a role and an effort, always
