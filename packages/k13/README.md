@@ -1,6 +1,6 @@
 # @randomknights/k13
 
-K13 - AI Response Standard, version 2.0.0, as an npm package: the standard
+K13 - AI Response Standard, version 2.1.0, as an npm package: the standard
 text and a small checker for the K13 rules that are implemented in code.
 
 The canonical text is `K13.md` in
@@ -85,7 +85,7 @@ Two licenses, see `NOTICE`:
 
 - The checker code (`src/`, `bin/`): Apache 2.0, in `LICENSE`.
 - The standard text (`K13.md`): CC BY 4.0, in `LICENSE-DOCS`. Cite as:
-  Random Knights, LLC (2026). K13 - AI Response Standard, version 2.0.0.
+  Random Knights, LLC (2026). K13 - AI Response Standard, version 2.1.0.
   CC BY 4.0. https://github.com/random-knights/standard
 
 SPDX: `Apache-2.0 AND CC-BY-4.0`.

@@ -6,8 +6,8 @@ title: "K13 - AI Response Standard"
 # same choice CITATION.cff makes for AiEDs. GitHub reads only CITATION.cff, so
 # this file is for humans and for tools pointed at it directly.
 type: software
-version: 2.0.0
-date-released: 2026-09-11
+version: 2.1.0
+date-released: 2026-09-22
 # Two licenses (see NOTICE): the K13 text is CC BY 4.0; the reference report
 # templates and the @randomknights/k13 checker code are Apache 2.0. CFF 1.2.0
 # accepts a list of SPDX identifiers here.
