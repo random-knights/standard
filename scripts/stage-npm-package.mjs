@@ -5,13 +5,14 @@
 // WHY THIS EXISTS. npm packs one directory and cannot reach outside it, but
 // every file these packages ship already has exactly one home elsewhere in the
 // repository: the factor table in spec/v2/, the schema in spec/, the reference
-// library in lib/, the K13 text at the root. Committing second copies is how a
+// library in lib/, the K13 text at the root, the E+ checker and methodology in
+// eplus/v1/. Committing second copies is how a
 // table drifts (see lib/src/factors.ts), so the copies are made at pack time
 // instead and are gitignored. Each package's "prepack" script runs this, so
 // `npm pack` and `npm publish` from packages/<name>/ always ship what is on the
 // checked-out commit.
 //
-// Usage: node scripts/stage-npm-package.mjs <aieds|k13>
+// Usage: node scripts/stage-npm-package.mjs <aieds|k13|earth-plus>
 import { execSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -65,7 +66,20 @@ function stageK13(pkgDir) {
   copy(join(repoRoot, "K13.md"), join(pkgDir, "K13.md"));
 }
 
-const STAGERS = { aieds: stageAieds, k13: stageK13 };
+function stageEarthPlus(pkgDir) {
+  // The checker's compiled output is committed under eplus/v1/conformance/out/
+  // and the conformance CI job refuses any out/ that is not byte-identical to
+  // a fresh build of src/, so it is copied, not rebuilt. cli.d.ts stays out:
+  // it declares nothing a consumer can import.
+  const out = join(repoRoot, "eplus", "v1", "conformance", "out");
+  rmSync(join(pkgDir, "dist"), { recursive: true, force: true });
+  for (const f of ["index.js", "index.d.ts", "cli.js"]) {
+    copy(join(out, f), join(pkgDir, "dist", f));
+  }
+  copy(join(repoRoot, "eplus", "v1", "methodology.md"), join(pkgDir, "methodology.md"));
+}
+
+const STAGERS = { aieds: stageAieds, k13: stageK13, "earth-plus": stageEarthPlus };
 const stage = STAGERS[name];
 if (!stage) {
   console.error(`usage: node scripts/stage-npm-package.mjs <${Object.keys(STAGERS).join("|")}>`);

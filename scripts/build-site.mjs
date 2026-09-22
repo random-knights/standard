@@ -83,12 +83,12 @@ const aiedsDir = artifactDirFromId(schema.$id); // "aieds/v2"
 const HOST = "https://standard.rand0m.ai";
 const XYZ = "https://randomknights.xyz";
 
-// K13 is decided to join this repository under CC BY 4.0 (see LICENSE-DOCS),
-// but whether it actually has is a FACT about the filesystem, not a flag a
-// human sets and might forget to flip. Checked here, not asserted: the page
-// renders K13 as live only once K13.md is really present at the proposed
-// path, so a partial move (K13.md added but k13-levels.json not yet) also
-// shows correctly rather than jumping straight to "fully published".
+// K13 lives in this repository under CC BY 4.0 (see LICENSE-DOCS): K13.md is
+// at the root. Its level registry, canon/k13-levels.json, is not in this
+// repository yet. Whether each file is present is a FACT about the
+// filesystem, not a flag a human sets and might forget to flip, so it is
+// checked here, not asserted: the page lists a file as published only when it
+// is really there, and marks the registry "not yet published" until it is.
 const K13_DIR = "k13/v1";
 const k13MdPresent = existsSync(join(repoRoot, "K13.md"));
 const k13LevelsPresent = existsSync(join(repoRoot, "canon", "k13-levels.json"));

@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "schema": "earth.healthscore.v1",
+    "eplusVersion": "1.2.0",
+    "methodologyVersion": "0.8",
+    "generatedAt": "2026-09-13T00:00:00.000Z",
+    "weights": {
+      "air": 0.5,
+      "ocean": 0.3,
+      "land-cover": 0.2
+    },
+    "isLive": true,
+    "freshnessWindowHours": 48,
+    "domainProvenance": {
+      "air": {
+        "provenance": "vendor-published",
+        "synthetic": false,
+        "available": true,
+        "sourceLabel": "example air dataset",
+        "sourceKind": "live-particulates",
+        "sourceLicense": "example",
+        "vintage": "air-2026-09-13",
+        "asOf": "2026-09-13T00:00:00Z",
+        "ageHours": 12,
+        "fresh": true
+      },
+      "ocean": {
+        "provenance": "vendor-published",
+        "synthetic": false,
+        "available": true,
+        "sourceLabel": "example ocean dataset",
+        "sourceKind": "live-sst",
+        "sourceLicense": "example",
+        "vintage": "ocean-2026-09-13",
+        "asOf": "2026-09-13T00:00:00Z",
+        "ageHours": 6,
+        "fresh": true
+      },
+      "land-cover": {
+        "provenance": "vendor-published",
+        "synthetic": false,
+        "available": true,
+        "sourceLabel": "example land cover dataset",
+        "sourceKind": "live-forest",
+        "sourceLicense": "example",
+        "vintage": "forest-2026-09-12",
+        "asOf": "2026-09-12T00:00:00Z",
+        "ageHours": 20,
+        "fresh": true
+      }
+    },
+    "weightCarryingDomains": [
+      "air",
+      "ocean",
+      "land-cover"
+    ],
+    "notLiveDomains": [],
+    "stale": false,
+    "staleDomains": [],
+    "derivation": {
+      "rawWeightSum": 1
+    }
+  },
+  "regions": {
+    "a": {
+      "score": 66,
+      "confidence": 1,
+      "measuredCoverage": 1,
+      "exposure": 40,
+      "notApplicableDomains": [],
+      "subScores": [
+        {
+          "layerId": "air",
+          "normalized": 80,
+          "direction": "burden",
+          "weight": 0.5,
+          "provenance": "vendor-published",
+          "synthetic": false
+        },
+        {
+          "layerId": "ocean",
+          "normalized": 60,
+          "direction": "burden",
+          "weight": 0.3,
+          "provenance": "vendor-published",
+          "synthetic": false
+        },
+        {
+          "layerId": "land-cover",
+          "normalized": 40,
+          "direction": "burden",
+          "weight": 0.2,
+          "provenance": "vendor-published",
+          "synthetic": false
+        }
+      ]
+    },
+    "b": {
+      "score": 52,
+      "confidence": 1,
+      "measuredCoverage": 1,
+      "exposure": 60,
+      "notApplicableDomains": [],
+      "subScores": [
+        {
+          "layerId": "air",
+          "normalized": 50,
+          "direction": "burden",
+          "weight": 0.5,
+          "provenance": "vendor-published",
+          "synthetic": false
+        },
+        {
+          "layerId": "ocean",
+          "normalized": 70,
+          "direction": "burden",
+          "weight": 0.3,
+          "provenance": "vendor-published",
+          "synthetic": false
+        },
+        {
+          "layerId": "land-cover",
+          "normalized": 30,
+          "direction": "burden",
+          "weight": 0.2,
+          "provenance": "vendor-published",
+          "synthetic": false
+        }
+      ]
+    }
+  },
+  "global": {
+    "score": 63.4,
+    "confidence": 1,
+    "measuredCoverage": 1,
+    "subScores": [
+      {
+        "layerId": "air",
+        "normalized": 62,
+        "direction": "burden",
+        "weight": 0.5,
+        "provenance": "vendor-published",
+        "synthetic": false
+      },
+      {
+        "layerId": "ocean",
+        "normalized": 66,
+        "direction": "burden",
+        "weight": 0.3,
+        "provenance": "vendor-published",
+        "synthetic": false
+      },
+      {
+        "layerId": "land-cover",
+        "normalized": 34,
+        "direction": "burden",
+        "weight": 0.2,
+        "provenance": "vendor-published",
+        "synthetic": false
+      }
+    ]
+  }
+}

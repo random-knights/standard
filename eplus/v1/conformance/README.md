@@ -10,23 +10,21 @@ disagrees, what it should have been, and which rule was broken.
 
 ## Run it in under a minute
 
+The checker ships on npm as
+[`@randomknights/earth-plus`](https://www.npmjs.com/package/@randomknights/earth-plus),
+together with the methodology text it implements:
+
 ```
-npx --yes https://codeload.github.com/random-knights/standard/tar.gz/main
+npx @randomknights/earth-plus
 ```
 
 That checks the reference implementation's live document. To check a different
 one, local or remote:
 
 ```
-npx --yes https://codeload.github.com/random-knights/standard/tar.gz/main ./my-health-score.json
-npx --yes https://codeload.github.com/random-knights/standard/tar.gz/main https://example.test/health-score.json
+npx @randomknights/earth-plus ./my-health-score.json
+npx @randomknights/earth-plus https://example.test/health-score.json
 ```
-
-A tarball URL rather than `github:random-knights/standard` on purpose: the
-`github:` shorthand is resolved by npm through `git clone`, so it needs a git
-binary and credentials that reach GitHub. The tarball URL is fetched by npm's
-own HTTP client, needs neither, and is verified against a sha512 recorded in
-your lockfile.
 
 Or from a clone, with no network at all except fetching the document:
 
@@ -48,12 +46,12 @@ as a warning into a failure. See "Warnings" below.
 ## Use it as a library
 
 ```
-npm install https://codeload.github.com/random-knights/standard/tar.gz/main
+npm install @randomknights/earth-plus
 ```
 
 ```js
 const { verifyPublishedScoreDoc, formatConformanceReport } =
-  require("@random-knights/eplus-conformance");
+  require("@randomknights/earth-plus");
 
 const result = verifyPublishedScoreDoc(doc);          // or (doc, { strict: true })
 if (!result.ok) {
@@ -65,18 +63,15 @@ if (!result.ok) {
 ```
 
 The package is CommonJS and ships its own TypeScript declarations. It has zero
-runtime dependencies and requires Node 20 or later.
+runtime dependencies and requires Node 20 or later. Its version is the E+
+standard version it implements.
 
-A consumer that needs a reproducible pin should pin a commit rather than a
-branch:
-
-```
-"@random-knights/eplus-conformance":
-  "https://codeload.github.com/random-knights/standard/tar.gz/<full 40-char sha>"
-```
-
-The full 40-character sha matters: npm rewrites a short ref on install and the
-lockfile then disagrees with what you wrote.
+The package was previously consumed from this repository by tarball URL under
+the name `@random-knights/eplus-conformance`. That name was never published to
+npm and is retired: the repository root is now a private workspace root with no
+entry point, so a tarball URL of a commit after the retirement installs nothing
+usable. Commits before it keep working for a consumer already pinned to one;
+new pins should use the npm package.
 
 ## What it checks
 
@@ -173,12 +168,12 @@ meets it. The default run does not pretend conformance exists.
 ## Where this lives, and why there is only one copy
 
 This is the CANONICAL copy, published from the standard repository under owner
-decision D6 (2026-09-13). The reference implementation consumes this package
-pinned to a commit; it does not keep a second copy of the checker.
+decision D6 (2026-09-13). The reference implementation consumes this checker
+as a pinned dependency; it does not keep a second copy of it.
 
 Two copies of one rule is the drift condition this standard's own audits kept
 finding. If you are about to copy this file into another repository, that is
-the thing the decision exists to stop: pin a commit instead.
+the thing the decision exists to stop: pin a version of the package instead.
 
 The compiled output under `out/` is committed so that installing this package
 never runs a compiler, and a test in `test/` rebuilds the source and refuses
