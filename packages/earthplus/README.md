@@ -88,9 +88,32 @@ the score. The table with each check is in the
 
 ## Versions
 
-The package version is the E+ standard version it implements. It is not the
-producer's `methodologyVersion`; the methodology, section 9, explains the
-difference.
+The package's MAJOR and MINOR are the E+ standard version it implements, so
+1.2.x implements E+ 1.2.0. The PATCH is this checker's own, and it moves when
+the checker is fixed without the standard moving: a patch release never changes
+a rule, a threshold or a published number. It is not the producer's
+`methodologyVersion`; the methodology, section 9, explains the difference.
+
+## Changelog
+
+This is the changelog of the checker package. The standard's own changelog is
+in the methodology, and nothing here moves it.
+
+### 1.2.1 (2026-09-23)
+
+The conformance summary line reports the two breach counts separately and by
+the names E+ 1.2.0 gives them, `liveBreachCount` and `assessedBreachCount`,
+instead of adding them together. Adding them was double counting: a boundary
+that is breached live is also breached when it is assessed, so a document with
+2 live and 5 assessed breaches was summarized as 7. No check, threshold or
+verdict changes, and no published number moves. Only the printed summary is
+different.
+
+### 1.2.0 (2026-09-22)
+
+First release under the ratified E+ 1.2.0: the two breach-panel evaluation
+modes, per-domain freshness windows, the fire warm-up rule, and the refusal of
+a synthetic input in a weight-carrying sub-score.
 
 ## License
 

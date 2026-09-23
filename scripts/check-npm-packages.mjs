@@ -57,7 +57,10 @@ const EXPECTED = {
 };
 
 // The E+ standard version the methodology text declares ("**Version:** x.y.z").
-// The earthplus package version must equal it.
+// The earthplus package's MAJOR.MINOR must equal this standard's MAJOR.MINOR.
+// Its PATCH is the checker's own, so a checker fix (1.2.0 -> 1.2.1) ships
+// without the standard moving, and the bundled methodology is still checked to
+// be exactly this version.
 const EPLUS_VERSION = (() => {
   const m = readFileSync(join(repoRoot, "eplus", "v1", "methodology.md"), "utf8").match(
     /^\*\*Version:\*\* (\d+\.\d+\.\d+)/m,
@@ -114,8 +117,10 @@ const require = createRequire(import.meta.url);
 const cjs = require("@randomknights/earthplus");
 const pkg = require("@randomknights/earthplus/package.json");
 const methodology = readFileSync(require.resolve("@randomknights/earthplus/methodology.md"), "utf8");
-if (!methodology.includes("**Version:** " + pkg.version)) throw new Error("package version " + pkg.version + " is not the bundled methodology version");
-if (pkg.version !== ${JSON.stringify(EPLUS_VERSION)}) throw new Error("package version " + pkg.version + " is not E+ ${EPLUS_VERSION}");
+const eplusVersion = ${JSON.stringify(EPLUS_VERSION)};
+const line = (v) => v.split(".").slice(0, 2).join(".");
+if (!methodology.includes("**Version:** " + eplusVersion)) throw new Error("the bundled methodology is not E+ " + eplusVersion);
+if (line(pkg.version) !== line(eplusVersion)) throw new Error("package version " + pkg.version + " does not implement E+ " + eplusVersion);
 if (cjs.verifyPublishedScoreDoc !== verifyPublishedScoreDoc) throw new Error("require and import disagree");
 const good = verifyPublishedScoreDoc(JSON.parse(readFileSync("conforming.json", "utf8")));
 if (!good.ok || good.findings.length) throw new Error("conforming sample failed: " + formatConformanceReport(good));
