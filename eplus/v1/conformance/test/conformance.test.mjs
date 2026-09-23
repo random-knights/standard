@@ -1040,6 +1040,32 @@ test("check 9 (6.1): a conforming mode panel passes, and each mode is counted ap
   assert.equal(result.breachCountRecomputed, 2);
 });
 
+// The summary once reported the retired single `breachCount` field, so a
+// conforming mode panel that publishes liveBreachCount and assessedBreachCount
+// and no `breachCount` printed "breaches published none". This asserts the
+// summary names both 1.2.0 counts, and that it never prints their sum (3).
+test("check 9 (6.1): the summary reports both mode counts, and never their sum", () => {
+  const result = verifyPublishedScoreDoc(
+    modePanelDoc((d) => {
+      delete d.boundaries.breachCount;
+      delete d.boundaries.breachedIds;
+    }),
+  );
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.liveBreachCountPublished, 2);
+  assert.equal(result.liveBreachCountRecomputed, 2);
+  assert.equal(result.assessedBreachCountPublished, 1);
+  assert.equal(result.assessedBreachCountRecomputed, 1);
+  const report = formatConformanceReport(result);
+  assert.match(
+    report,
+    /breach panel 9 entries, live breaches published 2, recomputed 2; assessed breaches published 1, recomputed 1 \(never summed\)/,
+  );
+  assert.doesNotMatch(report, /breaches published none/);
+  assert.doesNotMatch(report, /breach panel 9 entries, breaches published/);
+  assert.doesNotMatch(report, /breaches published 3/);
+});
+
 test("check 9 (6.1): a breachCount that sums the two modes is rejected", () => {
   const result = verifyPublishedScoreDoc(
     modePanelDoc((d) => {

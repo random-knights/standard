@@ -123,6 +123,17 @@ export interface ConformanceResult {
     breachCountPublished: number | null;
     /** The count of panel entries with `transgressed: true`, recomputed here. */
     breachCountRecomputed: number | null;
+    /**
+     * Section 6.1, the two evaluation modes. E+ 1.2.0 names the counts
+     * `boundaries.liveBreachCount` and `boundaries.assessedBreachCount`. These
+     * are `null` when the panel states no modes, and they are NEVER summed: the
+     * live count is this product's own measurement and the assessed count is a
+     * published finding it quotes.
+     */
+    liveBreachCountPublished: number | null;
+    liveBreachCountRecomputed: number | null;
+    assessedBreachCountPublished: number | null;
+    assessedBreachCountRecomputed: number | null;
     findings: ConformanceFinding[];
     warnings: ConformanceWarning[];
 }

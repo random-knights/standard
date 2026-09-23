@@ -127,6 +127,17 @@ export interface ConformanceResult {
   breachCountPublished: number | null;
   /** The count of panel entries with `transgressed: true`, recomputed here. */
   breachCountRecomputed: number | null;
+  /**
+   * Section 6.1, the two evaluation modes. E+ 1.2.0 names the counts
+   * `boundaries.liveBreachCount` and `boundaries.assessedBreachCount`. These
+   * are `null` when the panel states no modes, and they are NEVER summed: the
+   * live count is this product's own measurement and the assessed count is a
+   * published finding it quotes.
+   */
+  liveBreachCountPublished: number | null;
+  liveBreachCountRecomputed: number | null;
+  assessedBreachCountPublished: number | null;
+  assessedBreachCountRecomputed: number | null;
   findings: ConformanceFinding[];
   warnings: ConformanceWarning[];
 }
@@ -573,6 +584,10 @@ export function verifyPublishedScoreDoc(
       boundaryPanelSize: null,
       breachCountPublished: null,
       breachCountRecomputed: null,
+      liveBreachCountPublished: null,
+      liveBreachCountRecomputed: null,
+      assessedBreachCountPublished: null,
+      assessedBreachCountRecomputed: null,
       findings,
       warnings,
     };
@@ -1171,6 +1186,10 @@ export function verifyPublishedScoreDoc(
   let boundaryPanelSize: number | null = null;
   let breachCountPublished: number | null = null;
   let breachCountRecomputed: number | null = null;
+  let liveBreachCountPublished: number | null = null;
+  let liveBreachCountRecomputed: number | null = null;
+  let assessedBreachCountPublished: number | null = null;
+  let assessedBreachCountRecomputed: number | null = null;
   if (boundariesRaw === null) {
     warn(
       "boundaries",
@@ -1472,6 +1491,13 @@ export function verifyPublishedScoreDoc(
       : recomputedBreachedIds;
     breachCountRecomputed = expectedBreachCount;
     if (modesInEffect) {
+      // Reported side by side in the summary, never added together: the live
+      // count is this product's own measurement and the assessed count is a
+      // published finding it quotes (section 6.1).
+      liveBreachCountRecomputed = liveBreaches;
+      assessedBreachCountRecomputed = assessedBreaches;
+      liveBreachCountPublished = num(boundariesRaw.liveBreachCount);
+      assessedBreachCountPublished = num(boundariesRaw.assessedBreachCount);
       const pairs: [string, number][] = [
         ["liveBreachCount", liveBreaches],
         ["assessedBreachCount", assessedBreaches],
@@ -1632,6 +1658,10 @@ export function verifyPublishedScoreDoc(
     boundaryPanelSize,
     breachCountPublished,
     breachCountRecomputed,
+    liveBreachCountPublished,
+    liveBreachCountRecomputed,
+    assessedBreachCountPublished,
+    assessedBreachCountRecomputed,
     findings,
     warnings,
   };
@@ -1676,13 +1706,32 @@ export function formatConformanceReport(result: ConformanceResult): string {
         ? ""
         : ` (not live: ${result.notLiveDomainsRecomputed.join(", ")})`),
   );
-  lines.push(
-    result.boundaryPanelSize === null
-      ? "breach panel not published (section 6)"
-      : `breach panel ${result.boundaryPanelSize} entries, breaches published ` +
-          `${shown(result.breachCountPublished)}, recomputed ` +
-          `${shown(result.breachCountRecomputed)}`,
-  );
+  // The breach line. A panel that states modes publishes its counts under the
+  // E+ 1.2.0 names `liveBreachCount` and `assessedBreachCount`, so the summary
+  // reports BOTH under those names and never adds them: one is this product's
+  // own measurement, the other a published finding it quotes (section 6.1).
+  // Reporting only the retired single `breachCount` field made a conforming
+  // mode panel print "breaches published none".
+  if (result.boundaryPanelSize === null) {
+    lines.push("breach panel not published (section 6)");
+  } else if (
+    result.liveBreachCountRecomputed !== null ||
+    result.assessedBreachCountRecomputed !== null
+  ) {
+    lines.push(
+      `breach panel ${result.boundaryPanelSize} entries, live breaches ` +
+        `published ${shown(result.liveBreachCountPublished)}, recomputed ` +
+        `${shown(result.liveBreachCountRecomputed)}; assessed breaches ` +
+        `published ${shown(result.assessedBreachCountPublished)}, recomputed ` +
+        `${shown(result.assessedBreachCountRecomputed)} (never summed)`,
+    );
+  } else {
+    lines.push(
+      `breach panel ${result.boundaryPanelSize} entries, breaches published ` +
+        `${shown(result.breachCountPublished)}, recomputed ` +
+        `${shown(result.breachCountRecomputed)}`,
+    );
+  }
   lines.push(`${result.checked} published value(s) recomputed`);
   for (const f of result.findings) {
     lines.push(
