@@ -390,6 +390,10 @@ function verifyPublishedScoreDoc(raw, options = {}) {
             boundaryPanelSize: null,
             breachCountPublished: null,
             breachCountRecomputed: null,
+            liveBreachCountPublished: null,
+            liveBreachCountRecomputed: null,
+            assessedBreachCountPublished: null,
+            assessedBreachCountRecomputed: null,
             findings,
             warnings,
         };
@@ -788,6 +792,10 @@ function verifyPublishedScoreDoc(raw, options = {}) {
     let boundaryPanelSize = null;
     let breachCountPublished = null;
     let breachCountRecomputed = null;
+    let liveBreachCountPublished = null;
+    let liveBreachCountRecomputed = null;
+    let assessedBreachCountPublished = null;
+    let assessedBreachCountRecomputed = null;
     if (boundariesRaw === null) {
         warn("boundaries", null, "an earth.boundaries.v1 panel", "the document publishes no breach panel (section 6). The headline is a " +
             "compensatory mean, so without the panel a transgressed boundary can " +
@@ -975,6 +983,13 @@ function verifyPublishedScoreDoc(raw, options = {}) {
             : recomputedBreachedIds;
         breachCountRecomputed = expectedBreachCount;
         if (modesInEffect) {
+            // Reported side by side in the summary, never added together: the live
+            // count is this product's own measurement and the assessed count is a
+            // published finding it quotes (section 6.1).
+            liveBreachCountRecomputed = liveBreaches;
+            assessedBreachCountRecomputed = assessedBreaches;
+            liveBreachCountPublished = num(boundariesRaw.liveBreachCount);
+            assessedBreachCountPublished = num(boundariesRaw.assessedBreachCount);
             const pairs = [
                 ["liveBreachCount", liveBreaches],
                 ["assessedBreachCount", assessedBreaches],
@@ -1076,6 +1091,10 @@ function verifyPublishedScoreDoc(raw, options = {}) {
         boundaryPanelSize,
         breachCountPublished,
         breachCountRecomputed,
+        liveBreachCountPublished,
+        liveBreachCountRecomputed,
+        assessedBreachCountPublished,
+        assessedBreachCountRecomputed,
         findings,
         warnings,
     };
@@ -1107,11 +1126,28 @@ function formatConformanceReport(result) {
         (result.notLiveDomainsRecomputed.length === 0
             ? ""
             : ` (not live: ${result.notLiveDomainsRecomputed.join(", ")})`));
-    lines.push(result.boundaryPanelSize === null
-        ? "breach panel not published (section 6)"
-        : `breach panel ${result.boundaryPanelSize} entries, breaches published ` +
+    // The breach line. A panel that states modes publishes its counts under the
+    // E+ 1.2.0 names `liveBreachCount` and `assessedBreachCount`, so the summary
+    // reports BOTH under those names and never adds them: one is this product's
+    // own measurement, the other a published finding it quotes (section 6.1).
+    // Reporting only the retired single `breachCount` field made a conforming
+    // mode panel print "breaches published none".
+    if (result.boundaryPanelSize === null) {
+        lines.push("breach panel not published (section 6)");
+    }
+    else if (result.liveBreachCountRecomputed !== null ||
+        result.assessedBreachCountRecomputed !== null) {
+        lines.push(`breach panel ${result.boundaryPanelSize} entries, live breaches ` +
+            `published ${shown(result.liveBreachCountPublished)}, recomputed ` +
+            `${shown(result.liveBreachCountRecomputed)}; assessed breaches ` +
+            `published ${shown(result.assessedBreachCountPublished)}, recomputed ` +
+            `${shown(result.assessedBreachCountRecomputed)} (never summed)`);
+    }
+    else {
+        lines.push(`breach panel ${result.boundaryPanelSize} entries, breaches published ` +
             `${shown(result.breachCountPublished)}, recomputed ` +
             `${shown(result.breachCountRecomputed)}`);
+    }
     lines.push(`${result.checked} published value(s) recomputed`);
     for (const f of result.findings) {
         lines.push(`  MISMATCH ${f.path}: published ${shown(f.published)}, recomputed ` +
