@@ -82,19 +82,19 @@ if (methodologyVersion !== factors.methodologyVersion) {
 const aiedsDir = artifactDirFromId(schema.$id); // "aieds/v2"
 const HOST = "https://standard.rand0m.ai";
 
-// ONE BRAND NAME PER PROPERTY (owner decision 2026-09-23). The bracketed
-// letter is U+1D1A, the sole brand-character exception to the ASCII rule,
-// and it is built from its code point here so this source file stays ASCII
-// for spec/test/ascii.test.mjs. Never a plain R, another reverse-R
-// lookalike, SVG text or an image.
-export const BRAND_CHARACTER = String.fromCodePoint(0x1d1a);
-export const PROPERTY_NAME = `Standard by [${BRAND_CHARACTER}k]`;
-// Rendered output is ASCII in this repo and the brand mark ships as the
-// numeric character reference, the same way the family footer marks already
-// do. A numeric reference IS the character once parsed, so this is the same
-// name, not a lookalike: assets/icons/site.webmanifest carries the literal
-// because JSON has no entities.
-export const PROPERTY_NAME_HTML = "Standard by [&#7450;k]";
+// ONE BRAND NAME PER PROPERTY. The bracketed form was REPLACED on
+// 2026-09-23: Google brand verification rejected the bracketed letters, so
+// the property name follows the owner-approved App Titles list and is now
+// plain words. Block forms remain logo iconography only, with an exception
+// for GitHub apps.
+//
+// The name is therefore pure ASCII and identical in both forms, so there is
+// no entity to encode and no brand character to protect here. U+1D1A is
+// still the sole brand-character exception to the ASCII rule and still
+// ships as a numeric reference, but only in the family footer marks, which
+// spec/test/build-site.test.mjs pins separately.
+export const PROPERTY_NAME = "Standard by Random Knights";
+export const PROPERTY_NAME_HTML = PROPERTY_NAME;
 const XYZ = "https://randomknights.xyz";
 
 // K13 lives in this repository under CC BY 4.0 (see LICENSE-DOCS): K13.md is

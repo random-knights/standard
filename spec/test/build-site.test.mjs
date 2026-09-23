@@ -157,14 +157,19 @@ test("one brand name, and its brand character is U+1D1A", () => {
   assert.equal(manifest.name, PROPERTY_NAME);
   // short_name stays short because a phone truncates it under the icon.
   assert.equal(manifest.short_name, "standard");
-  // Exactly one non-ASCII code point in the name, and it is U+1D1A. Not a
-  // plain R, not another reverse-R lookalike, not SVG text, not an image.
-  const brand = [...PROPERTY_NAME]
+  // The property name is PLAIN ASCII. This assertion was inverted on
+  // 2026-09-23: it used to require exactly one U+1D1A, because the name was
+  // the bracketed form. Google brand verification rejected the bracketed
+  // letters, so the App Titles list replaced them with plain words and the
+  // name must now carry no block form and no brand character at all. The
+  // family footer marks still ship U+1D1A as a numeric reference and are
+  // pinned above by the "&#7450;k.xyz" assertion.
+  const exotic = [...PROPERTY_NAME]
     .map((character) => character.codePointAt(0))
     .filter((point) => point > 0x7f);
-  assert.deepEqual(brand, [0x1d1a]);
-  // The HTML form is the SAME name: a numeric character reference for the
-  // same code point, which is how this repo already ships the family marks.
+  assert.deepEqual(exotic, []);
+  // Both forms are the same pure-ASCII string, so the HTML form needs no
+  // entity. Decoding it is still a no-op and must still round-trip.
   assert.equal(
     PROPERTY_NAME_HTML.replace(/&#(\d+);/g, (_, point) => String.fromCodePoint(Number(point))),
     PROPERTY_NAME,
