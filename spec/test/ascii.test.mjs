@@ -51,6 +51,19 @@ const ALLOWED = new Map([
     "owner-supplied family footer: U+1D1A brand mark plus footer emoji and " +
       "rotated-Latin brand artwork (AGENTS.md, Owner ethos)",
   ],
+  [
+    "assets/icons/site.webmanifest",
+    // The installable name is the property name, and the property name
+    // carries U+1D1A (owner decision 2026-09-23). A manifest is JSON served
+    // as UTF-8, so the literal character is correct there.
+    // scripts/build-site.mjs builds the same name from its code point
+    // instead, which is why that file needs no entry here.
+    //
+    // The walk above does not read .webmanifest today. This entry is stated
+    // anyway, so that widening TEXT later reports a real drift rather than
+    // this sanctioned character.
+    "property name: U+1D1A brand mark (AGENTS.md, Owner ethos)",
+  ],
 ]);
 
 // Built from code points rather than written as literals, because this file is

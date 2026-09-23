@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../..");
 
-const { expectedFiles } = await import(
+const { PROPERTY_NAME, PROPERTY_NAME_HTML, expectedFiles } = await import(
   "file://" + resolve(repoRoot, "scripts/build-site.mjs")
 );
 
@@ -144,4 +144,29 @@ test("build output is ASCII; family marks are numeric entities, not literals", (
   const bad = [...html].filter((c) => c.charCodeAt(0) > 127);
   assert.equal(bad.length, 0, `non-ASCII in rendered output: ${bad.join(" ")}`);
   assert.match(html, /&#7450;k\.xyz/, "the U+1D1A mark must render via entity");
+});
+
+test("one brand name, and its brand character is U+1D1A", () => {
+  // Owner decision 2026-09-23: one name per property, on the title, the
+  // visible h1 and the installable manifest. Before this the three read
+  // standard.rand0m.ai, which is the host, not a name.
+  const html = files.get("index.html").toString("utf8");
+  assert.ok(html.includes(`<title>${PROPERTY_NAME_HTML}</title>`));
+  assert.ok(html.includes(`<h1>${PROPERTY_NAME_HTML}</h1>`));
+  const manifest = JSON.parse(files.get("site.webmanifest").toString("utf8"));
+  assert.equal(manifest.name, PROPERTY_NAME);
+  // short_name stays short because a phone truncates it under the icon.
+  assert.equal(manifest.short_name, "standard");
+  // Exactly one non-ASCII code point in the name, and it is U+1D1A. Not a
+  // plain R, not another reverse-R lookalike, not SVG text, not an image.
+  const brand = [...PROPERTY_NAME]
+    .map((character) => character.codePointAt(0))
+    .filter((point) => point > 0x7f);
+  assert.deepEqual(brand, [0x1d1a]);
+  // The HTML form is the SAME name: a numeric character reference for the
+  // same code point, which is how this repo already ships the family marks.
+  assert.equal(
+    PROPERTY_NAME_HTML.replace(/&#(\d+);/g, (_, point) => String.fromCodePoint(Number(point))),
+    PROPERTY_NAME,
+  );
 });
