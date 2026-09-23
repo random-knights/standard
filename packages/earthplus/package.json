@@ -1,6 +1,6 @@
 {
   "name": "@randomknights/earthplus",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Earth+ (E+) 1.2.0, the Earth Health Score standard: the conformance checker (library and eplus-conformance CLI) that recomputes every number and liveness claim in a published earth.healthscore.v1 document, and the ratified methodology text",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
