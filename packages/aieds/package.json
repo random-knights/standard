@@ -1,7 +1,7 @@
 {
   "name": "@randomknights/aieds",
-  "version": "2.3.0",
-  "description": "AiEDs (AI Energy Disclosure Standard) 2.3.0: the reference library that turns tokens and a model into an energy-first disclosure, the JSON Schema for one disclosure, and the published coefficient tables",
+  "version": "2.4.0",
+  "description": "AiEDs (AI Energy Disclosure Standard) 2.4.0: the reference library that turns tokens and a model into an energy-first disclosure, the JSON Schema for one disclosure, and the published coefficient tables",
   "type": "module",
   "main": "./lib/dist/index.js",
   "types": "./lib/dist/index.d.ts",

@@ -1,15 +1,25 @@
 {
   "$comment": "Canonical AiEDs factor data. This file is the single source of truth for every coefficient the AiEDs tooling emits. The TypeScript packages read it directly; the Dart package mirrors it as compile-time constants and is gated against a vendored copy by test. Editing a value here is a methodology change: bump methodology.md and its changelog in the same commit (methodology.md section 6).",
   "schemaVersion": 1,
-  "methodologyVersion": "2.3.0",
+  "methodologyVersion": "2.4.0",
   "impactModelVersion": "v2",
   "constants": {
     "matureReferenceTreeCo2eGramsPerYear": {
       "value": 21000,
       "unit": "gCO2e/year",
-      "methodologySection": "2.5",
+      "methodologySection": "2.5.1",
       "provenance": "class-estimated",
-      "note": "One Mature Reference Tree (MRT). Common forestry heuristic, unified at 21 kg in methodology 2.0.0; 1.x used 22 kg."
+      "citation": "McPherson, E. G.; van Doorn, N. S.; Peper, P. J. (2016). Urban tree database and allometric equations. Gen. Tech. Rep. PSW-GTR-253. USDA Forest Service, Pacific Southwest Research Station, as surfaced by the EPA Greenhouse Gas Equivalencies Calculator: https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references",
+      "referenceObject": "One mature, healthy, temperate broadleaf or coniferous tree in steady-state growth, sequestering on its own account. NOT mortality-discounted, NOT averaged over juvenile years, NOT a planting-program unit.",
+      "publishedRange": {
+        "min": 10000,
+        "max": 40000,
+        "centralTendency": 25000,
+        "unit": "gCO2/year",
+        "note": "Single-tree sequestration varies about 4x with species, age, soil, light and climate. Published to show the width of the pin, NOT so an implementation can choose within it. Implementations MUST use value (21000)."
+      },
+      "notComparableTo": "Per-tree-PLANTED figures such as the EPA calculator's 0.060 metric tons CO2/tree/year, which is about 3x this value because it is a different object: a 10-year horizon, a 59 percent survival discount, and an 11/89 coniferous/deciduous weighting. MUST NOT be substituted. Tree-Time MUST NOT be presented as a number of trees to plant; that is an offset claim, which methodology section 1.1 forbids.",
+      "note": "One Mature Reference Tree (MRT). Unified at 21 kg in methodology 2.0.0; 1.x used 22 kg. Defined, cited and bounded in 2.4.0. 21 kg CO2e equals 21 kg CO2 because CO2 has a GWP of exactly 1, so this denominator and the CO2e numerator are in the same unit. The value sits BELOW the central tendency on purpose: Tree-Time divides by it, so a lower denominator yields more tree-minutes and overstates the disclosed impact, which is the conservative direction and the same bias methodology section 2.1 states for using TDP as an upper bound. Commercial tree-planting and carbon-offset vendors publish figures in this range and are NOT cited: a seller's estimate of what its product absorbs is not an independent measurement."
     },
     "minutesPerYear": {
       "value": 525600,

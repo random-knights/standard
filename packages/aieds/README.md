@@ -1,6 +1,6 @@
 # @randomknights/aieds
 
-AiEDs, the AI Energy Disclosure Standard, version 2.3.0, as an npm package.
+AiEDs, the AI Energy Disclosure Standard, version 2.4.0, as an npm package.
 
 It carries three things, each built from its one canonical file in
 [random-knights/standard](https://github.com/random-knights/standard):

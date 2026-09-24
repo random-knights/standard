@@ -447,5 +447,5 @@ test("the measured entries do not disturb the class-estimated tables", () => {
 test("the published table declares the methodology it belongs to", () => {
   const docVersion = doc.match(/\*\*Version:\*\*\s*([\d.]+)/)[1];
   assert.equal(factors.methodologyVersion, docVersion);
-  assert.equal(docVersion, "2.3.0");
+  assert.equal(docVersion, "2.4.0");
 });

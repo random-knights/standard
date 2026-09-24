@@ -241,7 +241,7 @@ describe("factor tables come from the published file", () => {
     // band (RK-124). None changed a number already published, which is why
     // each is a minor bump.
     assert.strictEqual(FACTORS.methodologyVersion, METHODOLOGY_VERSION);
-    assert.strictEqual(METHODOLOGY_VERSION, "2.3.0");
+    assert.strictEqual(METHODOLOGY_VERSION, "2.4.0");
     assert.strictEqual(IMPACT_MODEL_VERSION, "v2");
   });
 
