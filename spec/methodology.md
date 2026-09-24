@@ -1,24 +1,25 @@
 # AiEDs Methodology
 
-> **CURRENT VERSION: 2.3.0. Versions 1.x are SUPERSEDED and MUST NOT be
+> **CURRENT VERSION: 2.4.0. Versions 1.x are SUPERSEDED and MUST NOT be
 > implemented.** 1.x specified a flat 0.30 gCO2e per 1k tokens for every model
-> and derived energy backward from carbon. Both are wrong. Implement 2.3.0 (see
+> and derived energy backward from carbon. Both are wrong. Implement 2.4.0 (see
 > the changelog below and `README.md`). Do not pick up 1.0.0 because it reads
-> like a stable base; it is not. 2.0.0, 2.1.0 and 2.2.0 records remain valid:
-> 2.1.0 is clarifying, and 2.2.0 and 2.3.0 are additive; none changes an
-> existing number.
+> like a stable base; it is not. 2.0.0, 2.1.0, 2.2.0 and 2.3.0 records remain
+> valid: 2.1.0 is clarifying, and 2.2.0, 2.3.0 and 2.4.0 are additive; none
+> changes an existing number.
 
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 2.3.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
+**Version:** 2.4.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
 **Status:** Ratified
-**Effective:** 2026-09-19
+**Effective:** 2026-09-24
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
 ## CHANGELOG
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 2.4.0   | 2026-09-24 | **MINOR (additive). No existing number changes; 2.0.0 through 2.3.0 records remain valid.** WHAT CHANGED: new section 2.5.1, THE MATURE REFERENCE TREE, which defines the reference object behind Tree-Time, publishes its literature range, names its primary citation, and states the bias in its choice. THE NUMBER: `matureReferenceTreeCo2eGramsPerYear` stays at 21 000. Every coefficient, both grid intensities, Tables 2, 4 and 4b and every other constant are byte-identical to 2.3.0. WHY IT WAS NEEDED: the MRT drives the standard's most public figure and was its least defensible entry. It carried no `citation` field at all, although `citation` is a convention used nine times elsewhere in `aieds-factors.json`; it published a bare scalar for a quantity that varies about 4x; its conservative bias was real but unwritten, so a deliberate choice read as an arbitrary one; and "Mature Reference Tree" was never defined, so it could not be reconciled with any primary source, including one that agrees with it. WHAT 2.5.1 SETTLES: the reference object is one mature tree in steady-state growth, NOT mortality-discounted and NOT averaged over juvenile years; the published range is 10 to 40 kg CO2/year with a central tendency near 25, published to show the pin's width, NOT to let an implementation choose within it; 21 is below that center on purpose, because a lower denominator yields more tree-minutes and overstating disclosed impact is the correct direction, the same bias section 2.1 states for TDP; the units are consistent because CO2 has a GWP of exactly 1. NON-COMPARABILITY: the EPA calculator's 0.060 metric tons CO2 per urban tree PLANTED per year is about 3x the MRT and is a different object (10-year horizon, 59 percent survival discount, 11/89 coniferous/deciduous weighting). The two MUST NOT be substituted, and Tree-Time MUST NOT be presented as a number of trees to plant, which would be the offset claim section 1.1 forbids. CITATION: McPherson, van Doorn and Peper (2016), PSW-GTR-253, USDA Forest Service, as surfaced by the EPA Greenhouse Gas Equivalencies Calculator. Commercial tree-planting and offset vendors publish figures in the same range and are explicitly ruled out as sources: a seller's estimate of what its product absorbs is not an independent measurement. WHAT DID NOT CHANGE: the provenance ladder (the MRT stays `class-estimated`; a citation does not promote a class representative), the confidence ladder, the response-surface path, the schema, every measured device table, and the other four equivalency constants. |
 | 2.3.0 erratum | 2026-09-22 | **ERRATUM. No rule change, no number change, no version bump; 2.3.0 records remain valid.** Section 6 item 4 said the schema (`aieds.schema.json`) is MIT-licensed. That was wrong: the schema is licensed Apache 2.0 under `LICENSE`, as the path list at the end of `LICENSE` and the `NOTICE` file state. Item 4 now says Apache 2.0, and names the coefficient tables with the methodology text as CC BY 4.0, which is what `LICENSE-DOCS` already said. |
 | 2.3.0   | 2026-09-19 | **MINOR (additive). No existing number changes; 2.0.0, 2.1.0 and 2.2.0 records remain valid.** WHAT CHANGED: new section 2.3.2 and Table 4b, MEASURED PREFILL COEFFICIENTS BY PROMPT-LENGTH BAND, publishing what 2.2.0 left UNRESOLVED. Owner decision on RK-16 (2026-09-18): publish prefill stratified by prompt length rather than rent an H100 hour or wait for a shape that fits the convex curve. THE SHAPE: three bands (short, under 256 prompt tokens; medium, 256 to under 2048; long, 2048 and over), boundaries inclusive on the lower end, chosen from the sample's own three prompt-length tiers. Each band publishes the RUN COUNT and the MEDIAN and INTERQUARTILE RANGE of Wh per million tokens observed in it, not a fitted line: no shape is assumed, so no shape can be mis-specified. THE NUMBER: no published figure moves. Table 2, Table 4's two decode rows, both grid intensities and every constant are byte-identical to 2.2.0; the two prefill rows that were on the "Table 4 unresolved" list are REMOVED from that list (both models now have band figures) and that list is empty as of this version. THE SCOPE FENCE IS UNCHANGED: a band figure describes only the named hardware, runtime, model and quantization; it MUST NOT be applied to hosted inference, which remains `class-estimated` with `low` confidence. WHAT DID NOT CHANGE: the provenance ladder, the confidence ladder, the response-surface path, the schema, decode's published two-term coefficients, the Mature Reference Tree, the two grid values. The reference library (`lib/`) gains a band-selection function reading these bands by prompt token count; it is additive and does not touch the response-surface disclosure path. EVIDENCE AND REPRODUCE: same raw samples as 2.2.0, no new measurement; the measurement harness now also emits `prefillBands` per session (see section 2.3.2), and `node harness/emit-factor-entry.mjs table` emits Table 4b's rows from the same committed bytes. |
 | 2.2.0   | 2026-09-15 | **MINOR (additive). No existing number changes; 2.0.0 and 2.1.0 records remain valid.** WHAT CHANGED: new section 2.3.1 and Table 4, MEASURED DEVICE COEFFICIENTS, fitted as a TWO-TERM model `energyWh = a + b * tokens` per phase and per device by ordinary least squares over 36 varied runs, with 95 percent intervals on both terms and the residual diagnostics that say whether the line fits. `a` is a per-request FIXED cost and `b` the marginal per-token cost. THE NUMBER: no published figure moves. Table 2's class estimates, every hosted coefficient, both grid intensities and every constant are byte-identical to 2.1.0; this version only ADDS a table that was not there. WHY IT IS TWO TERMS: a single Wh-per-million-tokens figure divides a fixed per-request cost by a varying token count, which is not a constant. Measured on the first device, the pooled figure came out with an interquartile range wider than its own median, and the fit shows why. A per-request fixed cost is a NEW disclosure shape that sections 2.1 to 2.4 cannot express. WHAT DID NOT CHANGE: the provenance ladder, the confidence ladder, the response-surface path, the schema, the Mature Reference Tree, the two grid values, and every hosted profile. Hosted calls have no measured intercept and stay `class-estimated` with `low` confidence. WHAT IS NOW UNRESOLVED: PREFILL on both measured models. A quadratic term in tokens is significant there (p below 1e-13), so energy is convex in token count rather than affine, the fitted intercept is a curvature artifact rather than a fixed cost, and the fitted line predicts negative energy inside the observed range. UNRESOLVED, not NOT-APPLICABLE: prefill applies and its energy was measured; the two-term shape cannot carry it. DECODE is published, and its intercept is NOT distinguishable from zero on either model, which is the result the two-term model predicts and is evidence the shape is right where it is used. EVIDENCE AND REPRODUCE: method document, harness, and every raw power sample are published under `spec/measurements/`; `node harness/summarise.mjs` recomputes every figure in Table 4 from the committed raw data. |
@@ -346,7 +347,7 @@ constants (all illustrative, modeled):
 
 | Equivalency | Formula | Constant |
 |-------------|---------|----------|
-| **Tree-Time** (minutes) | `carbon_g / 21 000 x 525 600` | 1 Mature Reference Tree (MRT) sequesters 21 kg CO2e/year (v2 unified; v1 used 22 kg) |
+| **Tree-Time** (minutes) | `carbon_g / 21 000 x 525 600` | 1 Mature Reference Tree (MRT) sequesters 21 kg CO2e/year (v2 unified; v1 used 22 kg). Defined in 2.5.1 |
 | Phone charges | `energyWh / 12` | 12 Wh per full charge |
 | LED-bulb hours | `energyWh / 10` | 10 W bulb |
 | Laptop minutes | `energyWh / 50 x 60` | 50 W laptop |
@@ -355,6 +356,66 @@ constants (all illustrative, modeled):
 Tree-Time is AiEDs's signature equivalency: how long one mature reference tree
 takes to sequester the disclosed carbon. Equivalencies MUST be labeled
 educational and MUST NOT be presented as offsets, credits, or restoration.
+
+### 2.5.1 The Mature Reference Tree (2.4.0)
+
+The MRT is the denominator of AiEDs's most visible number, so this section
+says what it is, where it comes from, and why it is the value it is. Before
+2.4.0 the constant carried the words "common forestry heuristic" and nothing
+else.
+
+**Reference object.** One MRT is a single **mature**, healthy, temperate
+broadleaf or coniferous tree in **steady-state growth**, sequestering on its
+own account. It is NOT discounted for mortality, NOT averaged over juvenile
+years, and NOT a planting-program unit.
+
+**Value.** 21 kg CO2e/year, equal to 21 kg CO2: carbon dioxide has a global
+warming potential of exactly 1, so the numerator (true CO2e, derived from a
+grid intensity that includes CH4 and N2O) and this denominator (CO2 only, the
+sole gas a tree fixes) are in the same unit. There is no unit conversion here
+and there must not be one.
+
+**Published range.** Sequestration for a single tree varies by roughly 4x with
+species, age, soil, light and climate. The literature range is **10 to 40 kg
+CO2/year** with a central tendency near 25. AiEDs pins one scalar rather than
+a distribution because Tree-Time is a **comparison unit**: if the MRT moved,
+every historical disclosure's Tree-Time would silently change meaning. The
+range is published so a reader can see the pin's width, not so an
+implementation can choose within it. **Implementations MUST use 21 000.**
+
+**Why 21 and not 25.** Tree-Time is `carbon_g / MRT x 525 600`, so a LOWER
+denominator yields MORE tree-minutes and every disclosure reads worse. 21 sits
+below the central tendency deliberately. This is the same conservative bias
+section 2.1 states for using TDP as an upper bound: where a modeled figure
+must be chosen, AiEDs chooses the one that overstates the disclosed impact,
+because understating it is the failure mode that matters.
+
+**Provenance.** `class-estimated`. The figure is a class representative, not a
+measurement of any particular tree, and it cannot be promoted above that rung
+by citation alone.
+
+**NOT comparable to per-tree-planted figures.** The EPA Greenhouse Gas
+Equivalencies Calculator publishes 0.060 metric tons CO2 per urban tree planted
+per year, roughly 3x the MRT. That figure is a different object: a
+medium-growth urban tree on a 10-year horizon, weighted 11 percent coniferous
+and 89 percent deciduous, and discounted by a 59 percent ten-year survival
+probability. It answers "what does planting one tree buy", where the MRT
+answers "what does one mature tree absorb". An implementation MUST NOT
+substitute one for the other, and a disclosure MUST NOT present Tree-Time as a
+number of trees to plant. That would be an offset claim, which section 1.1
+forbids.
+
+**Citation.** McPherson, E. G.; van Doorn, N. S.; Peper, P. J. (2016). *Urban
+tree database and allometric equations.* Gen. Tech. Rep. PSW-GTR-253. U.S.
+Department of Agriculture, Forest Service, Pacific Southwest Research Station,
+as surfaced by the EPA Greenhouse Gas Equivalencies Calculator.
+<https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references>
+
+Commercial tree-planting and carbon-offset vendors publish figures in this
+range and MUST NOT be cited as the source: a seller's estimate of what its
+product absorbs is not an independent measurement, and section 5.1's
+provenance ladder is about the strength of a source, not the convenience of
+finding one.
 
 ---
 

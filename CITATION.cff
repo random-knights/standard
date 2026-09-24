@@ -5,8 +5,8 @@ title: "AiEDs - AI Energy Disclosure Standard"
 # standard, but that is not an option the format offers at the top level,
 # and an invalid file makes GitHub drop the citation panel entirely.
 type: software
-version: 2.3.0
-date-released: 2026-09-19
+version: 2.4.0
+date-released: 2026-09-24
 # Two licenses (see NOTICE): the methodology text and the coefficient tables
 # are CC BY 4.0; the JSON Schema, the reference library and the MCP server are
 # Apache 2.0. CFF 1.2.0 accepts a list of SPDX identifiers here.
