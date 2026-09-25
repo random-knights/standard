@@ -6,7 +6,9 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc -p eplus/v1/conformance",
-    "test": "node --test eplus/v1/conformance/test/conformance.test.mjs eplus/v1/conformance/test/built-output-is-current.test.mjs"
+    "test": "node --test eplus/v1/conformance/test/conformance.test.mjs eplus/v1/conformance/test/built-output-is-current.test.mjs",
+    "check:published": "node scripts/check-published-site.mjs",
+    "publish:site": "node scripts/publish-site.mjs"
   },
   "repository": {
     "type": "git",
