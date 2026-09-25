@@ -31,6 +31,9 @@ test("the drift workflow holds NO production credential", () => {
   assert.ok(!/secrets\./.test(workflow), "85-published-drift must reference no secret");
   assert.ok(!/FIREBASE_SERVICE_ACCOUNT/.test(workflow));
   assert.ok(!/randomknights-xyz/.test(workflow));
+  // github.token is the read-only job token for the public API rate limit,
+  // not a credential that can publish anything.
+  assert.ok(!/secrets\.GITHUB_TOKEN/.test(workflow));
   assert.match(workflow, /permissions:\s*\n\s*contents: read/);
 });
 
@@ -41,6 +44,34 @@ test("an unreachable site is not reported as drift", () => {
   assert.match(workflow, /if \[ "\$code" = "2" \]/);
   assert.match(workflow, /::warning::/);
   assert.match(checker, /return 2;/);
+});
+
+test("the checker covers all three release surfaces", () => {
+  // A standard is not published until the site, npm and the releases agree.
+  // The site-only version of this check was green while npm was a version
+  // behind and the releases were four behind.
+  assert.match(checker, /surface: "site"/);
+  assert.match(checker, /surface: "npm"/);
+  assert.match(checker, /surface: "releases"/);
+  assert.match(checker, /registry\.npmjs\.org/);
+  assert.match(checker, /api\.github\.com/);
+});
+
+test("an unreachable surface is not counted as drift", () => {
+  // A registry or API blip reporting as a stale release is how a check gets
+  // muted, and then it is not there on the day it matters.
+  assert.match(checker, /state: "unreachable"/);
+  // Read the FAIL_STATES set literal itself. An earlier version of this
+  // assertion used a proximity regex and matched the explanatory comment
+  // sitting next to the set, which is a test that reports on prose.
+  const literal = /const FAIL_STATES = new Set\(\[([^\]]*)\]\)/.exec(checker);
+  assert.ok(literal, "FAIL_STATES must be a plain Set literal this test can read");
+  const states = literal[1].split(",").map((t) => t.trim().replace(/^"|"$/g, "")).filter(Boolean);
+  assert.ok(!states.includes("unreachable"), `'unreachable' must not be a failing state: ${states}`);
+  assert.ok(states.includes("BEHIND") && states.includes("UNPUBLISHED") && states.includes("UNTAGGED"));
+  // A 404 from the registry IS drift: the package was never published.
+  assert.match(checker, /HTTP 404/);
+  assert.match(checker, /UNPUBLISHED/);
 });
 
 test("the checker fails when a published version is behind, and only then", () => {

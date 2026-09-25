@@ -129,10 +129,21 @@ credentials:
 npm run check:published
 ```
 
-`.github/workflows/85-published-drift.yml` runs that daily. It compares
-published versions to this repository's and fails only when something
-published is BEHIND, so an ordinary merge does not make it red. It holds no
-production credential; publishing is still an owner act.
+`.github/workflows/85-published-drift.yml` runs that daily. It compares THREE
+release surfaces to this repository and fails only when one is BEHIND, so an
+ordinary merge does not make it red. It holds no production credential;
+publishing is still an owner act.
+
+| Surface | What it is | How it is fixed |
+|---------|------------|-----------------|
+| site | `standard.rand0m.ai`, the canonical text and factor tables | `npm run publish:site` |
+| npm | what `npm i @randomknights/...` installs | owner; see `.github/workflows/npm-publish.yml` |
+| releases | the citable tag per ratified version | owner; annotated tag, per the tagging note in `spec/methodology.md` |
+
+A standard is not published until all three agree. The check watched the site
+alone until 2026-09-25, when an outside reader found npm serving AiEDs 2.3.0
+and the releases stopped at v2.0.0 while the site was correctly on 2.4.0. The
+site check was green the whole time.
 
 `npm test` in `spec/` runs `test/site-output.test.mjs`, which rebuilds the
 tree and refuses if any served file is not byte-identical to its repo source

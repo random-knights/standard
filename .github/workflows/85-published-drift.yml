@@ -1,7 +1,7 @@
 name: 85-published-drift
 
-# Is standard.rand0m.ai actually serving the versions this repository has
-# ratified?
+# Are the versions this repository has ratified actually reachable on every
+# surface a consumer uses: the published site, npm, and GitHub releases?
 #
 # WHY: `firebase deploy --only hosting:standard` publishes
 # `.firebase/standard-site`, a GITIGNORED build output. A deploy run without
@@ -9,6 +9,13 @@ name: 85-published-drift
 # hosting URL and exits 0. On 2026-09-24 AiEDs 2.4.0 merged as PR #75, the
 # deploy ran, and the site kept serving 2.3.0 from a tree built the night
 # before. Nothing failed. A step had been skipped and the skip was invisible.
+#
+# IT WATCHES THREE SURFACES, because a standard is not published until all
+# three agree. It used to watch the site alone. On 2026-09-25 an agent on an
+# external machine reported AiEDs version drift; most of its reading was
+# wrong, but checking it found npm serving 2.3.0 and GitHub releases stopped
+# at v2.0.0 while the site was correctly on 2.4.0. The site check was green
+# throughout. An outsider found that before we did.
 #
 # THIS WORKFLOW HOLDS NO PRODUCTION CREDENTIAL, and that is deliberate.
 # CONTRIBUTING.md states production is a separate owner-only deploy and that
@@ -35,6 +42,7 @@ on:
     # cannot make the published site stale, so it should not run this.
     paths:
       - "spec/v2/standard-versions.json"
+      - "packages/*/package.json"
       - "spec/methodology.md"
       - "eplus/v1/methodology.md"
       - "K13.md"
@@ -50,14 +58,18 @@ concurrency:
 
 jobs:
   drift:
-    name: Published site is not behind this checkout
+    name: No release surface is behind this checkout
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 20
-      - name: Compare published versions to the repository
+      - name: Compare site, npm and releases to the repository
+        env:
+          # Only to avoid the unauthenticated GitHub API rate limit. The repo
+          # is public; nothing here needs a privileged token.
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set +e
           node scripts/check-published-site.mjs
@@ -67,10 +79,10 @@ jobs:
           # a network blip on a scheduled run. That is not publication drift
           # and must not be reported as it, or the real signal gets tuned out.
           if [ "$code" = "2" ]; then
-            echo "::warning::standard.rand0m.ai could not be read; nothing was compared."
+            echo "::warning::a release surface could not be read; nothing was compared."
             exit 0
           fi
           if [ "$code" != "0" ]; then
-            echo "::error::The published site is behind this checkout. Publish with 'npm run publish:site' from a clean checkout of main, owner identity only."
+            echo "::error::A release surface is behind this checkout. See the run log: the site is fixed with 'npm run publish:site'; npm and releases are owner actions."
           fi
           exit "$code"
