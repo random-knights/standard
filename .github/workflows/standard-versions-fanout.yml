@@ -109,7 +109,7 @@ jobs:
             .github
             abc
             r1-01
-            xyz-earth
+            earth
 
       - name: Open a pull request in each consumer
         env:
@@ -124,12 +124,18 @@ jobs:
           AIEDS_SOURCE="$PWD/.standard-sync/aieds"
           BRANCH=chore/standard-versions
 
+          # RENAMED 2026-09-25: xyz-earth -> earth. BOTH the app-token
+          # `repositories:` list above and this triple had to move. A stale
+          # name here does NOT go red: github.com redirects the clone, so the
+          # fan-out keeps working while carrying a dead target name, and the
+          # third field must also match a real aieds/blocks/<name>.md in the
+          # .github repository (sync-aieds.mjs resolves blocks/${repo}.md).
           # repo:readme:aieds-block triples. .github renders both blocks on the
           # org profile page, not on its own README, and its AiEDs block is the
           # ORGANISATION one. That block is filed under `organisation` and not
           # under `org`, because org IS a repository here and the collision put
           # one repo's figures on the public front page as the whole company's.
-          TARGETS=".github:profile/README.md:organisation abc:README.md:abc r1-01:README.md:r1-01 xyz-earth:README.md:xyz-earth"
+          TARGETS=".github:profile/README.md:organisation abc:README.md:abc r1-01:README.md:r1-01 earth:README.md:earth"
 
           for entry in $TARGETS; do
             repo="${entry%%:*}"
