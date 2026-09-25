@@ -105,14 +105,34 @@ the served bytes match before the run is called green. It is reachable at
 `https://abc-standard-rand0m-ai.web.app` and at the custom hostname
 `https://stg.standard.rand0m.ai`.
 
-Production remains a separate, owner-only deploy. Deploy from a clean
-checkout of `main`, owner identity only:
+Production remains a separate, owner-only deploy. From a clean checkout of
+`main`, owner identity only:
 
 ```
-node scripts/build-site.mjs
-cd spec && npm test && cd ..
-firebase deploy --only hosting:standard --project randomknights-xyz
+npm run publish:site
 ```
+
+That runs the build, the gate, the deploy and a verification of the LIVE site,
+in that order, and stops at the first failure.
+
+RUN IT AS ONE COMMAND. The three steps it wraps used to be copied out
+separately, and on 2026-09-24 only the last one was. `hosting:standard`
+publishes `.firebase/standard-site`, a GITIGNORED build output, so a deploy
+without `scripts/build-site.mjs` first re-ships the tree that was last built
+locally, prints a hosting URL and exits 0. AiEDs 2.4.0 had merged; the site
+kept serving 2.3.0, and nothing anywhere said so.
+
+To check whether the live site is behind this checkout, at any time, with no
+credentials:
+
+```
+npm run check:published
+```
+
+`.github/workflows/85-published-drift.yml` runs that daily. It compares
+published versions to this repository's and fails only when something
+published is BEHIND, so an ordinary merge does not make it red. It holds no
+production credential; publishing is still an owner act.
 
 `npm test` in `spec/` runs `test/site-output.test.mjs`, which rebuilds the
 tree and refuses if any served file is not byte-identical to its repo source

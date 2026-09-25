@@ -1,0 +1,76 @@
+name: 85-published-drift
+
+# Is standard.rand0m.ai actually serving the versions this repository has
+# ratified?
+#
+# WHY: `firebase deploy --only hosting:standard` publishes
+# `.firebase/standard-site`, a GITIGNORED build output. A deploy run without
+# `scripts/build-site.mjs` first re-ships the previously built tree, prints a
+# hosting URL and exits 0. On 2026-09-24 AiEDs 2.4.0 merged as PR #75, the
+# deploy ran, and the site kept serving 2.3.0 from a tree built the night
+# before. Nothing failed. A step had been skipped and the skip was invisible.
+#
+# THIS WORKFLOW HOLDS NO PRODUCTION CREDENTIAL, and that is deliberate.
+# CONTRIBUTING.md states production is a separate owner-only deploy and that
+# there is no production release workflow here on purpose. This does not
+# change that: it reads a public URL and a committed file, notices when the
+# published site has fallen behind, and says so. Publishing stays the owner's
+# act.
+#
+# IT COMPARES VERSIONS, NOT BYTES. main moves on every merge while publishing
+# is deliberately occasional, so a byte comparison would sit red as a matter
+# of course and be ignored within a week. Comparing published semver to repo
+# semver is quiet for ordinary merges and loud for exactly the failure that
+# occurred: a ratified standard that never reached the site.
+
+on:
+  schedule:
+    # 06:40 UTC daily. After the other morning jobs, so a failure here reads
+    # as "publication is stale", not as noise inside a deploy window.
+    - cron: "40 6 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    # Only when a version could actually have moved. A prose or tooling commit
+    # cannot make the published site stale, so it should not run this.
+    paths:
+      - "spec/v2/standard-versions.json"
+      - "spec/methodology.md"
+      - "eplus/v1/methodology.md"
+      - "K13.md"
+      - "scripts/check-published-site.mjs"
+      - ".github/workflows/85-published-drift.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: published-drift
+  cancel-in-progress: true
+
+jobs:
+  drift:
+    name: Published site is not behind this checkout
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Compare published versions to the repository
+        run: |
+          set +e
+          node scripts/check-published-site.mjs
+          code=$?
+          set -e
+          # Exit 2 is "the site could not be read at all" - an outage, DNS, or
+          # a network blip on a scheduled run. That is not publication drift
+          # and must not be reported as it, or the real signal gets tuned out.
+          if [ "$code" = "2" ]; then
+            echo "::warning::standard.rand0m.ai could not be read; nothing was compared."
+            exit 0
+          fi
+          if [ "$code" != "0" ]; then
+            echo "::error::The published site is behind this checkout. Publish with 'npm run publish:site' from a clean checkout of main, owner identity only."
+          fi
+          exit "$code"
