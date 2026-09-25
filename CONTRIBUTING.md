@@ -81,7 +81,7 @@ inside `@randomknights/aieds`, and the E+ checker only inside
 2. Bump the version in `packages/<name>/package.json` to the version of the
    standard it carries, on `main`, via PR. npm refuses to publish over an
    existing version.
-3. Publish with the `npm publish` workflow
+3. STAGE it with the `npm publish` workflow
    (`.github/workflows/npm-publish.yml`, manual dispatch from `main`, choose
    the package). It uses npm trusted publishing with provenance; there is no
    npm token anywhere. It runs only once the repository variable
@@ -90,6 +90,28 @@ inside `@randomknights/aieds`, and the E+ checker only inside
    its trusted publisher. A package's very first version is published by the
    owner by hand, because a trusted publisher can only be added to a package
    that already exists.
+4. PROMOTE it. The workflow runs `npm stage publish`, so a green run has
+   staged the version, not published it. Nothing is on the registry until the
+   owner approves:
+
+   ```
+   npm stage list @randomknights/<name>
+   npm stage approve <stage-id>     # prompts for 2FA
+   npm stage reject  <stage-id>     # discards it instead
+   ```
+
+5. Confirm: `npm run check:published` should report every surface `ok`.
+
+WHY TWO STEPS. The trusted publisher is deliberately configured WITHOUT "allow
+direct publish", which is npm's own recommendation. CI builds the tarball and
+proves it; a human decides it ships. `npm stage approve` requires 2FA and so
+cannot be done by a workflow, which is what makes the gate real rather than a
+convention.
+
+An unchecked box does NOT reroute a direct publish to staging, it refuses it:
+on 2026-09-25 this workflow still ran `npm publish` and failed with
+`403 OIDC permission denied for this action`. The gate was right; the command
+was wrong.
 
 Publishing is owner-only.
 
