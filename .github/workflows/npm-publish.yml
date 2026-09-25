@@ -20,7 +20,11 @@
 # Actions -> Variables): NPM_TRUSTED_PUBLISHING = enabled.
 #
 # A version is published once. Bump the version in packages/<name>/package.json
-# on main first; npm refuses to publish over an existing version.
+# on main first; npm refuses to publish over an existing version, and a STAGED
+# version occupies that version number too.
+#
+# THIS JOB STAGES; IT DOES NOT PUBLISH. The owner promotes with
+# `npm stage approve <stage-id>`, which requires 2FA. See the publish step.
 name: npm publish
 
 on:
@@ -71,5 +75,34 @@ jobs:
       - name: Check the tarballs
         run: node scripts/check-npm-packages.mjs
 
-      - name: Publish with provenance
-        run: cd "packages/${{ inputs.package }}" && npm publish --provenance --access public
+      # STAGE, not publish. The trusted publisher on npmjs.com is configured
+      # WITHOUT "allow direct publish", which is npm's own recommendation and
+      # matches the rule that a release is an owner act. Unchecked does not
+      # silently reroute a direct publish to staging: it refuses it. Run
+      # 36085426416 on 2026-09-25 failed with
+      #   403 Forbidden - PUT .../@randomknights%2faieds
+      #   OIDC permission denied for this action
+      # because this step ran `npm publish`. `npm stage publish` has parity
+      # with `npm publish` and takes the same flags.
+      #
+      # The staged version is then promoted by the owner with
+      #   npm stage approve <stage-id>
+      # which requires 2FA and therefore CANNOT be done by this job. That is
+      # the gate, not an inconvenience: CI builds and proves the tarball, a
+      # human decides it ships.
+      - name: Stage for publication, with provenance
+        run: cd "packages/${{ inputs.package }}" && npm stage publish --provenance --access public
+
+      - name: How to promote what this run staged
+        run: |
+          echo "Staged @randomknights/${{ inputs.package }}."
+          echo ""
+          echo "Nothing is on the registry yet. To promote it, as the owner:"
+          echo "  npm stage list @randomknights/${{ inputs.package }}"
+          echo "  npm stage approve <stage-id>        # prompts for 2FA"
+          echo ""
+          echo "To discard it instead:"
+          echo "  npm stage reject <stage-id>"
+          echo ""
+          echo "Then confirm every release surface agrees:"
+          echo "  npm run check:published"
