@@ -40,6 +40,22 @@
 name: Standard versions fan-out
 
 on:
+  # THE EVENT IS THE VERSIONS FILE MOVING, NOT A RELEASE. Added 2026-09-28.
+  # Until then this ran on `release: published` and manual dispatch only, so
+  # K13 2.1.0 (2026-09-22, #69) and AiEDs 2.4.0 (2026-09-24, #75) both landed
+  # on main without fanning out: no release was cut for either. Four consumer
+  # READMEs then advertised superseded versions for a week and the scheduled
+  # drift check in random-knights/.github went red every Monday with nobody
+  # able to fix it from inside their own repo, which is the failure mode the
+  # drift check exists to prevent rather than to cause.
+  #
+  # The path filter is the whole point: this file is generated and gated by
+  # spec/test/standard-versions.test.mjs, so a push that changes it IS a
+  # version move, and a push that does not cannot need a fan-out.
+  push:
+    branches: [main]
+    paths:
+      - spec/v2/standard-versions.json
   release:
     types: [published]
   workflow_dispatch:
@@ -137,23 +153,33 @@ jobs:
           # one repo's figures on the public front page as the whole company's.
           TARGETS=".github:profile/README.md:organisation abc:README.md:abc r1-01:README.md:r1-01 earth:README.md:earth"
 
-          for entry in $TARGETS; do
-            repo="${entry%%:*}"
-            rest="${entry#*:}"
-            readme="${rest%%:*}"
-            block="${rest#*:}"
-            echo "::group::$repo"
+          # ONE REPOSITORY'S FAILURE MUST NOT HIDE THE REST. Restructured
+          # 2026-09-28. This was a straight `for` loop under `set -e`, so the
+          # first repo that failed killed the whole step: on 2026-09-22 the
+          # push to `abc` was rejected and r1-01 and earth were never attempted
+          # at all. Their READMEs then sat on superseded versions for six days
+          # while the only evidence was one red run that named a different
+          # repository. A fan-out that stops at the first problem reports the
+          # problem it hit, not the state of the fleet.
+          #
+          # The body is a subshell function, so `cd` cannot leak between
+          # repositories and a failure is contained to the repository that had
+          # it. Every repository is still attempted; the step goes red at the
+          # end, naming all of them.
+          sync_one() (
+            set -e
+            repo="$1"
+            readme="$2"
+            block="$3"
             work="$(mktemp -d)"
             if [ "$CONFIGURED" != "true" ]; then
               echo "App not configured; would have checked $repo ($readme)."
-              echo "::endgroup::"
-              continue
+              exit 0
             fi
             git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/random-knights/${repo}.git" "$work"
             if ! node "$SYNC" --write --source "$VERSIONS" "$work/$readme"; then
               echo "::error::$repo: $readme could not be rewritten (missing STANDARD markers?)"
-              echo "::endgroup::"
-              continue
+              exit 0
             fi
             # Exit 2 from the AiEDs sync means a real problem, and the only one
             # a consumer can have here is "no AIEDS markers yet", which is an
@@ -169,16 +195,12 @@ jobs:
             cd "$work"
             if git diff --quiet -- "$readme"; then
               echo "$repo: already in sync"
-              cd - >/dev/null
-              echo "::endgroup::"
-              continue
+              exit 0
             fi
             if [ "$DRY_RUN" = "true" ]; then
               echo "$repo: WOULD open a pull request:"
               git --no-pager diff -- "$readme"
-              cd - >/dev/null
-              echo "::endgroup::"
-              continue
+              exit 0
             fi
             git config user.name "standard-sync[bot]"
             git config user.email "329637049+standard-sync[bot]@users.noreply.github.com"
@@ -198,13 +220,46 @@ jobs:
 
           Opened by standard-sync[bot].
           MSG
-            git push --force-with-lease origin "$BRANCH"
+            # A BARE --force-with-lease CANNOT WORK FROM THIS CLONE, and that
+            # is what broke the 2026-09-22 run. The lease is taken against the
+            # remote-tracking ref for $BRANCH, but the clone above is
+            # --depth 1 of the default branch and has never fetched $BRANCH,
+            # so there is no such ref and git refuses with "stale info". It
+            # only shows up on the SECOND fan-out into a repo, once the branch
+            # from the first one still exists, which is why this passed on
+            # 2026-09-18 and failed four days later.
+            #
+            # Reading the expected value explicitly keeps the safety the lease
+            # is for: if someone has pushed to the bot's branch since this
+            # line ran, the push still refuses rather than discarding it.
+            if remote_sha=$(git ls-remote --exit-code --heads origin "$BRANCH" 2>/dev/null | cut -f1); then
+              git push --force-with-lease="$BRANCH:$remote_sha" origin "$BRANCH"
+            else
+              git push origin "$BRANCH"
+            fi
             if ! gh pr view "$BRANCH" --repo "random-knights/$repo" --json number >/dev/null 2>&1; then
               gh pr create --repo "random-knights/$repo" \
                 --head "$BRANCH" \
                 --title "chore(readme): sync the generated README blocks" \
                 --body "This regenerates the generated blocks in $readme: the STANDARD version table from the versions published at https://standard.rand0m.ai/versions.json, and the AiEDs disclosure block from the blocks published in random-knights/.github. Both are generated, neither was hand-edited, and a guard fails a README where one has drifted. The bot does not merge; review and merge when you are happy."
             fi
-            cd - >/dev/null
+          )
+
+          failed=""
+          for entry in $TARGETS; do
+            repo="${entry%%:*}"
+            rest="${entry#*:}"
+            readme="${rest%%:*}"
+            block="${rest#*:}"
+            echo "::group::$repo"
+            if ! sync_one "$repo" "$readme" "$block"; then
+              echo "::error::$repo: fan-out failed for this repository. The remaining repositories were still attempted."
+              failed="$failed $repo"
+            fi
             echo "::endgroup::"
           done
+
+          if [ -n "$failed" ]; then
+            echo "::error::fan-out failed for:$failed"
+            exit 1
+          fi
