@@ -1,0 +1,592 @@
+{
+  "$comment": "Canonical AiEDs factor data. This file is the single source of truth for every coefficient the AiEDs tooling emits. The TypeScript packages read it directly; the Dart package mirrors it as compile-time constants and is gated against a vendored copy by test. Editing a value here is a methodology change: bump methodology.md and its changelog in the same commit (methodology.md section 6).",
+  "schemaVersion": 1,
+  "methodologyVersion": "2.4.0",
+  "impactModelVersion": "v2",
+  "constants": {
+    "matureReferenceTreeCo2eGramsPerYear": {
+      "value": 21000,
+      "unit": "gCO2e/year",
+      "methodologySection": "2.5.1",
+      "provenance": "class-estimated",
+      "citation": "McPherson, E. G.; van Doorn, N. S.; Peper, P. J. (2016). Urban tree database and allometric equations. Gen. Tech. Rep. PSW-GTR-253. USDA Forest Service, Pacific Southwest Research Station, as surfaced by the EPA Greenhouse Gas Equivalencies Calculator: https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references",
+      "referenceObject": "One mature, healthy, temperate broadleaf or coniferous tree in steady-state growth, sequestering on its own account. NOT mortality-discounted, NOT averaged over juvenile years, NOT a planting-program unit.",
+      "publishedRange": {
+        "min": 10000,
+        "max": 40000,
+        "centralTendency": 25000,
+        "unit": "gCO2/year",
+        "note": "Single-tree sequestration varies about 4x with species, age, soil, light and climate. Published to show the width of the pin, NOT so an implementation can choose within it. Implementations MUST use value (21000)."
+      },
+      "notComparableTo": "Per-tree-PLANTED figures such as the EPA calculator's 0.060 metric tons CO2/tree/year, which is about 3x this value because it is a different object: a 10-year horizon, a 59 percent survival discount, and an 11/89 coniferous/deciduous weighting. MUST NOT be substituted. Tree-Time MUST NOT be presented as a number of trees to plant; that is an offset claim, which methodology section 1.1 forbids.",
+      "note": "One Mature Reference Tree (MRT). Unified at 21 kg in methodology 2.0.0; 1.x used 22 kg. Defined, cited and bounded in 2.4.0. 21 kg CO2e equals 21 kg CO2 because CO2 has a GWP of exactly 1, so this denominator and the CO2e numerator are in the same unit. The value sits BELOW the central tendency on purpose: Tree-Time divides by it, so a lower denominator yields more tree-minutes and overstates the disclosed impact, which is the conservative direction and the same bias methodology section 2.1 states for using TDP as an upper bound. Commercial tree-planting and carbon-offset vendors publish figures in this range and are NOT cited: a seller's estimate of what its product absorbs is not an independent measurement."
+    },
+    "minutesPerYear": {
+      "value": 525600,
+      "unit": "minutes",
+      "methodologySection": "2.5"
+    }
+  },
+  "gridIntensity": {
+    "$comment": "TWO normative values for one physical quantity, deliberately split by methodology 2.4. They are NOT interchangeable: each applies to a different derivation path. See the finding filed with this lane.",
+    "responseSurfacePinned": {
+      "value": 429,
+      "unit": "gCO2e/kWh",
+      "methodologySection": "2.4",
+      "appliesTo": "response-surface path (section 2.4)",
+      "provenance": "project-modeled-constant",
+      "citation": null,
+      "note": "Pinned app-surface modeled global grid intensity. The shipped rand0m.ai app has disclosed with this value since AiEDs v1, so the standard follows the shipped number. This is a project modeled constant and carries no external citation."
+    },
+    "tableGlobalAverage": {
+      "value": 436,
+      "unit": "gCO2e/kWh",
+      "methodologySection": "3, Table 3",
+      "appliesTo": "compute paths (sections 2.1, 2.2, 2.3) when region is unknown",
+      "provenance": "cited",
+      "citation": "IEA World Energy Outlook 2023"
+    }
+  },
+  "responseSurface": {
+    "methodologySection": "2.4",
+    "formula": [
+      "energyWh = inTok/1000 * whPer1kIn + outTok/1000 * whPer1kOut",
+      "energyWh = energyWh * pue",
+      "gCO2e = energyWh/1000 * gridIntensity.responseSurfacePinned",
+      "treeTimeMinutes = gCO2e / matureReferenceTreeCo2eGramsPerYear * minutesPerYear"
+    ],
+    "splitAssumption": "split assumption: median exchange ~1000 in + 250 out tokens, output 4x input per token",
+    "confidenceTiers": [
+      "measured",
+      "vendor-published",
+      "class-estimated",
+      "unknown"
+    ],
+    "profiles": [
+      {
+        "matchPrefixes": [
+          "gemini"
+        ],
+        "whPer1kIn": 0.12,
+        "whPer1kOut": 0.48,
+        "pue": 1,
+        "confidence": "vendor-published",
+        "citation": "Google (Aug 2025): median Gemini Apps text prompt = 0.24 Wh, 0.03 gCO2e (arxiv.org/abs/2508.15734, \"Measuring the environmental impact of delivering AI\"); split assumption: median exchange ~1000 in + 250 out tokens, output 4x input per token."
+      },
+      {
+        "matchPrefixes": [
+          "gpt",
+          "o1",
+          "o3",
+          "o4",
+          "chatgpt"
+        ],
+        "whPer1kIn": 0.17,
+        "whPer1kOut": 0.68,
+        "pue": 1,
+        "confidence": "vendor-published",
+        "citation": "OpenAI / S. Altman blog \"The Gentle Singularity\" (Jun 2025): average ChatGPT query ~0.34 Wh (blog-grade figure, no methodology published); split assumption: median exchange ~1000 in + 250 out tokens, output 4x input per token."
+      },
+      {
+        "matchPrefixes": [
+          "claude"
+        ],
+        "whPer1kIn": 0.145,
+        "whPer1kOut": 0.58,
+        "pue": 1.2,
+        "confidence": "class-estimated",
+        "citation": "No Anthropic-published per-query figure as of 2026-01. Class estimate: midpoint of the two published frontier figures (0.24 Wh Google, 0.34 Wh OpenAI) = 0.29 Wh/prompt; split assumption: median exchange ~1000 in + 250 out tokens, output 4x input per token; PUE 1.2 (hyperscaler class)."
+      },
+      {
+        "matchPrefixes": [
+          "grok"
+        ],
+        "whPer1kIn": 0.145,
+        "whPer1kOut": 0.58,
+        "pue": 1.2,
+        "confidence": "unknown",
+        "citation": "No xAI-published figure found. UNKNOWN: falls back to the frontier-class estimate (see claude entry); treat as order-of-magnitude only."
+      }
+    ],
+    "unknownProfile": {
+      "matchPrefixes": [],
+      "whPer1kIn": 0.145,
+      "whPer1kOut": 0.58,
+      "pue": 1.2,
+      "confidence": "unknown",
+      "citation": "Model not in the coefficient table. UNKNOWN: frontier-class estimate (midpoint of published 0.24-0.34 Wh/prompt figures, output 4x input, PUE 1.2); order-of-magnitude only."
+    }
+  },
+  "computePaths": {
+    "hardwareTdp": {
+      "methodologySection": "2.1, Table 1",
+      "unit": "W",
+      "defaultPowerW": 400,
+      "entries": [
+        {
+          "id": "NVIDIA H100 SXM",
+          "label": "NVIDIA H100 SXM",
+          "description": "NVIDIA H100 SXM5 80GB",
+          "powerW": 700,
+          "source": "NVIDIA datasheet 2023"
+        },
+        {
+          "id": "NVIDIA H100 PCIe",
+          "label": "NVIDIA H100 PCIe",
+          "description": "NVIDIA H100 PCIe 80GB",
+          "powerW": 350,
+          "source": "NVIDIA datasheet 2023"
+        },
+        {
+          "id": "NVIDIA A100 SXM",
+          "label": "NVIDIA A100 SXM",
+          "description": "NVIDIA A100 SXM4 80GB",
+          "powerW": 400,
+          "source": "NVIDIA datasheet 2021"
+        },
+        {
+          "id": "NVIDIA A100 PCIe",
+          "label": "NVIDIA A100 PCIe",
+          "description": "NVIDIA A100 PCIe 80GB",
+          "powerW": 300,
+          "source": "NVIDIA datasheet 2021"
+        },
+        {
+          "id": "NVIDIA V100 SXM",
+          "label": "NVIDIA V100 SXM",
+          "description": "NVIDIA V100 SXM2 32GB",
+          "powerW": 300,
+          "source": "NVIDIA datasheet 2018"
+        },
+        {
+          "id": "NVIDIA RTX 4090",
+          "label": "NVIDIA RTX 4090",
+          "description": "NVIDIA GeForce RTX 4090",
+          "powerW": 450,
+          "source": "NVIDIA datasheet 2022"
+        },
+        {
+          "id": "NVIDIA RTX 3090",
+          "label": "NVIDIA RTX 3090",
+          "description": "NVIDIA GeForce RTX 3090",
+          "powerW": 350,
+          "source": "NVIDIA datasheet 2020"
+        },
+        {
+          "id": "NVIDIA L40S",
+          "label": "NVIDIA L40S",
+          "description": "NVIDIA L40S 48GB",
+          "powerW": 350,
+          "source": "NVIDIA datasheet 2023"
+        },
+        {
+          "id": "NVIDIA A40",
+          "label": "NVIDIA A40",
+          "description": "NVIDIA A40 48GB",
+          "powerW": 300,
+          "source": "NVIDIA datasheet 2020"
+        },
+        {
+          "id": "Google TPU v4",
+          "label": "Google TPU v4 (per chip)",
+          "description": "Google TPU v4 (per chip)",
+          "powerW": 170,
+          "source": "Google Cloud 2023"
+        },
+        {
+          "id": "Google TPU v5e",
+          "label": "Google TPU v5e (per chip)",
+          "description": "Google TPU v5e (per chip)",
+          "powerW": 200,
+          "source": "Google Cloud 2024"
+        }
+      ]
+    },
+    "flop": {
+      "methodologySection": "2.2",
+      "joulesPerTflop": 0.35,
+      "note": "Representative for FP16/BF16 on A100/H100 class hardware."
+    },
+    "tokenProxy": {
+      "methodologySection": "2.3, Table 2",
+      "unit": "Wh per million tokens",
+      "defaultScale": "medium",
+      "entries": [
+        {
+          "scale": "small",
+          "parameters": "< 7B",
+          "whPerMillionTokens": 100
+        },
+        {
+          "scale": "medium",
+          "parameters": "7B to 70B",
+          "whPerMillionTokens": 500
+        },
+        {
+          "scale": "large",
+          "parameters": "> 70B",
+          "whPerMillionTokens": 2000
+        }
+      ]
+    },
+    "gridByRegion": {
+      "methodologySection": "3, Table 3",
+      "unit": "gCO2e/kWh",
+      "basis": "2023 market average",
+      "defaultRegion": "global_average",
+      "entries": [
+        {
+          "region": "global_average",
+          "gCO2ePerKWh": 436,
+          "source": "IEA World Energy Outlook 2023"
+        },
+        {
+          "region": "US",
+          "gCO2ePerKWh": 386,
+          "source": "EPA eGRID 2023"
+        },
+        {
+          "region": "EU27",
+          "gCO2ePerKWh": 276,
+          "source": "EEA 2023"
+        },
+        {
+          "region": "UK",
+          "gCO2ePerKWh": 233,
+          "source": "DESNZ 2023"
+        },
+        {
+          "region": "France",
+          "gCO2ePerKWh": 85,
+          "source": "RTE 2023"
+        },
+        {
+          "region": "Germany",
+          "gCO2ePerKWh": 385,
+          "source": "UBA 2023"
+        },
+        {
+          "region": "Poland",
+          "gCO2ePerKWh": 746,
+          "source": "KOBiZE 2023"
+        },
+        {
+          "region": "China",
+          "gCO2ePerKWh": 530,
+          "source": "IEA 2023"
+        },
+        {
+          "region": "India",
+          "gCO2ePerKWh": 713,
+          "source": "CEA 2023"
+        },
+        {
+          "region": "Japan",
+          "gCO2ePerKWh": 463,
+          "source": "IEA 2023"
+        },
+        {
+          "region": "Canada",
+          "gCO2ePerKWh": 130,
+          "source": "CER 2023"
+        },
+        {
+          "region": "Australia",
+          "gCO2ePerKWh": 590,
+          "source": "DISER 2023"
+        },
+        {
+          "region": "Sweden",
+          "gCO2ePerKWh": 45,
+          "source": "Swedish Energy Agency 2023"
+        },
+        {
+          "region": "Norway",
+          "gCO2ePerKWh": 29,
+          "source": "NVE 2023"
+        }
+      ]
+    }
+  },
+  "humanEquivalencies": {
+    "methodologySection": "2.5",
+    "note": "Level 3. Educational comparisons only. Never offsets, credits, certifications or restoration claims.",
+    "phoneChargeWh": 12,
+    "ledBulbWatts": 10,
+    "laptopWatts": 50,
+    "carDrivingGramsCo2ePerKm": 170
+  },
+  "measuredDevices": {
+    "methodologySection": "2.3.1, Table 4; prefill bands 2.3.2, Table 4b",
+    "unit": "a in Wh per request, b in Wh per token; band figures in Wh per million tokens",
+    "model": "energyWh = a + b * tokens, fitted per phase and per device; prefill published as a per-prompt-length-band distribution where the affine fit is mis-specified (see each entry's prefill.bands)",
+    "scopeFence": "A measured device coefficient describes only the hardware, runtime, model and quantization it names. It MUST NOT be applied to any other system, and in particular MUST NOT be applied to hosted inference.",
+    "note": "A per-request fixed cost `a` is a NEW disclosure shape. The AiEDs per-token paths in sections 2.1 to 2.4 cannot express it, which is why a single Wh-per-million-tokens figure measured on real hardware came out with an interquartile range wider than its own median. Hosted calls have no measured intercept and remain class-estimated with low confidence. Where prefill's affine fit is mis-specified, no single coefficient is published; the phase is reported as a per-band median and interquartile range instead (methodology 2.3.2).",
+    "entries": [
+      {
+        "id": "rtx-3060-laptop-gpu-ollama-0-34-0-llama3-2-1b-q8-0",
+        "hardware": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "acceleratorDriver": "527.99",
+        "enforcedPowerLimitW": 60,
+        "hostCpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "hostRamGb": 15.4,
+        "os": "Microsoft Windows 11 Home 10.0.26200 build 26200",
+        "runtime": "Ollama 0.34.0",
+        "model": "llama3.2:1b",
+        "architecture": "llama",
+        "parameters": "1.2B",
+        "quantization": "Q8_0",
+        "contextLength": "8192",
+        "batchSize": 1,
+        "measurementScope": "dGPU board power only (nvidia-smi power.draw). Host CPU, system memory and the integrated GPU are NOT measured.",
+        "instrumentAccuracy": "nvidia-smi --help-query-gpu, driver 527.99: power.draw is the last measured power draw for the entire board, accurate to within +/- 5 watts.",
+        "samplingIntervalMs": 16,
+        "idleBaselineW": 13.229,
+        "idleBaselineBasis": "Loaded idle: model resident in VRAM, no request in flight, 60 s. Unloaded idle measured 13.486 W over 60 s; the difference is below this instrument's stated accuracy, so VRAM residency cost is not resolvable here.",
+        "unloadedIdleW": 13.486,
+        "tailExcluded": true,
+        "tailShareOfRequestPctMedian": 29.86,
+        "tailNote": "Both phase fits EXCLUDE the post-response power decay, which is real energy caused by the request but falls in neither phase window. Its median share of a request's net energy is published here so the size of the omission is a number rather than a caveat.",
+        "phases": {
+          "prefill": {
+            "status": "published-by-band",
+            "runs": 36,
+            "degreesOfFreedom": 34,
+            "r2": 0.966145,
+            "residualStandardErrorJoules": 7.557968,
+            "absResidualVsTokensPearson": -0.533943,
+            "curvatureSignificant": true,
+            "curvaturePValue": 0,
+            "method": "ordinary least squares, energy_joules = a + b * tokens",
+            "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+            "reason": "The affine two-term model is MIS-SPECIFIED for prefill on this device. A quadratic term in tokens is significant, so energy is convex in token count rather than affine, and the fitted intercept is not a fixed per-request cost: it is whatever a straight line needs at zero tokens to compensate for the curvature. On these data that line predicts NEGATIVE energy inside the observed range, which is not physical. No single coefficient is published for this phase.",
+            "bandNote": "No single a/b coefficient is published for this phase; see bands below. Each band reports the median and interquartile range of Wh per million tokens observed at that prompt length, not a fitted line.",
+            "bandUnit": "Wh per million tokens",
+            "bands": [
+              {
+                "band": "short",
+                "lowerBoundTokens": 0,
+                "upperBoundTokens": 256,
+                "runs": 12,
+                "promptTokensObservedMin": 252,
+                "promptTokensObservedMax": 252,
+                "medianWhPerMillionTokens": 2.474,
+                "q1WhPerMillionTokens": 1.163,
+                "q3WhPerMillionTokens": 3.591,
+                "iqrWhPerMillionTokens": 2.429,
+                "minWhPerMillionTokens": 0.485,
+                "maxWhPerMillionTokens": 4.185
+              },
+              {
+                "band": "medium",
+                "lowerBoundTokens": 256,
+                "upperBoundTokens": 2048,
+                "runs": 12,
+                "promptTokensObservedMin": 1528,
+                "promptTokensObservedMax": 1528,
+                "medianWhPerMillionTokens": 2.848,
+                "q1WhPerMillionTokens": 2.7,
+                "q3WhPerMillionTokens": 2.894,
+                "iqrWhPerMillionTokens": 0.194,
+                "minWhPerMillionTokens": 1.987,
+                "maxWhPerMillionTokens": 3.129
+              },
+              {
+                "band": "long",
+                "lowerBoundTokens": 2048,
+                "upperBoundTokens": null,
+                "runs": 12,
+                "promptTokensObservedMin": 4370,
+                "promptTokensObservedMax": 4370,
+                "medianWhPerMillionTokens": 5.897,
+                "q1WhPerMillionTokens": 5.722,
+                "q3WhPerMillionTokens": 6.015,
+                "iqrWhPerMillionTokens": 0.293,
+                "minWhPerMillionTokens": 5.579,
+                "maxWhPerMillionTokens": 6.143
+              }
+            ]
+          },
+          "decode": {
+            "status": "published",
+            "runs": 36,
+            "degreesOfFreedom": 34,
+            "r2": 0.94553,
+            "residualStandardErrorJoules": 14.090854,
+            "absResidualVsTokensPearson": 0.453742,
+            "curvatureSignificant": false,
+            "curvaturePValue": 0.910387737,
+            "method": "ordinary least squares, energy_joules = a + b * tokens",
+            "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+            "aWhPerRequest": -0.001692,
+            "aWhPerRequestCI95": [
+              -0.004049,
+              0.000665
+            ],
+            "aPValue": 0.153871,
+            "aDistinguishableFromZero": false,
+            "aNote": "NOT distinguishable from zero at 95 percent: the interval straddles zero, so this phase shows no measurable fixed per-request cost. A consumer may take a as zero and should carry the interval.",
+            "bWhPerToken": 0.000099273,
+            "bWhPerTokenCI95": [
+              0.000090969,
+              0.000107577
+            ],
+            "bWhPerMillionTokens": 99.273,
+            "bWhPerMillionTokensCI95": [
+              90.969,
+              107.577
+            ],
+            "bPValue": 0,
+            "bootstrapAWhPerRequestCI95": [
+              -0.003403,
+              -0.000106
+            ],
+            "bootstrapBWhPerTokenCI95": [
+              0.000090019,
+              0.000108517
+            ],
+            "bootstrapResamples": 10000,
+            "bootstrapSeed": 24301
+          }
+        },
+        "provenance": "measured",
+        "confidence": "high",
+        "measurementDirectory": "spec/measurements/2026-09-14-rtx-3060-laptop",
+        "measurementCommit": "d9a3f0a029ed885bb4f76eff7ed35f6a70acfe7f",
+        "citation": "Random Knights, LLC (2026). Measured on NVIDIA GeForce RTX 3060 Laptop GPU, driver 527.99, Ollama 0.34.0, llama3.2:1b Q8_0, batch size 1, context 8192. Discrete GPU board power via nvidia-smi power.draw at about 16 ms, loaded-idle baseline 13.229 W subtracted, 36 runs. Method, harness and raw samples: spec/measurements/2026-09-14-rtx-3060-laptop/README.md at commit d9a3f0a029ed885bb4f76eff7ed35f6a70acfe7f."
+      },
+      {
+        "id": "rtx-3060-laptop-gpu-ollama-0-34-0-llama3-2-latest-q4-k-m",
+        "hardware": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "acceleratorDriver": "527.99",
+        "enforcedPowerLimitW": 60,
+        "hostCpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+        "hostRamGb": 15.4,
+        "os": "Microsoft Windows 11 Home 10.0.26200 build 26200",
+        "runtime": "Ollama 0.34.0",
+        "model": "llama3.2:latest",
+        "architecture": "llama",
+        "parameters": "3.2B",
+        "quantization": "Q4_K_M",
+        "contextLength": "8192",
+        "batchSize": 1,
+        "measurementScope": "dGPU board power only (nvidia-smi power.draw). Host CPU, system memory and the integrated GPU are NOT measured.",
+        "instrumentAccuracy": "nvidia-smi --help-query-gpu, driver 527.99: power.draw is the last measured power draw for the entire board, accurate to within +/- 5 watts.",
+        "samplingIntervalMs": 16,
+        "idleBaselineW": 13.407,
+        "idleBaselineBasis": "Loaded idle: model resident in VRAM, no request in flight, 60 s. Unloaded idle measured 13.486 W over 60 s; the difference is below this instrument's stated accuracy, so VRAM residency cost is not resolvable here.",
+        "unloadedIdleW": 13.486,
+        "tailExcluded": true,
+        "tailShareOfRequestPctMedian": 14.82,
+        "tailNote": "Both phase fits EXCLUDE the post-response power decay, which is real energy caused by the request but falls in neither phase window. Its median share of a request's net energy is published here so the size of the omission is a number rather than a caveat.",
+        "phases": {
+          "prefill": {
+            "status": "published-by-band",
+            "runs": 36,
+            "degreesOfFreedom": 34,
+            "r2": 0.993897,
+            "residualStandardErrorJoules": 8.146918,
+            "absResidualVsTokensPearson": -0.410962,
+            "curvatureSignificant": true,
+            "curvaturePValue": 0,
+            "method": "ordinary least squares, energy_joules = a + b * tokens",
+            "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+            "reason": "The affine two-term model is MIS-SPECIFIED for prefill on this device. A quadratic term in tokens is significant, so energy is convex in token count rather than affine, and the fitted intercept is not a fixed per-request cost: it is whatever a straight line needs at zero tokens to compensate for the curvature. On these data that line predicts NEGATIVE energy inside the observed range, which is not physical. No single coefficient is published for this phase.",
+            "bandNote": "No single a/b coefficient is published for this phase; see bands below. Each band reports the median and interquartile range of Wh per million tokens observed at that prompt length, not a fitted line.",
+            "bandUnit": "Wh per million tokens",
+            "bands": [
+              {
+                "band": "short",
+                "lowerBoundTokens": 0,
+                "upperBoundTokens": 256,
+                "runs": 12,
+                "promptTokensObservedMin": 251,
+                "promptTokensObservedMax": 251,
+                "medianWhPerMillionTokens": 3.207,
+                "q1WhPerMillionTokens": 2.908,
+                "q3WhPerMillionTokens": 4.416,
+                "iqrWhPerMillionTokens": 1.508,
+                "minWhPerMillionTokens": 1.827,
+                "maxWhPerMillionTokens": 6.518
+              },
+              {
+                "band": "medium",
+                "lowerBoundTokens": 256,
+                "upperBoundTokens": 2048,
+                "runs": 12,
+                "promptTokensObservedMin": 1527,
+                "promptTokensObservedMax": 1527,
+                "medianWhPerMillionTokens": 11.282,
+                "q1WhPerMillionTokens": 10.696,
+                "q3WhPerMillionTokens": 11.409,
+                "iqrWhPerMillionTokens": 0.713,
+                "minWhPerMillionTokens": 10.369,
+                "maxWhPerMillionTokens": 12.165
+              },
+              {
+                "band": "long",
+                "lowerBoundTokens": 2048,
+                "upperBoundTokens": null,
+                "runs": 12,
+                "promptTokensObservedMin": 4369,
+                "promptTokensObservedMax": 4369,
+                "medianWhPerMillionTokens": 15.261,
+                "q1WhPerMillionTokens": 15.04,
+                "q3WhPerMillionTokens": 15.651,
+                "iqrWhPerMillionTokens": 0.611,
+                "minWhPerMillionTokens": 15.013,
+                "maxWhPerMillionTokens": 15.85
+              }
+            ]
+          },
+          "decode": {
+            "status": "published",
+            "runs": 36,
+            "degreesOfFreedom": 34,
+            "r2": 0.974538,
+            "residualStandardErrorJoules": 18.876011,
+            "absResidualVsTokensPearson": 0.600666,
+            "curvatureSignificant": false,
+            "curvaturePValue": 0.743138187,
+            "method": "ordinary least squares, energy_joules = a + b * tokens",
+            "intervalMethod": "t-based at 95 percent (df = n - 2) as the published interval; seeded percentile bootstrap over pairs, 10000 resamples, as a distribution-free cross-check",
+            "aWhPerRequest": -0.001838,
+            "aWhPerRequestCI95": [
+              -0.004996,
+              0.001319
+            ],
+            "aPValue": 0.244896,
+            "aDistinguishableFromZero": false,
+            "aNote": "NOT distinguishable from zero at 95 percent: the interval straddles zero, so this phase shows no measurable fixed per-request cost. A consumer may take a as zero and should carry the interval.",
+            "bWhPerToken": 0.000197467,
+            "bWhPerTokenCI95": [
+              0.000186343,
+              0.000208592
+            ],
+            "bWhPerMillionTokens": 197.467,
+            "bWhPerMillionTokensCI95": [
+              186.343,
+              208.592
+            ],
+            "bPValue": 0,
+            "bootstrapAWhPerRequestCI95": [
+              -0.004063,
+              0.00019
+            ],
+            "bootstrapBWhPerTokenCI95": [
+              0.000184942,
+              0.000210133
+            ],
+            "bootstrapResamples": 10000,
+            "bootstrapSeed": 24301
+          }
+        },
+        "provenance": "measured",
+        "confidence": "high",
+        "measurementDirectory": "spec/measurements/2026-09-14-rtx-3060-laptop",
+        "measurementCommit": "d9a3f0a029ed885bb4f76eff7ed35f6a70acfe7f",
+        "citation": "Random Knights, LLC (2026). Measured on NVIDIA GeForce RTX 3060 Laptop GPU, driver 527.99, Ollama 0.34.0, llama3.2:latest Q4_K_M, batch size 1, context 8192. Discrete GPU board power via nvidia-smi power.draw at about 16 ms, loaded-idle baseline 13.407 W subtracted, 36 runs. Method, harness and raw samples: spec/measurements/2026-09-14-rtx-3060-laptop/README.md at commit d9a3f0a029ed885bb4f76eff7ed35f6a70acfe7f."
+      }
+    ]
+  }
+}

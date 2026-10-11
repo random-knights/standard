@@ -23,3 +23,8 @@ packages/k13/K13.md
 packages/earthplus/dist/
 packages/earthplus/methodology.md
 *.tgz
+
+# The Claude Code plugin carries a vendored, compiled copy of the reference
+# library (scripts/sync-claude-plugin.mjs writes it; CI gates it). It is the one
+# dist/ that is committed on purpose.
+!plugins/random-knights/vendor/lib/dist/

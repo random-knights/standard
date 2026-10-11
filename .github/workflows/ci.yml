@@ -135,7 +135,35 @@ jobs:
           (cd packages/k13 && npm publish --dry-run)
           (cd packages/earthplus && npm publish --dry-run)
 
-  # Aggregating gate: one check that is green only when all five jobs above
+  # The Claude Code plugin (plugins/random-knights) and its marketplace
+  # (.claude-plugin/marketplace.json). The plugin carries a vendored copy of the
+  # compiled reference library, because Claude Code installs a plugin by copying
+  # its directory. This job builds lib/ and fails if that copy is not
+  # byte-identical to the build, then runs the plugin's own tests: transcript
+  # parsing, receipt math against the library, required wording, hook exit
+  # codes, and path handling. It uses no credential and publishes nothing.
+  claude-plugin:
+    name: Claude Code plugin (tests + vendored library gate)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build the reference library
+        run: cd lib && npm install && npm run build
+
+      - name: Vendored library copy is current
+        run: node scripts/sync-claude-plugin.mjs --check
+
+      - name: Plugin tests
+        run: cd plugins/random-knights && npm test
+
+  # Aggregating gate: one check that is green only when all six jobs above
   # pass. Named "CI Gate" so the org ci-gate-required ruleset can pin a single
   # context for this repo. Does no work of its own; it only depends on the jobs.
   ci-gate:
@@ -143,7 +171,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    needs: [spec, mcp, lib, conformance, packages]
+    needs: [spec, mcp, lib, conformance, packages, claude-plugin]
     # always(), then check every result: without it a failed dependency SKIPS
     # this job, and GitHub counts a skipped required check as passing.
     if: always()
@@ -156,4 +184,4 @@ jobs:
           for r in $RESULTS; do
             if [ "$r" != "success" ]; then echo "a required job did not succeed"; exit 1; fi
           done
-          echo "spec, mcp, lib, conformance and packages all passed."
+          echo "spec, mcp, lib, conformance, packages and claude-plugin all passed."
