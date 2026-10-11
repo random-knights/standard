@@ -18,6 +18,8 @@ a tool that was not run.
 | Claude Code | Verified | 2.1.286 | `/plugin marketplace add Random-Knights/Standard` then `/plugin install random-knights@standard` |
 | Codex CLI | Verified in a live session, with one step left to you (see [Codex CLI](#codex-cli)) | 0.159.2 | `codex plugin marketplace add Random-Knights/Standard`, `codex plugin add random-knights@standard`, then trust the hook once with `/hooks` |
 | Gemini CLI, Antigravity CLI | No verified path (see [Gemini CLI and Antigravity CLI](#gemini-cli-and-antigravity-cli)) | not run | none shipped |
+| Ollama | Wrapper, not a plugin install; verified on a real local run (see [Ollama and Hugging Face](#ollama-and-hugging-face)) | 0.34.4 | `node scripts/aieds.mjs ollama --model <name> "<prompt>"` |
+| Hugging Face | Library and wrapper, not a plugin install; not run against a Hugging Face endpoint | huggingface_hub 1.29.0 (client only) | `node scripts/aieds.mjs chat-completion <response.json> --provider "Hugging Face"` |
 | Grok Build | Not verified (see [Grok Build](#grok-build)) | 1.0.13 | `grok plugin marketplace add Random-Knights/Standard` then `grok plugin install random-knights@Standard --trust` |
 
 AiEDs is the AI Energy Disclosure Standard, published by Random Knights at
@@ -272,9 +274,61 @@ is claimed here. If Google publishes token usage to hooks, or a signed-in
 session's transcript is examined and found to carry it, a reader can be added in
 the same shape as the Codex and Grok ones.
 
+## Ollama and Hugging Face
+
+Neither has a hook or plugin mechanism, so there is nothing to install into.
+What they have is a chat response that carries its own token counts, and three
+small commands in `scripts/aieds.mjs` turn those counts into the same receipt.
+These are wrappers around the same library, not a plugin install. They need
+Node.js 20 or newer and nothing else, and none of them stores or logs a prompt
+or a response.
+
+From a clone of this repository (or the installed plugin directory):
+
+```bash
+# Ollama: one chat call, then the reply and its receipt.
+node plugins/random-knights/scripts/aieds.mjs ollama --model llama3.2:1b "Say hello"
+
+# Any OpenAI-compatible chat completion saved as JSON (Hugging Face Inference
+# Providers, Ollama's /v1 endpoint, and others), or piped on stdin with "-".
+node plugins/random-knights/scripts/aieds.mjs chat-completion response.json --provider "Hugging Face"
+
+# Raw counts from anywhere.
+node plugins/random-knights/scripts/aieds.mjs usage --provider "Hugging Face" --model <model id> --input 1200 --output 300 --cached 800
+```
+
+`ollama` accepts `--host <url>` (default: `OLLAMA_HOST`, then
+`http://127.0.0.1:11434`), `--num-ctx <n>` to pass a context size through, and
+`--no-text` to print only the receipt. The one network request it makes goes to
+that host and nowhere else. It reads `prompt_eval_count` (the whole prompt),
+`prompt_eval_cached_count` (the part of it reused from the cache, shown as cache
+read) and `eval_count` (the output).
+
+Observed:
+
+- Against a real local Ollama 0.34.4 and `llama3.2:1b`, the wrapper's receipt
+  carried the counts Ollama returned (51 in with 50 cached, 107 out) and its
+  energy equaled the library's result for those tokens. Ollama's
+  `prompt_eval_count` stayed the whole prompt on a repeated call while the
+  cached count rose, which is why the cached count is treated as a part of the
+  input and not an addition to it.
+- `chat-completion` was run on a real response from Ollama's OpenAI-compatible
+  endpoint, which has the same `usage` block a Hugging Face chat completion has.
+
+Not observed: a response from Hugging Face itself. The Hugging Face account used
+for testing had no Inference Providers credits (HTTP 402), so no call was made
+that returned a Hugging Face `usage` block. The `usage` fields read here
+(`prompt_tokens`, `completion_tokens`, `prompt_tokens_details.cached_tokens`)
+are the documented OpenAI-compatible ones, but treat the Hugging Face row as
+unverified until you run it once with your own credits.
+
+A local model has no per-model coefficient in the table, so the receipt uses the
+frontier-class estimate and says so. That figure is an order-of-magnitude
+estimate for a data-center model and says nothing about your own hardware.
+
 ## Other tools
 
-Claude Code, Codex CLI, Grok Build and Gemini/Antigravity are covered above. Other coding agents have their
+Claude Code, Codex CLI, Grok Build, Gemini/Antigravity, Ollama and Hugging Face are covered above. Other coding agents have their
 own hook and plugin mechanisms, and their transcript formats and hook inputs
 differ, so this plugin makes no claim about a tool that is not in the table. To
 use the same numbers elsewhere today, call the reference library

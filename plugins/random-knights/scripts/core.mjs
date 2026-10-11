@@ -353,6 +353,25 @@ export function formatReceipt(receipt) {
   ].join(" ");
 }
 
+/**
+ * One-response receipt for the wrappers (Ollama, any OpenAI-compatible chat
+ * completion). There is no session to total, so it is one line about one
+ * response, with the same basis text and the same two required sentences.
+ */
+export function formatResponseReceipt(d) {
+  const t = d.tokens;
+  const cache =
+    t.cacheRead > 0 || t.cacheCreation > 0
+      ? ` (${formatCount(t.cacheRead)} cache read, ${formatCount(t.cacheCreation)} cache write)`
+      : "";
+  return [
+    `AiEDs receipt: ${figures(d)} (this response).`,
+    `Tokens: ${formatCount(t.input)} in${cache}, ${formatCount(t.output)} out.`,
+    `Basis: ${d.aiedsVersion}, ${basisLabel(d.provenance, d.models, d.modelsInTable)}.`,
+    REQUIRED_COPY.join(" "),
+  ].join(" ");
+}
+
 export function formatSessionReceipt(session) {
   const lines = [
     `AiEDs session receipt: ${figures(session)} over ${session.calls} model ${session.calls === 1 ? "call" : "calls"}.`,

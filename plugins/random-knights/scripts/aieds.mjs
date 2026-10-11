@@ -8,13 +8,18 @@
 //   aieds.mjs receipt --transcript <p>  Session total for one session file.
 //   aieds.mjs explain                   Formulas and coefficient sources.
 //
+// For tools with no hook mechanism (a wrapper, not a plugin install):
+//   aieds.mjs ollama --model <m> [--host <url>] [--num-ctx <n>] [--no-text] <prompt>
+//   aieds.mjs chat-completion [<file>|-] [--provider <label>]
+//   aieds.mjs usage --provider <label> --model <m> --input <n> --output <n> [--cached <n>]
+//
 // The hook mode has one hard rule: it never blocks and never crashes Claude
 // Code. Every failure path, including a failure to load the modules below,
 // ends in exit code 0 with no output. There is no network access, no
 // telemetry, and no file is written unless the user sets AIEDS_RECEIPT_LOG to
 // a path.
 
-import { appendFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -180,6 +185,125 @@ async function runReceipt(args) {
   console.log(core.formatSessionReceipt(core.receiptFor(parsed).session));
 }
 
+function intArg(args, flag) {
+  const v = argValue(args, flag);
+  if (v === undefined) return undefined;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 0 ? n : NaN;
+}
+
+async function readAll(stream) {
+  const chunks = [];
+  for await (const c of stream) chunks.push(c);
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+async function runOllama(args) {
+  const wrappers = await import("./wrappers.mjs");
+  const model = argValue(args, "--model") ?? process.env.OLLAMA_MODEL;
+  const host = argValue(args, "--host") ?? process.env.OLLAMA_HOST;
+  const numCtx = intArg(args, "--num-ctx");
+  const noText = args.includes("--no-text");
+  // The prompt is everything that is not a flag or a flag's value.
+  const valued = new Set(["--model", "--host", "--num-ctx"]);
+  const words = [];
+  for (let i = 0; i < args.length; i += 1) {
+    if (valued.has(args[i])) {
+      i += 1;
+    } else if (!args[i].startsWith("--")) {
+      words.push(args[i]);
+    }
+  }
+  let prompt = words.join(" ");
+  if (prompt === "-" || (prompt.length === 0 && !process.stdin.isTTY)) {
+    prompt = (await readAll(process.stdin)).trim();
+  }
+  if (typeof model !== "string" || model.length === 0 || prompt.length === 0) {
+    console.error(
+      "usage: aieds.mjs ollama --model <name> [--host <url>] [--num-ctx <n>] [--no-text] <prompt>",
+    );
+    process.exitCode = 2;
+    return;
+  }
+  if (Number.isNaN(numCtx)) {
+    console.error("--num-ctx must be a whole number");
+    process.exitCode = 2;
+    return;
+  }
+  try {
+    const r = await wrappers.ollamaChat({ host, model, prompt, numCtx });
+    if (!noText) console.log(`${r.text}\n`);
+    console.log(r.receipt);
+  } catch (e) {
+    console.error(String(e && e.message ? e.message : e));
+    process.exitCode = 1;
+  }
+}
+
+async function runChatCompletion(args) {
+  const wrappers = await import("./wrappers.mjs");
+  const provider = argValue(args, "--provider") ?? "OpenAI-compatible";
+  const positional = args.filter(
+    (a, i) => !a.startsWith("--") && args[i - 1] !== "--provider",
+  );
+  const source = positional[0] ?? "-";
+  let text;
+  try {
+    text = source === "-" ? await readAll(process.stdin) : readFileSync(source, "utf8");
+  } catch {
+    console.error("The response could not be read.");
+    process.exitCode = 1;
+    return;
+  }
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    console.error("The input is not JSON.");
+    process.exitCode = 1;
+    return;
+  }
+  const usage = wrappers.usageFromChatCompletion(json);
+  if (usage === undefined) {
+    console.error(
+      "The response has no usage block with prompt and completion token counts, so no receipt can be built.",
+    );
+    process.exitCode = 1;
+    return;
+  }
+  console.log(wrappers.receiptTextFromUsage({ provider, ...usage }));
+}
+
+async function runUsage(args) {
+  const wrappers = await import("./wrappers.mjs");
+  const provider = argValue(args, "--provider") ?? "Other";
+  const model = argValue(args, "--model");
+  const input = intArg(args, "--input");
+  const output = intArg(args, "--output");
+  const cached = intArg(args, "--cached") ?? 0;
+  if (
+    typeof model !== "string" ||
+    input === undefined ||
+    output === undefined ||
+    [input, output, cached].some((n) => Number.isNaN(n))
+  ) {
+    console.error(
+      "usage: aieds.mjs usage --provider <label> --model <id> --input <n> --output <n> [--cached <n>]",
+    );
+    process.exitCode = 2;
+    return;
+  }
+  console.log(
+    wrappers.receiptTextFromUsage({
+      provider,
+      model,
+      inputTokens: input,
+      outputTokens: output,
+      cachedTokens: cached,
+    }),
+  );
+}
+
 async function main() {
   const [mode, ...rest] = process.argv.slice(2);
   if (mode === "hook") {
@@ -200,13 +324,26 @@ async function main() {
     await runReceipt(rest);
     return;
   }
+  if (mode === "ollama") {
+    await runOllama(rest);
+    return;
+  }
+  if (mode === "chat-completion") {
+    await runChatCompletion(rest);
+    return;
+  }
+  if (mode === "usage") {
+    await runUsage(rest);
+    return;
+  }
   if (mode === "explain") {
     const core = await import("./core.mjs");
     console.log(core.formatExplanation());
     return;
   }
   console.log(
-    "usage: aieds.mjs hook | receipt [--session <id> | --transcript <file>] | explain",
+    "usage: aieds.mjs hook | receipt [--session <id> | --transcript <file>] | explain | " +
+      "ollama | chat-completion | usage",
   );
 }
 

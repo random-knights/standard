@@ -9,6 +9,6 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test test/receipt.test.mjs test/grok.test.mjs test/codex.test.mjs test/vendor-in-sync.test.mjs"
+    "test": "node --test test/receipt.test.mjs test/grok.test.mjs test/codex.test.mjs test/wrappers.test.mjs test/vendor-in-sync.test.mjs"
   }
 }
