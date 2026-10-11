@@ -362,6 +362,8 @@ test("format: the one-line receipt carries figures, tokens and basis", () => {
 test("explain: formulas and coefficient sources come from the library table", () => {
   const text = formatExplanation();
   assert.match(text, /energyWh = inTok\/1000 \* whPer1kIn \+ outTok\/1000 \* whPer1kOut/);
+  assert.match(text, /gCO2e = energyWh\/1000 \* 429$/m);
+  assert.match(text, /treeTimeMinutes = gCO2e \/ 21000 \* 525600$/m);
   assert.match(text, /429 gCO2e\/kWh/);
   assert.match(text, /21000 gCO2e\/year/);
   assert.match(text, /claude: 0\.145 \/ 0\.58, PUE 1\.2, class-estimated/);

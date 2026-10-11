@@ -135,6 +135,14 @@ files and the factor table under `vendor/`, in the layout the library expects.
 that copy, and CI fails if the copy is not byte-identical to a fresh build of
 `lib/`. Nothing in the plugin restates a coefficient.
 
+## Other tools
+
+This plugin is for Claude Code only, and it has been tested only there. Other
+coding agents have their own hook and plugin mechanisms, but their transcript
+formats and hook inputs differ from Claude Code's, so this plugin makes no claim
+about them. To use the same numbers elsewhere today, call the reference library
+(`@randomknights/aieds`) with the token counts your tool reports.
+
 ## Develop and test
 
 ```bash

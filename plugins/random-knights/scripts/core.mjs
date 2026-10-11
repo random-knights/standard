@@ -348,7 +348,23 @@ export function formatExplanation() {
   lines.push("Prompt and response text are never read into a figure, stored or sent anywhere.");
   lines.push("");
   lines.push("Formulas (methodology section 2.4):");
-  for (const f of FACTORS.responseSurface.formula) lines.push(`  ${f}`);
+  // The table names the constants symbolically; print their values so the
+  // formula reads as a calculation. The strings themselves are the library's.
+  for (const f of FACTORS.responseSurface.formula) {
+    lines.push(
+      "  " +
+        f
+          .replace(
+            "gridIntensity.responseSurfacePinned",
+            String(MODELED_GRID_INTENSITY_GRAMS_PER_KWH),
+          )
+          .replace(
+            "matureReferenceTreeCo2eGramsPerYear",
+            String(MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR),
+          )
+          .replace("minutesPerYear", String(MINUTES_PER_YEAR)),
+    );
+  }
   lines.push("");
   lines.push(
     "Cached prefill (section 2.4.1): cache-write and cache-read tokens are input and are charged at the full input rate. " +
