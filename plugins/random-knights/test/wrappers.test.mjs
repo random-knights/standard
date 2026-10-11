@@ -23,8 +23,8 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const script = join(resolve(here, ".."), "scripts", "aieds.mjs");
-const EM_DASH = "—";
-const EN_DASH = "–";
+const EM_DASH = String.fromCharCode(0x2014);
+const EN_DASH = String.fromCharCode(0x2013);
 
 function run(args, input, { env = {}, timeoutMs = 15000 } = {}) {
   return new Promise((resolvePromise) => {

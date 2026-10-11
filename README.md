@@ -209,6 +209,22 @@ coefficient.
 
 Node.js 20 or newer is required. Full details: [plugins/random-knights](plugins/random-knights/README.md).
 
+#### Other tools
+
+The same plugin directory carries readers for other coding agents. A tool is
+marked verified only after a real session of that tool produced a receipt whose
+token counts matched the tool's own reported usage. Everything else says what was
+and was not seen.
+
+| Tool | Status | Tested version | Commands |
+| ---- | ------ | -------------- | -------- |
+| Claude Code | Verified | 2.1.286 | `/plugin marketplace add Random-Knights/Standard`, `/plugin install random-knights@standard` |
+| Codex CLI | Verified in a live session; trust the hook once with `/hooks` | 0.159.2 | `codex plugin marketplace add Random-Knights/Standard`, `codex plugin add random-knights@standard` |
+| Grok Build | Not verified: plugin hooks did not run and the Stop hook runs before its own usage is written; on-demand receipts work | 1.0.13 | `grok plugin marketplace add Random-Knights/Standard`, `grok plugin install random-knights@Standard --trust` |
+| Gemini CLI, Antigravity CLI | No verified path; nothing shipped | not run | none |
+| Ollama | Wrapper, not a plugin install; verified on a local run | 0.34.4 | `node plugins/random-knights/scripts/aieds.mjs ollama --model <name> "<prompt>"` |
+| Hugging Face | Library and wrapper, not a plugin install; not run against a Hugging Face endpoint | not run | `node plugins/random-knights/scripts/aieds.mjs chat-completion <response.json> --provider "Hugging Face"` |
+
 ### Quick start (one minute)
 
 Disclose your first response with the reference library:
@@ -476,7 +492,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Examples             | `spec/examples/`             | CC BY 4.0  | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script                                                               |
 | Reference library    | `lib/`                       | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested)                                       |
 | MCP server           | `mcp/`                       | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose                                                                                                           |
-| Claude Code plugin   | `plugins/random-knights/`    | Apache 2.0 | An AiEDs receipt after every Claude Code response, computed locally from token usage with the reference library. Marketplace: `.claude-plugin/marketplace.json` |
+| Claude Code plugin   | `plugins/random-knights/`    | Apache 2.0 | An AiEDs receipt after every Claude Code or Codex response, computed locally from token usage with the reference library; Grok Build session files, Ollama and Hugging Face responses are read too (see the plugin README for what is verified). Marketplace: `.claude-plugin/marketplace.json` |
 | K13                  | `K13.md`                     | CC BY 4.0  | K13 - AI Response Standard, 2.1.0. The canonical text.                                                                                                       |
 | K13 report templates | `templates/`                 | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement.                                                 |
 | E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth Health Score Methodology, 1.2.0, ratified 2026-09-22. The canonical text, including the public implementation changelog.                          |
