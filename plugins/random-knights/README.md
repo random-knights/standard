@@ -17,6 +17,7 @@ a tool that was not run.
 | ---- | ------ | -------------- | ------- |
 | Claude Code | Verified | 2.1.286 | `/plugin marketplace add Random-Knights/Standard` then `/plugin install random-knights@standard` |
 | Codex CLI | Verified in a live session, with one step left to you (see [Codex CLI](#codex-cli)) | 0.159.2 | `codex plugin marketplace add Random-Knights/Standard`, `codex plugin add random-knights@standard`, then trust the hook once with `/hooks` |
+| Gemini CLI, Antigravity CLI | No verified path (see [Gemini CLI and Antigravity CLI](#gemini-cli-and-antigravity-cli)) | not run | none shipped |
 | Grok Build | Not verified (see [Grok Build](#grok-build)) | 1.0.13 | `grok plugin marketplace add Random-Knights/Standard` then `grok plugin install random-knights@Standard --trust` |
 
 AiEDs is the AI Energy Disclosure Standard, published by Random Knights at
@@ -246,9 +247,34 @@ Observed and NOT working, so no automatic receipt is claimed:
 When Grok changes either behavior, the hook starts printing receipts without a
 code change, and the tests in `test/grok.test.mjs` pin the shapes it relies on.
 
+## Gemini CLI and Antigravity CLI
+
+Status: **no verified path. Nothing is shipped for these tools.** The CLI was not
+installed or run, so there is no tested version. What the vendor's own
+documentation says, as of this writing:
+
+- Google announced on 2026-05-19 that Gemini CLI is being replaced by the
+  Antigravity CLI (command `agy`). Gemini CLI stopped serving requests on
+  2026-06-18 for Google AI Pro and Ultra subscribers and for free users of Gemini
+  Code Assist for individuals. It remains available with Gemini Code Assist
+  Standard or Enterprise licenses and with paid Gemini API keys.
+- Antigravity CLI installs with Google's own installer (a PowerShell or shell
+  script, not a package-manager package) and requires a Google sign-in before it
+  does anything. It also offers a Gemini API key path for headless use.
+- Antigravity hooks and plugins exist. A hook receives `conversationId`,
+  `transcriptPath` and `modelName`. Google's hooks page documents no token usage
+  or usage metadata for any hook event and no `systemMessage` output field.
+
+Without a documented usage field there is nothing for a receipt to be computed
+from except a transcript whose format was not examined, and a sign-in was
+required before any session could run. So no reader, manifest or install command
+is claimed here. If Google publishes token usage to hooks, or a signed-in
+session's transcript is examined and found to carry it, a reader can be added in
+the same shape as the Codex and Grok ones.
+
 ## Other tools
 
-Claude Code, Codex CLI and Grok Build are covered above. Other coding agents have their
+Claude Code, Codex CLI, Grok Build and Gemini/Antigravity are covered above. Other coding agents have their
 own hook and plugin mechanisms, and their transcript formats and hook inputs
 differ, so this plugin makes no claim about a tool that is not in the table. To
 use the same numbers elsewhere today, call the reference library
