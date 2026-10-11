@@ -1,7 +1,7 @@
 {
   "name": "random-knights",
   "displayName": "Random Knights AiEDs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An AiEDs receipt (energy in Wh, carbon in gCO2e, tree-time in minutes) after every Claude Code response, computed locally from the session's token usage with the AiEDs reference library.",
   "author": {
     "name": "Random Knights",

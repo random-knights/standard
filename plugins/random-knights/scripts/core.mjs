@@ -18,6 +18,8 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
+import { parseSessionText } from "./hosts.mjs";
+
 import {
   AIEDS_VERSION,
   EDUCATIONAL_COMPARISON_COPY,
@@ -30,6 +32,7 @@ import {
   MODELED_GRID_INTENSITY_GRAMS_PER_KWH,
   UNKNOWN_MODEL_PROFILE,
   disclosureFromResponse,
+  energyProfileForModel,
   treeTimeLabel,
 } from "../vendor/lib/dist/index.js";
 
@@ -157,7 +160,17 @@ export function parseTranscript(jsonlText) {
     calls: order.map((id) => byId.get(id)),
     lastTurn: turn,
     lastAssistantText,
+    host: "claude",
   };
+}
+
+/**
+ * Parses a session file from any supported host. The host is recognized from
+ * the file's own records (see sniffFormat), not from where it was found.
+ * An unrecognized file yields no calls, so the caller prints nothing.
+ */
+export function parseSession(text) {
+  return parseSessionText(text, parseTranscript);
 }
 
 // -- Receipt -------------------------------------------------------------------
@@ -191,6 +204,9 @@ function sumUsage(calls) {
     total.cacheCreation += c.usage.cache_creation_input_tokens;
     total.cacheRead += c.usage.cache_read_input_tokens;
     total.output += c.usage.output_tokens;
+    // A host that reports one record per prompt (Grok) says how many model
+    // calls it covers. Claude and Codex report one record per call.
+    if (typeof c.count === "number" && c.count > 1) total.calls += c.count - 1;
   }
   return total;
 }
@@ -204,8 +220,11 @@ function sumUsage(calls) {
 export function disclose(calls) {
   const groups = new Map();
   for (const c of calls) {
-    const key = c.model;
-    const g = groups.get(key) ?? { model: key, calls: [] };
+    // The provider is only a label on the library's result; the coefficient is
+    // chosen by model name. Claude Code records no provider, so it is Anthropic.
+    const provider = typeof c.provider === "string" ? c.provider : "Anthropic";
+    const key = `${provider}\u0000${c.model}`;
+    const g = groups.get(key) ?? { model: c.model, provider, calls: [] };
     g.calls.push(c);
     groups.set(key, g);
   }
@@ -215,11 +234,12 @@ export function disclose(calls) {
   let treeTimeMinutes = 0;
   const provenances = [];
   const models = [];
+  let allInTable = true;
 
   for (const g of groups.values()) {
     const u = sumUsage(g.calls);
     const d = disclosureFromResponse({
-      provider: "Anthropic",
+      provider: g.provider,
       model: g.model || undefined,
       inputTokenBreakdown: {
         plain: u.plain,
@@ -233,6 +253,9 @@ export function disclose(calls) {
     treeTimeMinutes += d.treeTimeMinutes;
     provenances.push(d.provenance);
     models.push(g.model || "unknown");
+    if (energyProfileForModel(g.model || undefined).matchPrefixes.length === 0) {
+      allInTable = false;
+    }
   }
 
   const t = sumUsage(calls);
@@ -253,6 +276,9 @@ export function disclose(calls) {
     treeTimeMinutes,
     treeTimeLabel: treeTimeLabel(treeTimeMinutes),
     provenance: calls.length === 0 ? "unknown" : weakest(provenances),
+    // True when every model has its own row in the coefficient table, even a
+    // row whose provenance is "unknown" (Grok has one).
+    modelsInTable: calls.length > 0 && allInTable,
     confidence: "low",
   };
 }
@@ -288,9 +314,12 @@ function formatCount(n) {
   return n.toLocaleString("en-US");
 }
 
-function basisLabel(provenance, models) {
+function basisLabel(provenance, models, inTable = false) {
   const modelList = [...new Set(models)].join(", ");
   const known = modelList.length > 0 ? modelList : "unknown model";
+  if (provenance === "unknown" && inTable) {
+    return `${known}, no published figure for this model, class estimate, low confidence`;
+  }
   if (provenance === "unknown") {
     return `${known}, class estimate (model not in the coefficient table), low confidence`;
   }
@@ -319,7 +348,26 @@ export function formatReceipt(receipt) {
     `Tokens this response: ${formatCount(r.tokens.input)} in ` +
       `(${formatCount(r.tokens.cacheRead)} cache read, ${formatCount(r.tokens.cacheCreation)} cache write), ` +
       `${formatCount(r.tokens.output)} out.`,
-    `Basis: ${s.aiedsVersion}, ${basisLabel(s.provenance, s.models)}.`,
+    `Basis: ${s.aiedsVersion}, ${basisLabel(s.provenance, s.models, s.modelsInTable)}.`,
+    REQUIRED_COPY.join(" "),
+  ].join(" ");
+}
+
+/**
+ * One-response receipt for the wrappers (Ollama, any OpenAI-compatible chat
+ * completion). There is no session to total, so it is one line about one
+ * response, with the same basis text and the same two required sentences.
+ */
+export function formatResponseReceipt(d) {
+  const t = d.tokens;
+  const cache =
+    t.cacheRead > 0 || t.cacheCreation > 0
+      ? ` (${formatCount(t.cacheRead)} cache read, ${formatCount(t.cacheCreation)} cache write)`
+      : "";
+  return [
+    `AiEDs receipt: ${figures(d)} (this response).`,
+    `Tokens: ${formatCount(t.input)} in${cache}, ${formatCount(t.output)} out.`,
+    `Basis: ${d.aiedsVersion}, ${basisLabel(d.provenance, d.models, d.modelsInTable)}.`,
     REQUIRED_COPY.join(" "),
   ].join(" ");
 }
@@ -331,7 +379,7 @@ export function formatSessionReceipt(session) {
       `(${formatCount(session.tokens.plain)} plain, ${formatCount(session.tokens.cacheCreation)} cache write, ` +
       `${formatCount(session.tokens.cacheRead)} cache read), ${formatCount(session.tokens.output)} out. ` +
       `Cache tokens are counted as input at the full input rate (methodology 2.4.1).`,
-    `Basis: ${session.aiedsVersion}, methodology ${session.methodologyVersion}; ${basisLabel(session.provenance, session.models)}.`,
+    `Basis: ${session.aiedsVersion}, methodology ${session.methodologyVersion}; ${basisLabel(session.provenance, session.models, session.modelsInTable)}.`,
     REQUIRED_COPY.join(" "),
   ];
   return lines.join("\n");
@@ -451,7 +499,7 @@ export function findTranscript(sessionId, env = process.env) {
 }
 
 export function readTranscript(path) {
-  return parseTranscript(readFileSync(expandHome(path), "utf8"));
+  return parseSession(readFileSync(expandHome(path), "utf8"));
 }
 
 // -- Opt-in environment --------------------------------------------------------

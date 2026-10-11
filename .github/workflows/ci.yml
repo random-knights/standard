@@ -140,8 +140,10 @@ jobs:
   # compiled reference library, because Claude Code installs a plugin by copying
   # its directory. This job builds lib/ and fails if that copy is not
   # byte-identical to the build, then runs the plugin's own tests: transcript
-  # parsing, receipt math against the library, required wording, hook exit
-  # codes, and path handling. It uses no credential and publishes nothing.
+  # parsing (Claude Code, Codex CLI and Grok Build session files, from
+  # fixtures that carry real shapes and no text), receipt math against the
+  # library, required wording, hook exit codes, path handling, and the Ollama and
+  # chat-completion wrappers. It uses no credential and publishes nothing.
   claude-plugin:
     name: Claude Code plugin (tests + vendored library gate)
     runs-on: ubuntu-latest
