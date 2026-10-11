@@ -1,10 +1,22 @@
-# Random Knights AiEDs plugin for Claude Code
+# Random Knights AiEDs plugin
 
 After every Claude Code response, this plugin prints an AiEDs receipt: the
 modeled energy (Wh), carbon (gCO2e) and Tree-Time (minutes) of that response and
 of the session so far. The figures are computed on your machine from the
 session's real token usage, with the AiEDs reference library, so they agree with
 the standard to the number.
+
+## Which tools it works with
+
+Status means one thing: the whole path was run on a real session of that tool,
+and the receipt's token counts matched the tool's own reported usage. A row that
+is not verified says what was and was not observed. Nothing here is claimed for
+a tool that was not run.
+
+| Tool | Status | Tested version | Install |
+| ---- | ------ | -------------- | ------- |
+| Claude Code | Verified | 2.1.286 | `/plugin marketplace add Random-Knights/Standard` then `/plugin install random-knights@standard` |
+| Grok Build | Not verified (see [Grok Build](#grok-build)) | 1.0.13 | `grok plugin marketplace add Random-Knights/Standard` then `grok plugin install random-knights@Standard --trust` |
 
 AiEDs is the AI Energy Disclosure Standard, published by Random Knights at
 <https://standard.rand0m.ai>. This plugin lives in the same repository as the
@@ -135,12 +147,59 @@ files and the factor table under `vendor/`, in the layout the library expects.
 that copy, and CI fails if the copy is not byte-identical to a fresh build of
 `lib/`. Nothing in the plugin restates a coefficient.
 
+## Grok Build
+
+Status: **not verified.** Tested version: Grok Build 1.0.13. The plugin
+installs through Grok's own commands and its session files are read correctly,
+but an automatic receipt after each response was not observed. What was and was
+not seen:
+
+Observed and working:
+
+- `grok plugin marketplace add Random-Knights/Standard` and
+  `grok plugin install random-knights@Standard --trust` install the plugin from
+  this repository. `grok plugin validate plugins/random-knights` accepts the
+  manifest, and `grok inspect` lists the plugin, its two skills and its hook.
+- Grok writes each finished prompt's token usage to its session file
+  (`updates.jsonl`, one `turn_completed` record with `inputTokens`,
+  `cachedReadTokens`, `cacheCreationTokens`, `outputTokens` and a per-model
+  split). The reader in this plugin turns that record into a receipt that matches
+  the usage Grok itself reports for the same run (234 plain + 1,000 cache read
+  input, 7 output), and the energy equals the library's result for those tokens.
+- You can ask for that receipt on demand, for any Grok session:
+
+  ```bash
+  node scripts/aieds.mjs receipt --transcript "<grok home>/sessions/<encoded folder>/<session id>/updates.jsonl"
+  node scripts/aieds.mjs receipt --session <session id>
+  ```
+
+  `<grok home>` is `~/.grok`, or `GROK_HOME` if you set it.
+
+Observed and NOT working, so no automatic receipt is claimed:
+
+- In headless (`grok -p`) and agent (`grok agent ... stdio`) sessions, Grok 1.0.13
+  discovered the plugin's hook but never ran it, even with the plugin enabled and
+  trusted. Hooks configured directly in Grok's `config.toml` did run. The
+  interactive terminal UI was not driven in this test.
+- For a response that ends normally, Grok writes that response's
+  `turn_completed` record after its Stop hooks have returned. A Stop hook can
+  read every earlier response and not the one it belongs to. The hook in this
+  plugin checks for its own prompt id and prints nothing when the record is not
+  there, rather than print the previous response's figures as "this response".
+- These results were obtained against a local OpenAI-compatible model endpoint,
+  not an xAI-hosted model, because that is what could be run without a current
+  Grok sign-in. The session-file shape was not compared against an xAI-hosted
+  session.
+
+When Grok changes either behavior, the hook starts printing receipts without a
+code change, and the tests in `test/grok.test.mjs` pin the shapes it relies on.
+
 ## Other tools
 
-This plugin is for Claude Code only, and it has been tested only there. Other
-coding agents have their own hook and plugin mechanisms, but their transcript
-formats and hook inputs differ from Claude Code's, so this plugin makes no claim
-about them. To use the same numbers elsewhere today, call the reference library
+Claude Code and Grok Build are covered above. Other coding agents have their
+own hook and plugin mechanisms, and their transcript formats and hook inputs
+differ, so this plugin makes no claim about a tool that is not in the table. To
+use the same numbers elsewhere today, call the reference library
 (`@randomknights/aieds`) with the token counts your tool reports.
 
 ## Develop and test

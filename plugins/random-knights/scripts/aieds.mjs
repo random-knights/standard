@@ -3,8 +3,9 @@
 //
 //   aieds.mjs hook                      Stop hook: reads the hook input on stdin,
 //                                       prints {"systemMessage": "..."} or nothing.
-//   aieds.mjs receipt --session <id>    Session total, found under the Claude config dir.
-//   aieds.mjs receipt --transcript <p>  Session total for one transcript file.
+//   aieds.mjs receipt --session <id>    Session total, found under the Claude or
+//                                       Grok Build session directories.
+//   aieds.mjs receipt --transcript <p>  Session total for one session file.
 //   aieds.mjs explain                   Formulas and coefficient sources.
 //
 // The hook mode has one hard rule: it never blocks and never crashes Claude
@@ -43,19 +44,38 @@ function normalize(s) {
 }
 
 /**
- * The transcript can lag the live conversation at Stop time (Claude Code's
- * hooks reference says so). When the hook was handed the final assistant text,
- * wait briefly until the transcript contains it, so the receipt includes the
- * last model call. Bounded: it gives up quietly and uses what is there.
+ * True when the session file already holds the model call this Stop belongs
+ * to. Each host names the turn differently, so each gets its own check:
+ *
+ *   Claude Code  the last assistant text equals last_assistant_message
+ *   Grok Build   a turn_completed record exists for the hook's promptId
+ *
+ * A host whose input names no turn is treated as settled.
  */
-async function readSettledTranscript(core, path, lastMessage) {
-  let parsed = core.readTranscript(path);
-  if (typeof lastMessage !== "string" || normalize(lastMessage).length === 0) {
-    return parsed;
+function isSettled(parsed, input) {
+  if (parsed.host === "unknown") return true;
+  if (parsed.host === "grok") {
+    const id = input.promptId ?? input.prompt_id;
+    return (
+      typeof id !== "string" ||
+      parsed.calls.some((c) => c.id.startsWith(`${id}:`))
+    );
   }
-  const want = normalize(lastMessage);
+  const last = input.last_assistant_message ?? input.lastAssistantMessage;
+  if (typeof last !== "string" || normalize(last).length === 0) return true;
+  return normalize(parsed.lastAssistantText) === normalize(last);
+}
+
+/**
+ * The session file can lag the live conversation at Stop time (Claude Code's
+ * hooks reference says so). Wait briefly until it holds this turn, so the
+ * receipt includes the last model call. Bounded: it gives up quietly and uses
+ * what is there.
+ */
+async function readSettledTranscript(core, path, input) {
+  let parsed = core.readTranscript(path);
   for (let i = 0; i < 20; i += 1) {
-    if (normalize(parsed.lastAssistantText) === want) return parsed;
+    if (isSettled(parsed, input)) return parsed;
     await sleep(100);
     parsed = core.readTranscript(path);
   }
@@ -73,14 +93,24 @@ async function runHook() {
     return;
   }
   if (input === null || typeof input !== "object") return;
-  if (typeof input.transcript_path !== "string") return;
+  // Claude Code sends transcript_path. Grok Build sends both spellings.
+  const transcriptPath = input.transcript_path ?? input.transcriptPath;
+  if (typeof transcriptPath !== "string") return;
+  // Grok also fires Stop once more at session end, with reason "shutdown" or
+  // "channel_closed". That is not a response, so it gets no receipt.
+  if (typeof input.reason === "string" && input.reason !== "end_turn") return;
 
-  const parsed = await readSettledTranscript(
-    core,
-    input.transcript_path,
-    input.last_assistant_message,
-  );
+  const parsed = await readSettledTranscript(core, transcriptPath, input);
   if (parsed.calls.length === 0) return;
+  // Grok names the turn in the hook input. If the session file still
+  // lacks that turn after the bounded wait, the newest record in it belongs to
+  // an earlier response, and a receipt labeled "this response" would be wrong.
+  // Say nothing rather than mislabel.
+  if (
+    parsed.host === "grok" && !isSettled(parsed, input)
+  ) {
+    return;
+  }
 
   const receipt = core.receiptFor(parsed);
   process.stdout.write(
@@ -92,7 +122,7 @@ async function runHook() {
     try {
       appendFileSync(
         core.expandHome(logPath),
-        core.logLine(input.session_id, receipt) + "\n",
+        core.logLine(input.session_id ?? input.sessionId, receipt) + "\n",
       );
     } catch {
       // The log is a convenience. A failure here must not surface.
@@ -118,6 +148,10 @@ async function runReceipt(args) {
       return;
     }
     path = core.findTranscript(session);
+    if (path === undefined) {
+      const hosts = await import("./hosts.mjs");
+      path = hosts.findHostSession(session);
+    }
     if (path === undefined) {
       console.log(
         "No transcript was found for this session yet, so no receipt can be built. " +
