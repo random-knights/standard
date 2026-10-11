@@ -1,0 +1,17 @@
+{
+  "description": "Prints an AiEDs receipt after each Claude Code response. Local only: no network, no telemetry.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/aieds.mjs", "hook"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

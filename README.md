@@ -180,6 +180,35 @@ AiEDs surfaces:
 > **AiEDs scope is device / usage / inference / training.**
 > It is NOT the planetary Earth Health Score produced by `rand0m.ai/earthHealthScoreRefresh`. See [spec/methodology.md section 1](spec/methodology.md#1-scope-and-non-overlap).
 
+### Install the Claude Code plugin
+
+Get an AiEDs receipt after every Claude Code response, with no code to write:
+
+```text
+/plugin marketplace add Random-Knights/Standard
+/plugin install random-knights@standard
+```
+
+After the second command, each response ends with one line: the modeled energy
+(Wh), carbon (gCO2e) and Tree-Time (minutes) of that response and of the session
+so far, with the token split and the two sentences AiEDs requires on every
+rendered disclosure. `/random-knights:aieds` prints the session total on demand
+and `/random-knights:aieds-explain` prints the formulas and the source of every
+coefficient.
+
+- **What is measured:** token counts only (input, cache write, cache read,
+  output) and the model name, read from the session transcript Claude Code
+  already keeps. Prompt and response text are never read into a figure.
+- **Privacy:** no network access, no telemetry, and no file is written unless you
+  set `AIEDS_RECEIPT_LOG` to a path.
+- **Same numbers as the standard:** the plugin carries the reference library
+  from `lib/`, not a second implementation, and CI fails if the copy drifts.
+- **Turn it off:** set `AIEDS_RECEIPTS` to `off` in the `env` block of your
+  Claude Code settings, or run `claude plugin disable random-knights`.
+- **Uninstall:** `claude plugin uninstall random-knights@standard`.
+
+Node.js 20 or newer is required. Full details: [plugins/random-knights](plugins/random-knights/README.md).
+
 ### Quick start (one minute)
 
 Disclose your first response with the reference library:
@@ -447,6 +476,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Examples             | `spec/examples/`             | CC BY 4.0  | 4 valid disclosures, 3 superseded-1.x records the schema must reject, and a conformance script                                                               |
 | Reference library    | `lib/`                       | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested)                                       |
 | MCP server           | `mcp/`                       | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose                                                                                                           |
+| Claude Code plugin   | `plugins/random-knights/`    | Apache 2.0 | An AiEDs receipt after every Claude Code response, computed locally from token usage with the reference library. Marketplace: `.claude-plugin/marketplace.json` |
 | K13                  | `K13.md`                     | CC BY 4.0  | K13 - AI Response Standard, 2.1.0. The canonical text.                                                                                                       |
 | K13 report templates | `templates/`                 | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement.                                                 |
 | E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth Health Score Methodology, 1.2.0, ratified 2026-09-22. The canonical text, including the public implementation changelog.                          |
@@ -462,6 +492,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 - [x] 7 conformance examples (4 valid, 3 superseded-1.x rejection cases) + validate script
 - [x] MCP server 2.0.0: `aieds_estimate`, `aieds_factors`, `aieds_disclose`
 - [x] Reference library 2.1.0: energy-first, byte-mirrors the app, emits provenance + confidence
+- [x] Claude Code plugin `random-knights` (marketplace `standard`): an AiEDs receipt after every response, from the reference library
 - [x] CI: schema validation + build + unit tests
 
 ### Deferred

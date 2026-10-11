@@ -1,0 +1,14 @@
+{
+  "name": "random-knights",
+  "displayName": "Random Knights AiEDs",
+  "version": "0.1.0",
+  "description": "An AiEDs receipt (energy in Wh, carbon in gCO2e, tree-time in minutes) after every Claude Code response, computed locally from the session's token usage with the AiEDs reference library.",
+  "author": {
+    "name": "Random Knights",
+    "url": "https://standard.rand0m.ai"
+  },
+  "homepage": "https://standard.rand0m.ai",
+  "repository": "https://github.com/random-knights/standard",
+  "license": "Apache-2.0 AND CC-BY-4.0",
+  "keywords": ["aieds", "energy", "carbon", "disclosure", "receipt", "tree-time"]
+}
