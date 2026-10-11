@@ -17,25 +17,28 @@ import { existsSync, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
+import { TESTED_CODEX_VERSION, looksLikeCodex, parseCodexRollout } from "./hosts/codex.mjs";
 import { TESTED_GROK_VERSION, looksLikeGrok, parseGrokSession } from "./hosts/grok.mjs";
 import { jsonLines } from "./hosts/util.mjs";
 
-export { parseGrokSession };
+export { parseCodexRollout, parseGrokSession };
 
 /** The exact host versions the readers were checked against. */
 export const TESTED_HOSTS = Object.freeze({
+  codex: TESTED_CODEX_VERSION,
   grok: TESTED_GROK_VERSION,
 });
 
 /**
  * Names the host that wrote a session file from its first records:
- * "grok", "claude" or "unknown". Content decides, not the hook's
+ * "codex", "grok", "claude" or "unknown". Content decides, not the hook's
  * name, because Grok deliberately sends Claude-shaped hook input.
  */
 export function sniffFormat(text) {
   let seen = 0;
   for (const entry of jsonLines(String(text).slice(0, 200000))) {
     if (seen++ > 60) break;
+    if (looksLikeCodex(entry)) return "codex";
     if (looksLikeGrok(entry)) return "grok";
     if (
       (entry.type === "user" || entry.type === "assistant") &&
@@ -57,6 +60,8 @@ export function parseSessionText(text, parseClaude) {
   switch (sniffFormat(text)) {
     case "grok":
       return parseGrokSession(text);
+    case "codex":
+      return parseCodexRollout(text);
     case "claude":
       return parseClaude(text);
     default:
@@ -77,10 +82,11 @@ function listDir(dir) {
 }
 
 /**
- * Finds a Grok Build session file for a session id, without ever joining an
- * unvalidated id into a path. Grok keeps
- * `sessions/<encoded cwd>/<id>/updates.jsonl` under its home directory.
- * Returns the newest match, or undefined.
+ * Finds a Codex rollout or a Grok Build session file for a session id, without
+ * ever joining an unvalidated id into a path. Codex names a rollout
+ * `rollout-<timestamp>-<id>.jsonl` under sessions/YYYY/MM/DD; Grok keeps
+ * `sessions/<encoded cwd>/<id>/updates.jsonl`. Returns the newest match, or
+ * undefined.
  */
 export function findHostSession(sessionId, env = process.env) {
   if (typeof sessionId !== "string" || !SAFE_ID.test(sessionId)) return undefined;
@@ -97,6 +103,23 @@ export function findHostSession(sessionId, env = process.env) {
       // ignore unreadable candidates
     }
   };
+
+  const codexHome =
+    env.CODEX_HOME && env.CODEX_HOME.length > 0 ? env.CODEX_HOME : join(homedir(), ".codex");
+  const walkDays = (dir, depth) => {
+    for (const e of listDir(dir)) {
+      const full = join(dir, e.name);
+      if (e.isDirectory() && depth < 3) walkDays(full, depth + 1);
+      else if (
+        e.isFile() &&
+        e.name.startsWith("rollout-") &&
+        e.name.endsWith(`-${sessionId}.jsonl`)
+      ) {
+        consider(full);
+      }
+    }
+  };
+  walkDays(join(codexHome, "sessions"), 0);
 
   const grokHome =
     env.GROK_HOME && env.GROK_HOME.length > 0 ? env.GROK_HOME : join(homedir(), ".grok");

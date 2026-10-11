@@ -3,8 +3,8 @@
 //
 //   aieds.mjs hook                      Stop hook: reads the hook input on stdin,
 //                                       prints {"systemMessage": "..."} or nothing.
-//   aieds.mjs receipt --session <id>    Session total, found under the Claude or
-//                                       Grok Build session directories.
+//   aieds.mjs receipt --session <id>    Session total, found under the Claude, Codex
+//                                       or Grok Build session directories.
 //   aieds.mjs receipt --transcript <p>  Session total for one session file.
 //   aieds.mjs explain                   Formulas and coefficient sources.
 //
@@ -48,12 +48,17 @@ function normalize(s) {
  * to. Each host names the turn differently, so each gets its own check:
  *
  *   Claude Code  the last assistant text equals last_assistant_message
+ *   Codex        a token_count record exists for the hook's turn_id
  *   Grok Build   a turn_completed record exists for the hook's promptId
  *
  * A host whose input names no turn is treated as settled.
  */
 function isSettled(parsed, input) {
   if (parsed.host === "unknown") return true;
+  if (parsed.host === "codex") {
+    const id = input.turn_id ?? input.turnId;
+    return typeof id !== "string" || parsed.calls.some((c) => c.turnId === id);
+  }
   if (parsed.host === "grok") {
     const id = input.promptId ?? input.prompt_id;
     return (
@@ -93,7 +98,7 @@ async function runHook() {
     return;
   }
   if (input === null || typeof input !== "object") return;
-  // Claude Code sends transcript_path. Grok Build sends both spellings.
+  // Claude Code and Codex send transcript_path. Grok Build sends both spellings.
   const transcriptPath = input.transcript_path ?? input.transcriptPath;
   if (typeof transcriptPath !== "string") return;
   // Grok also fires Stop once more at session end, with reason "shutdown" or
@@ -102,12 +107,13 @@ async function runHook() {
 
   const parsed = await readSettledTranscript(core, transcriptPath, input);
   if (parsed.calls.length === 0) return;
-  // Grok names the turn in the hook input. If the session file still
+  // Codex and Grok name the turn in the hook input. If the session file still
   // lacks that turn after the bounded wait, the newest record in it belongs to
   // an earlier response, and a receipt labeled "this response" would be wrong.
   // Say nothing rather than mislabel.
   if (
-    parsed.host === "grok" && !isSettled(parsed, input)
+    (parsed.host === "codex" || parsed.host === "grok") &&
+    !isSettled(parsed, input)
   ) {
     return;
   }

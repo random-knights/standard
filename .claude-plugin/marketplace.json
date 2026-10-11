@@ -1,6 +1,6 @@
 {
   "name": "standard",
-  "description": "Random Knights standards for AI work. The random-knights plugin adds an AiEDs energy receipt to every Claude Code response.",
+  "description": "Random Knights standards for AI work. The random-knights plugin adds an AiEDs energy receipt to every Claude Code or Codex response.",
   "owner": {
     "name": "Random Knights",
     "url": "https://standard.rand0m.ai"
@@ -9,7 +9,7 @@
     {
       "name": "random-knights",
       "source": "./plugins/random-knights",
-      "description": "AiEDs energy, carbon and tree-time receipt after every Claude Code response, computed locally from the session's token usage.",
+      "description": "AiEDs energy, carbon and tree-time receipt after every Claude Code or Codex response, computed locally from the session's token usage.",
       "homepage": "https://standard.rand0m.ai",
       "license": "Apache-2.0",
       "keywords": ["aieds", "energy", "carbon", "disclosure", "receipt"]

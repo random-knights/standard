@@ -205,7 +205,7 @@ function sumUsage(calls) {
     total.cacheRead += c.usage.cache_read_input_tokens;
     total.output += c.usage.output_tokens;
     // A host that reports one record per prompt (Grok) says how many model
-    // calls it covers. Claude reports one record per call.
+    // calls it covers. Claude and Codex report one record per call.
     if (typeof c.count === "number" && c.count > 1) total.calls += c.count - 1;
   }
   return total;

@@ -16,6 +16,7 @@ a tool that was not run.
 | Tool | Status | Tested version | Install |
 | ---- | ------ | -------------- | ------- |
 | Claude Code | Verified | 2.1.286 | `/plugin marketplace add Random-Knights/Standard` then `/plugin install random-knights@standard` |
+| Codex CLI | Verified in a live session, with one step left to you (see [Codex CLI](#codex-cli)) | 0.159.2 | `codex plugin marketplace add Random-Knights/Standard`, `codex plugin add random-knights@standard`, then trust the hook once with `/hooks` |
 | Grok Build | Not verified (see [Grok Build](#grok-build)) | 1.0.13 | `grok plugin marketplace add Random-Knights/Standard` then `grok plugin install random-knights@Standard --trust` |
 
 AiEDs is the AI Energy Disclosure Standard, published by Random Knights at
@@ -147,6 +148,57 @@ files and the factor table under `vendor/`, in the layout the library expects.
 that copy, and CI fails if the copy is not byte-identical to a fresh build of
 `lib/`. Nothing in the plugin restates a coefficient.
 
+## Codex CLI
+
+Status: **verified in a live session; the first run asks you to trust the hook.**
+Tested version: Codex CLI 0.159.2. Codex's rollout file is documented by OpenAI
+as "not a stable interface for hooks and may change over time", so the reader is
+pinned to this version and prints nothing, rather than guesses, when a record
+is not in the shape it knows.
+
+Install, from a shell:
+
+```bash
+codex plugin marketplace add Random-Knights/Standard
+codex plugin add random-knights@standard
+```
+
+Then start Codex and run `/hooks` once to review and trust the plugin's Stop
+hook. Codex's documentation says it does not run a hook it has not been told to
+trust, and that trust is tied to the hook's content hash, so an updated plugin
+asks again. For one
+non-interactive run you vouch for yourself, `codex exec --dangerously-bypass-hook-trust`
+skips the review.
+
+What is measured: each `token_count` record in the rollout
+(`~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`). Codex's `input_tokens` already
+includes its `cached_input_tokens`, and `output_tokens` already includes
+reasoning tokens. Codex's own "tokens used" line is input minus cached plus
+output, so a receipt that says `15,733 in (12,288 cache read), 5 out` goes with
+Codex's `tokens used 3,450`. The receipt counts cached input at the full input
+rate (methodology section 2.4.1); Codex's line does not.
+
+Observed:
+
+- Both commands above install the plugin from this repository's marketplace
+  file; `.codex-plugin/plugin.json` points Codex at `hooks/codex-hooks.json`.
+  Codex reads a hook as one command string, which is why the Codex hook file is
+  separate from the Claude Code one.
+- Codex lists the installed plugin's hook as source `plugin`, event `stop`,
+  trust status `untrusted` until you trust it.
+- In a real `codex exec` session (the hook script run from the installed plugin
+  copy with the hook trust check bypassed for that one run), the hook ran,
+  Codex reported `Stop Completed`, and the receipt's token counts equaled the
+  `usage` in Codex's own `turn.completed` event (18,467 in, 7,936 cached, 5 out).
+  The energy equaled the library's result for those tokens.
+
+Not observed: how the Codex terminal UI renders the `systemMessage` warning the
+hook returns. Codex's documentation says it is shown as a warning in the UI or
+event stream, and `codex exec` does not print it. The same plugin was not
+installed into a signed-in Codex home, because that changes the signed-in
+configuration; the live run above used a session-level hook override pointing
+at the file the installer copied.
+
 ## Grok Build
 
 Status: **not verified.** Tested version: Grok Build 1.0.13. The plugin
@@ -196,7 +248,7 @@ code change, and the tests in `test/grok.test.mjs` pin the shapes it relies on.
 
 ## Other tools
 
-Claude Code and Grok Build are covered above. Other coding agents have their
+Claude Code, Codex CLI and Grok Build are covered above. Other coding agents have their
 own hook and plugin mechanisms, and their transcript formats and hook inputs
 differ, so this plugin makes no claim about a tool that is not in the table. To
 use the same numbers elsewhere today, call the reference library
