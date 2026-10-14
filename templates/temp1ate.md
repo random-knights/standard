@@ -11,7 +11,7 @@
        - No em dashes (U+2014). Gate fails on one.
        - No en dashes (U+2013), and no double hyphen used as a dash. Use a
          comma, a colon, or a new sentence.
-       - Levels are "levels," never "reading levels."
+       - Levels are "response levels," never "reading levels" or "learning levels."
        - STRUCTURAL INVARIANCE. Every level carries all twelve tiles, in this
          order. Only the register changes: the finding sentence, the narrative
          prose and the wording of actions. Data cells are byte-identical at

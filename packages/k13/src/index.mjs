@@ -47,10 +47,10 @@ function section(heading) {
 
 /**
  * The six normative levels, in ladder order, from the table in K13.md "The
- * learning level ladder". `id` is the name with spaces as underscores, which is
+ * response levels". `id` is the name with spaces as underscores, which is
  * how the reference HTML template names its panes.
  */
-export const LEVELS = section("The learning level ladder")
+export const LEVELS = section("The response levels")
   .split("\n")
   .filter((l) => /^\| [a-z][a-z ]+ \| /.test(l))
   .map((l) => l.split("|")[1].trim())
@@ -111,7 +111,7 @@ export const NOT_IMPLEMENTED = [
   "machine gate 3: no untraceable figure (needs the run data)",
   "machine gate 6 for markdown reports: evidence block has a rendered result",
   "the seventh check for markdown reports: no model name in What's next",
-  "reading level of each pass",
+  "response level of each pass (that it is written at its level)",
   "the thirteen steps as process (cost logged, state verified, owner action named)",
   "humor rules",
 ];

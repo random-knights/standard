@@ -1,6 +1,6 @@
 # @randomknights/k13
 
-K13 - AI Response Standard, version 2.1.0, as an npm package: the standard
+K13 - AI Response Standard, version 2.2.0, as an npm package: the standard
 text and a small checker for the K13 rules that are implemented in code.
 
 The canonical text is `K13.md` in
@@ -63,7 +63,7 @@ this package is not a full pass of the K13 machine gate.
 - Machine gate 3, no untraceable figure. This needs the run data, not the
   report.
 - Machine gate 6 and the model-name rule for markdown reports.
-- The reading level of each pass.
+- That each pass is written at its response level.
 - The thirteen steps as a process: cost logged, state verified, owner action
   named.
 - The humor rules.
@@ -85,7 +85,7 @@ Two licenses, see `NOTICE`:
 
 - The checker code (`src/`, `bin/`): Apache 2.0, in `LICENSE`.
 - The standard text (`K13.md`): CC BY 4.0, in `LICENSE-DOCS`. Cite as:
-  Random Knights, LLC (2026). K13 - AI Response Standard, version 2.1.0.
+  Random Knights, LLC (2026). K13 - AI Response Standard, version 2.2.0.
   CC BY 4.0. https://github.com/random-knights/standard
 
 SPDX: `Apache-2.0 AND CC-BY-4.0`.
