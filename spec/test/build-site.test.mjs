@@ -91,7 +91,7 @@ test("the index page lists E+ at the version and status its own text declares", 
   const version = source.match(/\*\*Version:\*\*\s*([\d.]+)/)[1];
   const status = source.match(/\*\*Status:\*\*\s*([^\n]+)/)[1].trim();
 
-  assert.match(html, /E\+ Earth Health Score/);
+  assert.match(html, /E\+ Earth \+ Ai Impact Standard/);
   assert.match(html, /standard\.rand0m\.ai\/eplus\/v1\/methodology\.md/);
   assert.ok(html.includes(`methodology ${version}`), `index must show E+ ${version}`);
   assert.ok(html.includes(status), `index must carry the E+ status line: ${status}`);

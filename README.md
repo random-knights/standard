@@ -44,8 +44,8 @@
 ## <span style="color:#FAAFA5"><u> **STANDARD** </u></span>
 
 Open standard from Random Knights. K13 is how we write. AiEDs is how
-we report modeled energy and carbon from AI work. E+ is how we score
-planetary health, and it is a draft.
+we report modeled energy and carbon from AI work. E+ scores the health of
+Earth systems and shows where Ai's resource use meets them.
 
 - Built with:
   - Maximum Effort
@@ -60,21 +60,21 @@ planetary health, and it is a draft.
 </div>
 
 K13 and AiEDs are published and free to read. Both are CC BY 4.0, so you can
-adopt either without asking. E+ 1.2.0 was ratified on 2026-09-22 and is
-published the same way, CC BY 4.0. All three live in this repository.
+adopt either without asking. E+ 1.2.0 was ratified on 2026-09-22, its wording-only patch 1.2.1 followed on
+2026-10-15, and it is published the same way, CC BY 4.0. All three live in this repository.
 
 | Standard                                  | Version                   | License                                              | Canonical text                                                          | Read it                                                                                                        |
 | ----------------------------------------- | ------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | **AiEDs - AI Energy Disclosure Standard** | methodology 2.4.0         | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai)                                                               |
 | **K13 - AI Response Standard**            | 2.1.0                     | CC BY 4.0 prose, Apache 2.0 reference templates      | [K13.md](K13.md) with `templates/`                                      | [randomknights.xyz/k13](https://randomknights.xyz/k13/)                                                        |
-| **E+ - Earth Health Score Methodology**   | 1.2.0, ratified           | CC BY 4.0 prose, Apache 2.0 conformance checker      | [eplus/v1/methodology.md](eplus/v1/methodology.md)                      | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md)               |
+| **E+ - Earth + Ai Impact Standard**       | 1.2.1, ratified           | CC BY 4.0 prose, Apache 2.0 conformance checker      | [eplus/v1/methodology.md](eplus/v1/methodology.md)                      | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md)               |
 
 <!-- E+ -->
 
-## <span style="color:#ff4124"><u>**E+**</u></span> Earth Health Score Methodology (draft)
+## <span style="color:#ff4124"><u>**E+**</u></span> Earth + Ai Impact Standard
 
-A 0 to 100 planetary health index from nine environmental domains. The draft
-specifies the weights and normalizers the reference implementation computes,
+A 0 to 100 planetary health index (the Earth Health Score) from nine
+environmental domains. The text specifies the weights and normalizers the reference implementation computes,
 the coverage-normalized region mean and the exposure-weighted headline, a
 provenance ladder under which a document must not claim live for a synthetic
 input, a non-averageable breach panel with cited thresholds, and what a
@@ -82,6 +82,12 @@ conforming document and a conforming implementation must be able to prove.
 It invents nothing: every constant traces to a ratified ADR, the producer
 source, the four independent audits of 2026-09-10, or a recorded owner
 decision, and the undecided items are listed as open questions.
+
+The long name was changed from "Earth Health Score Methodology" in 1.2.1, a
+wording-only patch: the 0 to 100 score keeps the name Earth Health Score and
+no rule moved. "Ai Impact" means modeled resource demand and the published
+context found near it, never cause. This version carries no impact data.
+Co-location is not causation.
 
 <!-- K13 -->
 
@@ -495,7 +501,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Claude Code plugin   | `plugins/random-knights/`    | Apache 2.0 | An AiEDs receipt after every Claude Code or Codex response, computed locally from token usage with the reference library; Grok Build session files, Ollama and Hugging Face responses are read too (see the plugin README for what is verified). Marketplace: `.claude-plugin/marketplace.json` |
 | K13                  | `K13.md`                     | CC BY 4.0  | K13 - AI Response Standard, 2.1.0. The canonical text.                                                                                                       |
 | K13 report templates | `templates/`                 | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement.                                                 |
-| E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth Health Score Methodology, 1.2.0, ratified 2026-09-22. The canonical text, including the public implementation changelog.                          |
+| E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth + Ai Impact Standard, 1.2.1, ratified 2026-09-22. The canonical text, including the public implementation changelog.                              |
 
 <!-- ROADMAP -->
 
@@ -542,12 +548,11 @@ used.
 > Random Knights, LLC (2026). K13 - AI Response Standard, version 2.1.0.
 > CC BY 4.0. https://github.com/random-knights/standard
 
-E+ is a draft and has no citable ratified version yet. Cite the draft only as
-a draft:
+E+ 1.2.1 is ratified (1.2.0, 2026-09-22; 1.2.1 renames the standard and moves
+no rule). Cite the version you implemented:
 
-> Random Knights, LLC (2026). E+ - Earth Health Score Methodology, version
-> 1.0.0 (draft, not ratified). CC BY 4.0.
-> https://github.com/random-knights/standard
+> Random Knights, LLC (2026). E+ - Earth + Ai Impact Standard, version 1.2.1.
+> CC BY 4.0. https://github.com/random-knights/standard
 
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
