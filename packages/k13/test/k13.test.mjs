@@ -55,13 +55,12 @@ test("the version, limits and tiles come from K13.md", () => {
 
 test("K13.md no longer defines response levels, identifiers or a levels file", () => {
   const body = readFileSync(join(repoRoot, "K13.md"), "utf8");
-  const normative = body.slice(0, body.indexOf("\n## Changelog"));
-  // The words survive only where the text says what changed from 2.x.
-  const changed = normative.slice(
-    normative.indexOf("\n## What changed from 2.x"),
-    normative.indexOf("\n## The thirteen steps"),
-  );
-  const rest = normative.replace(changed, "");
+  // The words survive only in the one line that says what changed in 3.0.0.
+  const rest = body
+    .split(String.fromCharCode(10))
+    .filter((l) => !l.startsWith("Changed in 3.0.0:"))
+    .join(String.fromCharCode(10));
+  assert.ok(rest.length < body.length, "the one-line 'Changed in 3.0.0' note is gone");
   assert.doesNotMatch(rest, /response level/i);
   assert.doesNotMatch(rest, /k13-levels/);
   assert.doesNotMatch(rest, /soda pop|energy drink|black coffee|loose leaf|yerba mate/);

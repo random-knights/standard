@@ -127,6 +127,10 @@ no sentence is long. The `@randomknights/k13` package checks all of that.
 [Get started](https://randomknights.xyz/k13/get-started/) covers adopting it
 in your own pipeline.
 
+The standard is [K13.md](K13.md), about 245 lines. Longer detail is in
+[K13-REFERENCE.md](K13-REFERENCE.md) and the full version history is in
+[CHANGELOG-K13.md](CHANGELOG-K13.md).
+
 <!-- AiEDs -->
 
 ## <span style="color:#ff4124"><u>**AiEDs**</u></span> AI Energy Disclosure Standard

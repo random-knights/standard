@@ -1,4 +1,4 @@
-// Dogfood gate: K13.md is held to its own limits.
+// Dogfood gate: K13.md and its companion files are held to the same limits.
 //
 // K13 3.0.0 sets numeric limits for the quick squeeze (longest word, longest
 // sentence, average sentence, no hype word, no dashes). The standard's own
@@ -22,15 +22,30 @@ import {
 } from "../../packages/k13/src/index.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const text = readFileSync(resolve(repoRoot, "K13.md"), "utf8");
+const read = (f) => readFileSync(resolve(repoRoot, f), "utf8");
+const NL = String.fromCharCode(10);
 
-/** The prose of K13.md: outside code fences, tables, headings, metadata and 2.x history. */
-export function proseOfK13(src) {
-  const cut = src.indexOf("\n### 2.2.0");
-  assert.ok(cut > 0, "K13.md no longer has its 2.2.0 changelog entry to stop at");
+// Owner-approved exceptions to the sentence limit. Each is the exact sentence
+// text and the reason. Nothing else may be over the limit.
+const EXCEPTIONS = [
+  {
+    sentence:
+      "A quick squeeze and you're hit with a burst of sweet, simple goodness: easy to consume, easy to digest ... and oddly transparent.",
+    reason: "owner wording 2026-10-15",
+  },
+];
+
+/**
+ * The prose of a K13 document: outside code fences, tables, headings and the
+ * metadata header. `stop` cuts the document at the first line that starts the
+ * 2.x history, which is not rewritten.
+ */
+export function proseOf(src, stop) {
+  const cut = stop ? src.indexOf(stop) : -1;
+  if (stop) assert.ok(cut > 0, `the document no longer has "${stop}" to stop at`);
   const out = [];
   let fence = false;
-  for (const line of src.slice(0, cut).split("\n")) {
+  for (const line of (cut > 0 ? src.slice(0, cut) : src).split(NL)) {
     if (/^\s*(```|~~~)/.test(line)) {
       fence = !fence;
       continue;
@@ -41,33 +56,55 @@ export function proseOfK13(src) {
     if (/^\*\*[A-Za-z ]+:\*\*/.test(line)) continue; // metadata header
     out.push(line.replace(/^>\s?/, ""));
   }
-  return out.join("\n");
+  let text = out.join(NL);
+  // An approved exception is cut out before measuring.
+  for (const e of EXCEPTIONS) text = text.replace(e.sentence, " ");
+  return text;
 }
 
-const prose = proseOfK13(text);
+const DOCS = [
+  { file: "K13.md", stop: null },
+  { file: "K13-REFERENCE.md", stop: null },
+  { file: "CHANGELOG-K13.md", stop: NL + "### 2.2.0" },
+];
+const prose = Object.fromEntries(DOCS.map((d) => [d.file, proseOf(read(d.file), d.stop)]));
 
-test("K13.md's own prose meets the quick squeeze limits", () => {
-  assert.deepEqual(LIMITS, { longestWord: 12, longestSentence: 20, averageSentence: 14 });
-  assert.deepEqual(checkSentences(prose), [], "a sentence or the average is over the limit");
-  assert.deepEqual(checkPlainWords(prose), [], "a long word or a hype word");
-  assert.deepEqual(checkDashes(prose), [], "a dash");
+test("K13.md stays small enough to read in five minutes", () => {
+  const lines = read("K13.md").split(NL).length;
+  assert.ok(lines <= 260, `K13.md is ${lines} lines; the guard is 260. Move detail to K13-REFERENCE.md.`);
 });
 
-test("K13.md's own prose names no school grade or school stage", () => {
-  assert.doesNotMatch(
-    prose,
-    /kindergarten|\bK-5\b|grades?\b|middle school|high school|college|masters|doctorate|\b5th\b|elementary/i,
-  );
+test("every owner-approved exception is in K13.md word for word", () => {
+  for (const e of EXCEPTIONS) {
+    assert.ok(read("K13.md").includes(e.sentence), `exception not found: ${e.reason}`);
+  }
 });
+
+for (const d of DOCS) {
+  test(`${d.file} prose meets the quick squeeze limits`, () => {
+    assert.deepEqual(LIMITS, { longestWord: 12, longestSentence: 20, averageSentence: 14 });
+    assert.deepEqual(checkSentences(prose[d.file]), [], "a sentence or the average is over the limit");
+    assert.deepEqual(checkPlainWords(prose[d.file]), [], "a long word or a hype word");
+    assert.deepEqual(checkDashes(prose[d.file]), [], "a dash");
+  });
+
+  test(`${d.file} prose names no school grade or school stage`, () => {
+    assert.doesNotMatch(
+      prose[d.file],
+      /kindergarten|\bK-5\b|grades?\b|middle school|high school|college|masters|doctorate|\b5th\b|elementary/i,
+    );
+  });
+}
 
 test("measured numbers are printed so a reader can see the margin", () => {
-  const ss = sentencesOf(prose);
-  const longest = Math.max(...ss.map((s) => s.words));
-  const avg = ss.reduce((n, s) => n + s.words, 0) / ss.length;
-  const words = plainWordCandidates(prose);
-  const longestWord = Math.max(...words.map((w) => w.length));
-  console.log(
-    `K13.md prose: ${ss.length} sentences, longest ${longest} words, average ${avg.toFixed(1)}, longest word ${longestWord} letters`,
-  );
-  assert.ok(longest <= LIMITS.longestSentence);
+  for (const d of DOCS) {
+    const ss = sentencesOf(prose[d.file]);
+    const longest = Math.max(...ss.map((s) => s.words));
+    const avg = ss.reduce((n, s) => n + s.words, 0) / ss.length;
+    const longestWord = Math.max(...plainWordCandidates(prose[d.file]).map((w) => w.length));
+    console.log(
+      `${d.file}: ${ss.length} sentences, longest ${longest} words, average ${avg.toFixed(1)}, longest word ${longestWord} letters`,
+    );
+    assert.ok(longest <= LIMITS.longestSentence);
+  }
 });
