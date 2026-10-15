@@ -155,7 +155,7 @@ if (!eplusVersionMatch) {
 const eplusStatusMatch = eplusText.match(/\*\*Status:\*\*\s*([^\n]+)/);
 const EPLUS = {
   name: "E+",
-  fullName: "E+ Earth Health Score",
+  fullName: "E+ Earth + Ai Impact Standard",
   version: eplusVersionMatch[1],
   status: eplusStatusMatch ? eplusStatusMatch[1].trim() : "",
   dir: EPLUS_DIR,
