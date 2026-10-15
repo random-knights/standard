@@ -421,7 +421,7 @@ export function sentencesOf(prose) {
  * digit or a path, version or address character in it are named things, not
  * vocabulary, and are not read.
  */
-function plainWordCandidates(prose) {
+export function plainWordCandidates(prose) {
   const stripped = prose
     .replace(/`[^`]*`/g, " ")
     .replace(/"[^"\n]*"/g, " ")
@@ -444,7 +444,8 @@ export function checkPlainWords(prose) {
       out.push(finding("plain-words", `"${w}" is ${w.length} letters; the limit is ${LIMITS.longestWord}. Use a shorter word, or put a technical name in backticks`));
     }
   }
-  const flat = prose.replace(/`[^`]*`/g, " ");
+  // A word named in backticks or double quotes is mentioned, not used.
+  const flat = prose.replace(/`[^`]*`/g, " ").replace(/"[^"\n]*"/g, " ");
   for (const re of HYPE) {
     const m = re.exec(flat);
     if (m) out.push(finding("plain-words", `hype or long-form word "${m[0]}"`));
