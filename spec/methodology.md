@@ -40,6 +40,15 @@
 > `v1.0.0` and `v1.1.0` remain tagged (deleting them would recreate a changelog
 > that claims versions with no artifacts) but are SUPERSEDED and must not be
 > implemented.
+>
+> **Tag series (2026-10-15):** the tags above are the AiEDs series and keep the
+> bare `v<semver>` form. K13 and E+ are separate standards in this repository
+> whose version numbers collide with it, so they are tagged `k13-v<semver>`
+> and `eplus-v<semver>`, annotated, one per ratified version, with any tag cut
+> after the fact stated as a backfill in its release notes. `v2.3.1` marks a
+> naming commit, not a methodology release, and stays where it is. The scheme
+> and the rules for backfills are in CONTRIBUTING.md under "Release tags and
+> GitHub Releases".
 
 ## 1. Scope and Non-Overlap
 

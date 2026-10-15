@@ -160,12 +160,53 @@ publishing is still an owner act.
 |---------|------------|-----------------|
 | site | `standard.rand0m.ai`, the canonical text and factor tables | `npm run publish:site` |
 | npm | what `npm i @randomknights/...` installs | owner; see `.github/workflows/npm-publish.yml` |
-| releases | the citable tag per ratified version | owner; annotated tag, per the tagging note in `spec/methodology.md` |
+| releases | the citable tag per ratified version, for each standard | owner; annotated tag, per the scheme below and the tagging note in `spec/methodology.md` |
 
 A standard is not published until all three agree. The check watched the site
 alone until 2026-09-25, when an outside reader found npm serving AiEDs 2.3.0
 and the releases stopped at v2.0.0 while the site was correctly on 2.4.0. The
 site check was green the whole time.
+
+### Release tags and GitHub Releases
+
+This repository carries three standards and one tag namespace, and their
+version numbers collide (AiEDs 2.x, K13 2.x, E+ 1.x). The original series,
+`v1.0.0` to `v2.4.0`, tracks AiEDs and is not renamed or moved. K13 and E+ use
+a prefix:
+
+| Standard | Tag | Example | Version source |
+|----------|-----|---------|----------------|
+| AiEDs | `v<semver>` | `v2.4.0` | `spec/methodology.md` |
+| K13 | `k13-v<semver>` | `k13-v2.2.0` | `K13.md` |
+| E+ | `eplus-v<semver>` | `eplus-v1.2.1` | `eplus/v1/methodology.md` |
+
+Rules:
+
+1. **One tag per ratified version, annotated.** `git tag -a`, never a
+   lightweight tag, pointing at the commit on `main` that ratified that
+   version (the merge or squash commit, not a branch commit). A draft that
+   was never ratified gets no tag.
+2. **A tag is never moved or deleted.** If a tag is wrong, say so in a new
+   release note and tag the next version.
+3. **A GitHub Release is created from each tag**, with the notes drafted from
+   that version's changelog entry. The release is not marked pre-release. Only
+   the newest release of a series may be marked latest; GitHub allows one
+   latest release per repository, so when a backfill is created after a newer
+   tag exists, create it with `--latest=false`.
+4. **Backfills are stated plainly.** A tag cut after the fact says in its
+   annotation and in its release notes that it is a backfill, names the date
+   it was cut, and names the commit that ratified the version. The 2026-07-12
+   AiEDs backfill in the tagging note of `spec/methodology.md` is the
+   precedent. A backfill never claims the tag existed at the time.
+5. **Tagging, pushing tags and creating releases are owner acts.** The drift
+   check below reads the result; it publishes nothing.
+
+`npm run check:published` compares the newest tag in each series with the
+version in `spec/v2/standard-versions.json`. AiEDs keeps its exact-tag test.
+K13 and E+ fail when their newest tag is BEHIND the repository version or the
+series has no tag at all, and never fail when a tag is ahead. The daily
+`85-published-drift` run is therefore red for K13 and E+ until the owner cuts
+their first tags; that is the check working, not a fault in the check.
 
 `npm test` in `spec/` runs `test/site-output.test.mjs`, which rebuilds the
 tree and refuses if any served file is not byte-identical to its repo source
