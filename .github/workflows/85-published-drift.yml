@@ -47,6 +47,7 @@ on:
       - "eplus/v1/methodology.md"
       - "K13.md"
       - "scripts/check-published-site.mjs"
+      - "scripts/release-tags.mjs"
       - ".github/workflows/85-published-drift.yml"
 
 permissions:

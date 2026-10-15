@@ -69,6 +69,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { compareSemver, releaseRows } from "./release-tags.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -79,22 +80,6 @@ const BASE = baseIndex !== -1 ? args[baseIndex + 1] : "https://standard.rand0m.a
 const repo = JSON.parse(
   readFileSync(join(root, "spec/v2/standard-versions.json"), "utf8"),
 );
-
-// Semver compare on the numeric triple. These are all plain x.y.z; anything
-// that is not gets compared as a string and reported rather than guessed at.
-function compareSemver(a, b) {
-  const pa = String(a).split(".").map(Number);
-  const pb = String(b).split(".").map(Number);
-  if (pa.some(Number.isNaN) || pb.some(Number.isNaN)) {
-    return a === b ? 0 : null;
-  }
-  for (let i = 0; i < 3; i++) {
-    const x = pa[i] ?? 0;
-    const y = pb[i] ?? 0;
-    if (x !== y) return x < y ? -1 : 1;
-  }
-  return 0;
-}
 
 const REPO = "random-knights/standard";
 const PACKAGES = ["aieds", "k13", "earthplus"];
@@ -144,30 +129,24 @@ async function checkNpm() {
 }
 
 // releases: methodology.md's own tagging note establishes that each ratified
-// version gets an annotated tag so it has a citable artifact. This asks
-// whether the CURRENT AiEDs version has one.
+// version gets an annotated tag so it has a citable artifact. This asks, for
+// each standard with its own tag series (AiEDs v*, K13 k13-v*, E+ eplus-v*),
+// whether the CURRENT repo version has one. The comparison itself lives in
+// scripts/release-tags.mjs so it can be tested against fixtures.
 //
-// It checks only the AiEDs version deliberately. This repo's tag namespace is
-// already muddled - v2.3.1 marks a naming commit, not a methodology release -
-// so inferring a rule for eplus and k13 from these tags would be inventing
-// one. AiEDs is the version the tagging note actually speaks to.
-async function checkReleases(aiedsSemver) {
+// AiEDs keeps its original exact-tag test. K13 and E+ compare the newest
+// published tag in their series to the repo version and fail only when it is
+// BEHIND (or the series has no tag at all), the same rule as the other
+// surfaces. See the tag naming scheme in CONTRIBUTING.md.
+async function checkReleases(standards) {
   const headers = process.env.GITHUB_TOKEN
     ? { authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
     : {};
   try {
     const tags = await getJson(`https://api.github.com/repos/${REPO}/tags?per_page=100`, headers);
-    const names = new Set(tags.map((t) => t.name));
-    const want = `v${aiedsSemver}`;
-    return [{
-      surface: "releases",
-      id: want,
-      repo: aiedsSemver,
-      live: names.has(want) ? aiedsSemver : null,
-      state: names.has(want) ? "ok" : "UNTAGGED",
-    }];
+    return releaseRows(standards, tags.map((t) => t.name));
   } catch (err) {
-    return [{ surface: "releases", id: "tags", repo: aiedsSemver, live: null, state: "unreachable", note: err.message }];
+    return [{ surface: "releases", id: "tags", repo: null, live: null, state: "unreachable", note: err.message }];
   }
 }
 
@@ -218,12 +197,11 @@ async function main() {
     }
   }
 
-  // The AiEDs version this repo claims, used to ask whether a release exists
-  // for it. Taken from the committed file, not from the live site, so a stale
+  // The versions this repo claims, used to ask whether a release exists for
+  // each. Taken from the committed file, not from the live site, so a stale
   // site cannot make the release check agree with it.
-  const aieds = (repo.standards ?? []).find((s) => s.id === "aieds");
   rows.push(...(await checkNpm()));
-  if (aieds) rows.push(...(await checkReleases(aieds.semver)));
+  rows.push(...(await checkReleases(repo.standards)));
 
   const FAIL_STATES = new Set(["BEHIND", "MISSING", "UNCOMPARABLE", "UNPUBLISHED", "UNTAGGED"]);
   const failing = rows.filter((r) => FAIL_STATES.has(r.state));
@@ -269,7 +247,7 @@ async function main() {
     } else if (r.state === "UNPUBLISHED") {
       console.error(`UNPUBLISHED  ${r.id}: version ${r.repo} is committed but the package is not on npm`);
     } else if (r.state === "UNTAGGED") {
-      console.error(`UNTAGGED     ${r.id}: AiEDs ${r.repo} is ratified but has no release tag`);
+      console.error(`UNTAGGED     ${r.id}: ${r.name ?? r.id} ${r.repo} is ratified but has no release tag`);
     } else {
       console.error(`UNCOMPARABLE ${r.surface} ${r.id}: repo ${r.repo} vs published ${r.live}`);
     }
@@ -291,7 +269,9 @@ async function main() {
   }
   if (by("releases")) {
     console.error("RELEASES: owner action. Cut an annotated tag for the ratified");
-    console.error("  version so it has a citable artifact, per the tagging note in");
+    console.error("  version so it has a citable artifact: v<x.y.z> for AiEDs,");
+    console.error("  k13-v<x.y.z> for K13, eplus-v<x.y.z> for E+. See the tagging");
+    console.error("  scheme in CONTRIBUTING.md and the tagging note in");
     console.error("  spec/methodology.md.");
   }
   return 1;
