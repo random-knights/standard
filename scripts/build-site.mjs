@@ -30,6 +30,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { levelsRegistry } from "../packages/k13/src/index.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outputRoot = join(repoRoot, ".firebase", "standard-site");
@@ -98,14 +99,14 @@ export const PROPERTY_NAME_HTML = PROPERTY_NAME;
 const XYZ = "https://randomknights.xyz";
 
 // K13 lives in this repository under CC BY 4.0 (see LICENSE-DOCS): K13.md is
-// at the root. Its level registry, canon/k13-levels.json, is not in this
-// repository yet. Whether each file is present is a FACT about the
-// filesystem, not a flag a human sets and might forget to flip, so it is
-// checked here, not asserted: the page lists a file as published only when it
-// is really there, and marks the registry "not yet published" until it is.
+// at the root. Its level registry, k13-levels.json, is GENERATED from K13.md
+// when the site is built (packages/k13 levelsRegistry), so the ladder has one
+// source and there is no committed second copy to drift. Whether K13.md is
+// present is a FACT about the filesystem, not a flag a human sets and might
+// forget to flip, so it is checked here, not asserted.
 const K13_DIR = "k13/v1";
 const k13MdPresent = existsSync(join(repoRoot, "K13.md"));
-const k13LevelsPresent = existsSync(join(repoRoot, "canon", "k13-levels.json"));
+const k13LevelsPresent = k13MdPresent;
 
 // K13's version is READ OUT OF K13.md, exactly as E+ reads its own and AiEDs
 // reads the methodology document. It used to be the literal "1.1.0" typed
@@ -499,7 +500,8 @@ export function expectedFiles() {
   if (k13LevelsPresent) {
     files.set(
       join(K13_DIR, "k13-levels.json"),
-      readFileSync(join(repoRoot, "canon", "k13-levels.json")),
+      Buffer.from(`${JSON.stringify(levelsRegistry(), null, 2)}
+`),
     );
   }
   return files;
