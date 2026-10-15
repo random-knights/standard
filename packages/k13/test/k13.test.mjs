@@ -292,3 +292,21 @@ test("the worked example 'One fact, one pass' passes checks 1 to 5", () => {
   assert.ok(checkPassage(`${passage} It took 3.2 seconds.`, runFigures).some((f) => f.check === "figures"));
   assert.ok(checkPassage(passage.replace(/Confidence is[^.]*\./g, ""), runFigures).some((f) => f.check === "confidence"));
 });
+
+test("hostile input: repeated tags, Derived: and spaces cannot make any check slow", () => {
+  const hostile = [
+    "<pre".repeat(40000),
+    "<script".repeat(40000),
+    "Derived: ! from ".repeat(20000),
+    "confidence ".repeat(20000),
+    " ".repeat(200000) + "x",
+    "<".repeat(100000),
+  ];
+  for (const h of hostile) {
+    const t0 = Date.now();
+    checkText(`## quick squeeze\n\n${h}\n`, "md");
+    checkText(`<div id="quick-squeeze"><section data-tile="finding">${h}</section></div>`, "html");
+    checkPassage(h, []);
+    assert.ok(Date.now() - t0 < 3000, `a hostile input of ${h.length} characters took too long`);
+  }
+});

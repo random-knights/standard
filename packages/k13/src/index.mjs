@@ -151,6 +151,93 @@ function finding(check, message, line) {
 }
 
 // ---------------------------------------------------------------------------
+// Linear string helpers. The checker reads files it did not write, so nothing
+// here uses a regular expression that can backtrack on a hostile file: tags
+// and sentences are cut with indexOf and character scans.
+// ---------------------------------------------------------------------------
+
+/** Remove every tag, putting `repl` in its place. A "<" with no ">" ends the text. */
+function stripTags(s, repl = " | ") {
+  const out = [];
+  let i = 0;
+  while (i < s.length) {
+    const lt = s.indexOf("<", i);
+    if (lt < 0) {
+      out.push(s.slice(i));
+      break;
+    }
+    out.push(s.slice(i, lt));
+    const gt = s.indexOf(">", lt);
+    if (gt < 0) break;
+    out.push(repl);
+    i = gt + 1;
+  }
+  return out.join("");
+}
+
+/** Remove whole elements (open tag to close tag) of the given names. */
+function removeElements(html, names) {
+  let text = html;
+  for (const name of names) {
+    let lc = text.toLowerCase();
+    const out = [];
+    let i = 0;
+    while (i < text.length) {
+      const open = lc.indexOf(`<${name}`, i);
+      if (open < 0) {
+        out.push(text.slice(i));
+        break;
+      }
+      const after = lc[open + name.length + 1];
+      if (after !== undefined && /[a-z0-9]/.test(after)) {
+        out.push(text.slice(i, open + 1));
+        i = open + 1;
+        continue;
+      }
+      out.push(text.slice(i, open), " ");
+      const close = lc.indexOf(`</${name}`, open);
+      if (close < 0) break;
+      const gt = lc.indexOf(">", close);
+      if (gt < 0) break;
+      i = gt + 1;
+    }
+    text = out.join("");
+    lc = text.toLowerCase();
+  }
+  return text;
+}
+
+/** Collapse runs of whitespace to one space, by scan. */
+function squash(s) {
+  return s.split(/\s+/).join(" ").trim();
+}
+
+/** The elements of a name, kept (the complement of removeElements). */
+function keepElements(html, names) {
+  const lc = html.toLowerCase();
+  const out = [];
+  for (const name of names) {
+    let i = 0;
+    while (i < html.length) {
+      const open = lc.indexOf(`<${name}`, i);
+      if (open < 0) break;
+      const after = lc[open + name.length + 1];
+      if (after !== undefined && /[a-z0-9]/.test(after)) {
+        i = open + 1;
+        continue;
+      }
+      const close = lc.indexOf(`</${name}`, open);
+      if (close < 0) break;
+      const gt = lc.indexOf(">", close);
+      if (gt < 0) break;
+      out.push(html.slice(open, gt + 1));
+      i = gt + 1;
+    }
+  }
+  return out.join("\n");
+}
+
+// ---------------------------------------------------------------------------
 // Figures (gate check 1).
 // ---------------------------------------------------------------------------
 
@@ -178,7 +265,43 @@ export function extractFigures(text) {
   return out;
 }
 
-const DERIVED = /Derived:\s*([^\s]+)\s+from\s+(.+?)\s+by\s+([^.\n]+)/gi;
+/**
+ * The "Derived: <figure> from <figures> by <how>" sentences of a text, found by
+ * scanning, with the text left over once they are cut out.
+ */
+function findDerived(text) {
+  const lc = text.toLowerCase();
+  const found = [];
+  const rest = [];
+  let i = 0;
+  while (i < text.length) {
+    const at = lc.indexOf("derived:", i);
+    if (at < 0) {
+      rest.push(text.slice(i));
+      break;
+    }
+    rest.push(text.slice(i, at), " ");
+    let end = at + 8;
+    while (end < text.length) {
+      const ch = text[end];
+      if (ch === "\n") break;
+      if ((ch === "." || ch === "!" || ch === "?") && (end + 1 >= text.length || /\s/.test(text[end + 1]))) break;
+      end += 1;
+    }
+    const sentence = text.slice(at + 8, end).trim();
+    const low = sentence.toLowerCase();
+    const fromAt = low.indexOf(" from ");
+    const byAt = fromAt < 0 ? -1 : low.indexOf(" by ", fromAt + 6);
+    found.push({
+      raw: text.slice(at, end),
+      fig: fromAt < 0 ? sentence : sentence.slice(0, fromAt),
+      inputs: fromAt < 0 ? "" : sentence.slice(fromAt + 6, byAt < 0 ? sentence.length : byAt),
+      how: byAt < 0 ? "" : sentence.slice(byAt + 4),
+    });
+    i = end + 1;
+  }
+  return { found, rest: rest.join("") };
+}
 
 /**
  * Gate check 1 on prose. `runFigures` is the run data: the figures the run
@@ -190,19 +313,22 @@ const DERIVED = /Derived:\s*([^\s]+)\s+from\s+(.+?)\s+by\s+([^.\n]+)/gi;
 export function checkFigures(prose, runFigures) {
   const known = new Set([...(runFigures ?? [])].map(String));
   const out = [];
-  for (const m of prose.matchAll(DERIVED)) {
-    const [, fig, inputs, how] = m;
+  const { found, rest } = findDerived(prose);
+  for (const d of found) {
+    const { fig, inputs, how } = d;
     const outFigs = [...extractFigures(fig)];
     const inFigs = [...extractFigures(inputs)];
     if (outFigs.length === 0) {
-      out.push(finding("figures", `a Derived sentence names no figure: "${m[0].trim()}"`));
+      out.push(finding("figures", `a Derived sentence names no figure: "${d.raw.trim().slice(0, 60)}"`));
       continue;
     }
     if (inFigs.length === 0) {
       out.push(finding("figures", `derived figure "${outFigs[0]}" names no input figure`));
     }
-    if (how.trim().split(/\s+/).filter(Boolean).length < 1) {
-      out.push(finding("figures", `derived figure "${outFigs[0]}" does not say how`));
+    if (how.trim() === "") {
+      out.push(
+        finding("figures", `derived figure "${outFigs[0]}" does not say how (write "Derived: 8 from 5 and 3 by adding them.")`),
+      );
     }
     for (const f of inFigs) {
       if (!known.has(f)) {
@@ -211,8 +337,7 @@ export function checkFigures(prose, runFigures) {
     }
     for (const f of outFigs) known.add(f);
   }
-  const body = prose.replace(DERIVED, " ");
-  for (const fig of [...extractFigures(body)].sort()) {
+  for (const fig of [...extractFigures(rest)].sort()) {
     if (!known.has(fig)) {
       out.push(finding("figures", `figure "${fig}" is not in the run data and is not declared derived`));
     }
@@ -226,8 +351,22 @@ export function checkFigures(prose, runFigures) {
 
 /** Gate check 2: "confidence" then high, moderate or low, then "because". */
 export function checkConfidence(prose) {
-  const flat = prose.replace(/[*_`]/g, "").replace(/\s+/g, " ");
-  const ok = /\bconfidence(?:\s+is)?\s*[:,]?\s*(?:high|moderate|low)\b[^.!?]*\bbecause\b/i.test(flat);
+  const flat = squash(prose.replace(/[*_`]/g, ""));
+  let ok = false;
+  // One sentence at a time: "confidence", an optional "is", a level word, and a
+  // "because" later in the same sentence. Cut by scan, no backtracking.
+  for (const sentence of flat.split(/(?<=[.!?])\s/)) {
+    const lc = sentence.toLowerCase();
+    let from = lc.indexOf("confidence");
+    while (from >= 0 && !ok) {
+      let rest = lc.slice(from + 10).replace(/^[\s:,]+/, "");
+      if (rest.startsWith("is ")) rest = rest.slice(3).replace(/^[\s:,]+/, "");
+      const level = ["high", "moderate", "low"].find((w) => rest.startsWith(w) && !/[a-z]/.test(rest[w.length] ?? " "));
+      if (level && rest.slice(level.length).includes("because")) ok = true;
+      from = lc.indexOf("confidence", from + 10);
+    }
+    if (ok) break;
+  }
   return ok
     ? []
     : [finding("confidence", 'no confidence statement: write "Confidence is high, because ..." (high, moderate or low, and what it rests on)')];
@@ -401,17 +540,14 @@ function htmlPass(text) {
   return from < 0 ? null : text.slice(from);
 }
 
+const ENTITIES = { nbsp: " ", lt: "<", gt: ">", amp: "&", middot: "." };
+
 function htmlToText(s) {
-  return s
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " | ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/&middot;/g, ".")
-    .replace(/&#?\w+;/g, " ")
+  // Elements out, tags out, then every entity decoded in ONE pass, so an
+  // "&amp;lt;" is read once as "&lt;" and never a second time as "<".
+  const text = stripTags(removeElements(s, ["script", "style"]));
+  return text
+    .replace(/&(nbsp|lt|gt|amp|middot);|&#?\w+;/g, (m, name) => (name ? ENTITIES[name] : " "))
     .replace(/[ \t]+/g, " ");
 }
 
@@ -468,10 +604,8 @@ function reportParts(rep) {
     if (raw === undefined) continue;
     if (rep.format === "html") {
       const body = raw;
-      const code = [...body.matchAll(/<(pre|code|table)[\s\S]*?<\/\1>/gi)].map((m) => m[0]).join("\n");
-      const rest = body
-        .replace(/<(pre|code|table)[\s\S]*?<\/\1>/gi, "\n")
-        .replace(/<h\d[\s\S]*?<\/h\d>/gi, " ");
+      const code = keepElements(body, ["pre", "code", "table"]);
+      const rest = removeElements(body, ["pre", "code", "table", "h1", "h2", "h3", "h4", "h5", "h6"]);
       const proseBody = t.data ? "" : htmlToText(rest.replace(/<\/(p|li|div|h\d)>/gi, "\n"));
       prose += `${proseBody}\n`;
       data += `${htmlToText(t.data ? body : code)}\n`;
@@ -571,7 +705,7 @@ function shapeFindings(rep) {
 
 /** Gate check 6: the AiEDs tile gives energyKWh and gCO2e, each a figure or "not reported". */
 export function checkCostLine(tileText) {
-  const flat = tileText.replace(/<[^>]+>/g, " | ").replace(/\s+/g, " ");
+  const flat = squash(stripTags(tileText));
   const out = [];
   for (const key of ["energyKWh", "gCO2e"]) {
     const re = new RegExp(`${key}[\\s|:*]+(?:[0-9][0-9.,]*|not reported)`, "i");
