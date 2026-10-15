@@ -1,8 +1,13 @@
 // Tests for @randomknights/k13. Not shipped in the package.
 //
 // K13 says a gate that has never failed is not a gate, so every check this
-// package implements is shown passing on the reference templates and then
-// failing on a planted defect.
+// package implements is shown passing on the reference templates and a filled
+// report, and then failing on a planted defect.
+//
+// K13 3.0.0 replaced the six response levels with one pass, the quick squeeze.
+// The tests that pinned six levels, the level identifiers, the levels registry
+// and the glyph text alternatives were removed with them: the rules they held
+// are no longer in the standard.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -12,20 +17,21 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   K13_VERSION,
-  LEVELS,
+  LIMITS,
   TILES,
-  IDENTIFIERS,
+  checkConfidence,
   checkDashes,
+  checkFigures,
   checkFile,
-  checkGlyphAlternatives,
-  checkGradedValues,
-  checkNumberAgreement,
+  checkPassage,
+  checkPlainWords,
+  checkSentences,
   checkText,
-  exampleSixWays,
+  exampleQuickSqueeze,
   extractFigures,
-  levelsRegistry,
   loadVectors,
   runVector,
+  sentencesOf,
 } from "../src/index.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -33,27 +39,67 @@ const repoRoot = resolve(here, "../../..");
 const cli = join(here, "..", "bin", "k13.mjs");
 const mdTemplate = readFileSync(join(repoRoot, "templates/temp1ate.md"), "utf8");
 const htmlTemplate = readFileSync(join(repoRoot, "templates/temp1ate.html"), "utf8");
+const filledMd = readFileSync(join(here, "..", "vectors/filled-pass.md"), "utf8");
+const filledHtml = readFileSync(join(here, "..", "vectors/filled-pass.html"), "utf8");
 
 const EM_DASH = String.fromCharCode(0x2014);
 const EN_DASH = String.fromCharCode(0x2013);
 
-test("the version, levels and tiles come from K13.md", () => {
+test("the version, limits and tiles come from K13.md", () => {
   const k13 = readFileSync(join(repoRoot, "K13.md"), "utf8");
   assert.ok(k13.includes(`**Version:** ${K13_VERSION}`));
-  assert.deepEqual(
-    LEVELS.map((l) => l.name),
-    ["juice box", "soda pop", "energy drink", "black coffee", "loose leaf", "yerba mate"],
-  );
+  assert.equal(K13_VERSION, "3.0.0");
+  assert.deepEqual(LIMITS, { longestWord: 12, longestSentence: 20, averageSentence: 14 });
   assert.equal(TILES.length, 12);
 });
 
-test("the reference templates and K13.md itself pass", () => {
+test("K13.md no longer defines response levels, identifiers or a levels file", () => {
+  const body = readFileSync(join(repoRoot, "K13.md"), "utf8");
+  const normative = body.slice(0, body.indexOf("\n## Changelog"));
+  // The words survive only where the text says what changed from 2.x.
+  const changed = normative.slice(
+    normative.indexOf("\n## What changed from 2.x"),
+    normative.indexOf("\n## The thirteen steps"),
+  );
+  const rest = normative.replace(changed, "");
+  assert.doesNotMatch(rest, /response level/i);
+  assert.doesNotMatch(rest, /k13-levels/);
+  assert.doesNotMatch(rest, /soda pop|energy drink|black coffee|loose leaf|yerba mate/);
+  assert.doesNotMatch(rest, /^\d+\.\d+ /m, "a numbered sub-step such as 12.1 is back");
+});
+
+test("the thirteen steps are numbered 1 to 13, with no sub-steps", () => {
+  const body = readFileSync(join(repoRoot, "K13.md"), "utf8");
+  const start = body.indexOf("\n## The thirteen steps");
+  const end = body.indexOf("\n## ", start + 5);
+  const numbers = body
+    .slice(start, end)
+    .split("\n")
+    .map((l) => /^(\d+)\. /.exec(l))
+    .filter(Boolean)
+    .map((m) => Number(m[1]));
+  assert.deepEqual(numbers, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
+});
+
+test("the reference templates and a filled document pass; K13.md passes the dash check", () => {
   for (const f of ["templates/temp1ate.md", "templates/temp1ate.html", "K13.md"]) {
     const r = checkFile(join(repoRoot, f));
     assert.deepEqual(r.findings, [], f);
   }
-  assert.ok(checkText(mdTemplate, "md").ran.includes("structure"));
-  assert.ok(checkText(htmlTemplate, "html").ran.includes("evidence"));
+  const t = checkText(mdTemplate, "md");
+  assert.ok(t.ran.includes("structure"));
+  assert.equal(t.skipped.length, 1, "an unfilled template says its content checks were skipped");
+  for (const [text, format] of [
+    [filledMd, "md"],
+    [filledHtml, "html"],
+  ]) {
+    const r = checkText(text, format);
+    assert.deepEqual(r.findings, [], format);
+    assert.deepEqual(
+      r.ran,
+      ["dash", "structure", "evidence", "whats-next", "figures", "confidence", "plain-words", "sentences", "cost-line"],
+    );
+  }
 });
 
 test("dash: em dash, en dash and a double-hyphen surrogate fail", () => {
@@ -75,46 +121,98 @@ test("dash: em dash, en dash and a double-hyphen surrogate fail", () => {
   assert.deepEqual(checkDashes(notDashes), []);
 });
 
-test("structure: a tile missing from one markdown level fails", () => {
-  const planted = mdTemplate.replace(/### Discrepancies/, "### Something else");
-  const r = checkText(planted, "md");
-  assert.equal(r.ok, false);
-  assert.ok(r.findings.some((f) => f.check === "structure"));
+test("figures: spelled numbers and digits are the same figure", () => {
+  assert.deepEqual([...extractFigures("six of 6 and Four, version 3.0.0")].sort(), ["3.0.0", "4", "6"]);
+  assert.deepEqual([...extractFigures("one of the copies")], []);
 });
 
-test("structure: a markdown level missing entirely fails", () => {
-  const r = checkText(mdTemplate.replace("## yerba mate", "## other"), "md");
-  assert.ok(r.findings.some((f) => /missing level "yerba mate"/.test(f.message)));
+test("figures: an untraced figure fails, a derived one passes, a derived one with a bad input fails", () => {
+  assert.equal(checkFigures("We ran 7 checks.", ["6"]).length, 1);
+  assert.deepEqual(checkFigures("We ran 6 checks.", ["6"]), []);
+  const derived = "Eight ran. Derived: 8 from 5 and 3 by adding them.";
+  assert.deepEqual(checkFigures(derived, ["5", "3"]), []);
+  const bad = checkFigures(derived, ["5"]);
+  assert.ok(bad.some((f) => /comes from "3"/.test(f.message)));
+  // A chain: a derived figure may feed a later one.
+  const chain = "Derived: 8 from 5 and 3 by adding them. Derived: 4 from 8 by halving it. Four ran.";
+  assert.deepEqual(checkFigures(chain, ["5", "3"]), []);
+});
+
+test("confidence: a level word and a reason are both needed", () => {
+  assert.deepEqual(checkConfidence("Confidence is high, because we read each one."), []);
+  assert.deepEqual(checkConfidence("**confidence:** moderate, because we searched four places."), []);
+  assert.equal(checkConfidence("We are sure.").length, 1);
+  assert.equal(checkConfidence("Confidence is high.").length, 1);
+});
+
+test("plain words: the letter limit and the hype list", () => {
+  assert.equal(checkPlainWords("We checked interoperability today.").length, 1);
+  assert.deepEqual(checkPlainWords("We checked `interoperability` today."), []);
+  assert.deepEqual(checkPlainWords('The term "interoperability" is defined here.'), []);
+  assert.deepEqual(checkPlainWords("See https://example.org/interoperability-guidelines for it."), []);
+  assert.deepEqual(checkPlainWords("A twelve-letter word, verification, is allowed."), []);
+  assert.equal(checkPlainWords("An unlock for the team.").length, 1);
+  assert.equal(checkPlainWords("We use it prior to the run.").length, 1);
+});
+
+test("sentences: the word limit and the average", () => {
+  const short = "It is so. It is so. It is so.";
+  const twenty = Array(20).fill("word").join(" ") + ".";
+  assert.deepEqual(checkSentences(`${twenty} ${short}`), []);
+  assert.equal(checkSentences(`${Array(21).fill("word").join(" ")}. ${short}`).length, 1);
+  const eighteen = `Word ${Array(17).fill("word").join(" ")}.`;
+  const avg = checkSentences(`${eighteen} ${eighteen} ${eighteen}`);
+  assert.equal(avg.length, 1);
+  assert.match(avg[0].message, /average/);
+  assert.equal(sentencesOf("One. Two words here.\n\n- A list item.\n- Another one.").length, 4);
+});
+
+test("structure: a tile missing from the markdown report fails", () => {
+  const r = checkText(filledMd.replace("### Discrepancies", "### Something else"), "md");
+  assert.equal(r.ok, false);
+  assert.ok(r.findings.some((f) => f.check === "structure" && /Discrepancies/.test(f.message)));
 });
 
 test("structure: html tiles out of order fail", () => {
-  const planted = htmlTemplate
+  const planted = filledHtml
     .replace('data-tile="finding"', 'data-tile="__swap__"')
     .replace('data-tile="verdict-row"', 'data-tile="finding"')
     .replace('data-tile="__swap__"', 'data-tile="verdict-row"');
-  const r = checkText(planted, "html");
-  assert.ok(r.findings.some((f) => f.check === "structure"));
+  assert.ok(checkText(planted, "html").findings.some((f) => f.check === "structure"));
 });
 
-test("evidence: a command with no result fails", () => {
-  const planted = htmlTemplate.replace('class="ev-result"', 'class="ev-nothing"');
-  const r = checkText(planted, "html");
-  assert.ok(r.findings.some((f) => f.check === "evidence"));
+test("structure: other passes in a 2.x report are not checked and do not fail it", () => {
+  const withOld = `${filledMd}\n---\n\n## soda pop\n\nAn old 2.x pass that carries nothing else.\n`;
+  assert.deepEqual(checkText(withOld, "md").findings, []);
 });
 
-test("whats-next: a model name fails", () => {
-  const from = htmlTemplate.indexOf('data-tile="whats-next"');
-  const planted =
-    htmlTemplate.slice(0, from) +
-    htmlTemplate.slice(from).replace(">role<", ">role< opus ");
-  const r = checkText(planted, "html");
-  assert.ok(r.findings.some((f) => /names a model/.test(f.message)));
+test("evidence: a command with no result fails, in html and in markdown", () => {
+  const h = checkText(filledHtml.replace('class="ev-result"', 'class="ev-nothing"'), "html");
+  assert.ok(h.findings.some((f) => f.check === "evidence"));
+  const m = checkText(filledMd.replace("Result:\n\n```\n6\n```\n", ""), "md");
+  assert.ok(m.findings.some((f) => f.check === "evidence"));
 });
 
-test("whats-next: a markdown level without the completion answer fails", () => {
-  const planted = mdTemplate.replace(/No next step, this\s+work is complete/, "Done");
-  const r = checkText(planted, "md");
-  assert.ok(r.findings.some((f) => f.check === "whats-next"));
+test("whats-next: a model name fails; the completion answer stands in for a role", () => {
+  const model = checkText(filledMd.replace("| role | builder |", "| role | opus builder |"), "md");
+  assert.ok(model.findings.some((f) => /names a model/.test(f.message)));
+  const done = filledMd.replace(
+    /### What's next[\s\S]*?### Owner actions/,
+    "### What's next\n\nNo next step, this work is complete. The check is done.\n\n### Owner actions",
+  );
+  assert.deepEqual(checkText(done, "md").findings.filter((f) => f.check === "whats-next"), []);
+});
+
+test("cost line: energyKWh and gCO2e each need a figure or not reported", () => {
+  const ok = checkText(filledMd.replace("| gCO2e | not reported |", "| gCO2e | 0.4 |"), "md");
+  assert.deepEqual(ok.findings, []);
+  const bad = checkText(filledMd.replace("| gCO2e | not reported |", "| gCO2e | |"), "md");
+  assert.ok(bad.findings.some((f) => f.check === "cost-line" && /gCO2e/.test(f.message)));
+});
+
+test("content: a report with an untraced figure in its prose fails check 1", () => {
+  const planted = filledMd.replace("Six copies of the rules are old.", "Seven copies of the rules are old.");
+  assert.ok(checkText(planted, "md").findings.some((f) => f.check === "figures" && /"7"/.test(f.message)));
 });
 
 test("a plain document runs only the dash check and says so", () => {
@@ -143,7 +241,7 @@ test("cli: exit 0 on a pass, 1 on a finding, 2 on bad usage", () => {
 
 test("evidence: a hostile file cannot make the check slow", () => {
   const hostile =
-    '<div id="pane-juice_box"><div data-tile="evidence-blocks">' +
+    '<div id="quick-squeeze"><div data-tile="evidence-blocks">' +
     '<div class="evidence">a'.repeat(50000) +
     '<div data-tile="discrepancies"></div></div>';
   const t0 = Date.now();
@@ -151,9 +249,9 @@ test("evidence: a hostile file cannot make the check slow", () => {
   assert.ok(Date.now() - t0 < 2000, "the evidence check took too long");
 });
 
-test("vectors: every gate 1 to 6 has a passing and a failing vector, and each behaves", () => {
+test("vectors: every gate 1 to 9 has a passing and a failing vector, and each behaves", () => {
   const vectors = loadVectors();
-  for (let gate = 1; gate <= 6; gate += 1) {
+  for (let gate = 1; gate <= 9; gate += 1) {
     for (const expect of ["pass", "fail"]) {
       assert.ok(
         vectors.some((v) => v.gate === gate && v.expect === expect),
@@ -175,61 +273,22 @@ test("vectors: every gate 1 to 6 has a passing and a failing vector, and each be
   }
 });
 
-test("vectors: every level of every vector is the six normative levels", () => {
-  for (const v of loadVectors().filter((x) => x.passes)) {
-    assert.deepEqual(Object.keys(v.passes), LEVELS.map((l) => l.name), v.id);
+test("vectors: a failing passage vector is named by its own check", () => {
+  // A planted defect must be named by the check it is for and by no other
+  // content check of the same kind, or the vector teaches the wrong lesson.
+  const names = { 1: "figures", 2: "confidence", 3: "plain-words", 4: "sentences", 5: "dash" };
+  for (const v of loadVectors().filter((x) => x.expect === "fail" && x.passage !== undefined)) {
+    const all = checkPassage(v.passage, v.runFigures).map((f) => f.check);
+    assert.ok(all.includes(names[v.gate]), v.id);
   }
 });
 
-test("the worked example 'One fact, six ways' passes gate checks 1 and 2", () => {
-  const passes = exampleSixWays();
-  assert.deepEqual(Object.keys(passes), LEVELS.map((l) => l.name));
-  assert.deepEqual(checkNumberAgreement(passes), []);
-  const ex = loadVectors().find((v) => v.id === "example-gate-2");
-  assert.deepEqual(checkGradedValues(passes, ex.graded), []);
-  // And the example, mutated the way the old one was, goes red.
-  const detail = { ...passes, "yerba mate": `${passes["yerba mate"]} It took 3 days.` };
-  assert.equal(checkNumberAgreement(detail).length, 1);
-  const noConfidence = { ...passes };
-  for (const k of ["juice box", "soda pop"]) noConfidence[k] = "Six copies are old.";
-  assert.ok(checkNumberAgreement(noConfidence).length > 0);
-});
-
-test("figures: spelled numbers and digits are the same figure", () => {
-  assert.deepEqual([...extractFigures("six of 6 and Four, version 2.0.0")].sort(), ["2.0.0", "4", "6"]);
-  assert.deepEqual([...extractFigures("one of the copies")], []);
-});
-
-test("identifiers: lowercase name with underscores, soda pop keeps its legacy id", () => {
-  for (const l of LEVELS) assert.equal(IDENTIFIERS.get(l.name).id, l.id);
-  assert.equal(IDENTIFIERS.get("soda pop").legacy, "vending_machine");
-  assert.equal(IDENTIFIERS.get("juice box").legacy, null);
-});
-
-test("levels registry: generated from K13.md, six levels, juice box default", () => {
-  const r = levelsRegistry();
-  assert.equal(r.k13Version, K13_VERSION);
-  assert.equal(r.default, "juice_box");
-  assert.deepEqual(
-    r.levels.map((l) => [l.name, l.step, l.glyph.codepoint]),
-    [
-      ["juice box", "9", "U+1F9C3"],
-      ["soda pop", "10", "U+1F964"],
-      ["energy drink", "11", "U+1F9CB"],
-      ["black coffee", "12", "U+2615"],
-      ["loose leaf", "12.1", "U+1FAD6"],
-      ["yerba mate", "12.2", "U+1F9C9"],
-    ],
-  );
-});
-
-test("glyph-alt: a bare glyph fails, a hidden glyph beside its name or a labelled image passes", () => {
-  assert.equal(checkGlyphAlternatives('<span>&#x1F9C3;</span> juice box').length, 1);
-  assert.equal(checkGlyphAlternatives('<span aria-hidden="true">&#x1F9C3;</span> juice box').length, 0);
-  assert.equal(checkGlyphAlternatives('<span aria-hidden="true">&#x1F9C3;</span>').length, 1);
-  assert.equal(checkGlyphAlternatives('<span role="img" aria-label="soda pop">&#x1F964;</span>').length, 0);
-  assert.equal(checkGlyphAlternatives('<span class="t-icon">&#9749;</span><span>black coffee</span>').length, 1);
-  assert.deepEqual(checkGlyphAlternatives("<p>&#169; 2026</p>"), []);
-  const r = checkText('<div id="pane-x"></div><span>&#x1F9C3;</span>', "html");
-  assert.ok(r.findings.some((f) => f.check === "glyph-alt"));
+test("the worked example 'One fact, one pass' passes checks 1 to 5", () => {
+  const { passage, runFigures } = exampleQuickSqueeze();
+  assert.ok(passage.length > 100, "the passage was not read out of K13.md");
+  assert.ok(runFigures.includes("6") && runFigures.includes("3.0.0"));
+  assert.deepEqual(checkPassage(passage, runFigures), []);
+  // And the example, mutated the way a drifting report drifts, goes red.
+  assert.ok(checkPassage(`${passage} It took 3.2 seconds.`, runFigures).some((f) => f.check === "figures"));
+  assert.ok(checkPassage(passage.replace(/Confidence is[^.]*\./g, ""), runFigures).some((f) => f.check === "confidence"));
 });

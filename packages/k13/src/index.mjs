@@ -1,18 +1,22 @@
-// K13 checks: the parts of the K13 machine gate that this repository already
-// checks in code, packaged so a report can be checked outside it.
+// K13 checks: the machine gate of K13 3.0.0, packaged so a report can be
+// checked outside the repository that defines it.
 //
-// Every rule here is written in K13.md ("The machine gate", "The report
-// template", "Structural invariance", "Evidence blocks", "What's next"), and
-// every implementation is a port of a gate that already runs: the structure,
-// evidence and What's next checks from spec/test/templates.test.mjs in
-// random-knights/standard (which holds the K13 reference templates), and the
-// dash check from the Random Knights workspace docs gate. Nothing here is a
-// new rule. The rules K13 names
-// that no code checks yet are listed in NOT_IMPLEMENTED and the README, so a
-// clean result is never read as a full pass of the gate.
+// K13 3.0.0 asks for one pass, the quick squeeze, and nine gate checks:
 //
-// The tile list and the level names are read out of K13.md at run time, not
-// out of a copy of it, so the checks move when the standard moves.
+//   1 figures     every figure in the prose has a source or is derived
+//   2 confidence  the confidence is stated, with what it rests on
+//   3 plain words no long word, no hype word
+//   4 sentences   no long sentence, a short average
+//   5 dash        no em dash, no en dash, no double-hyphen surrogate
+//   6 cost-line   the AiEDs tile gives energyKWh and gCO2e, or "not reported"
+//   7 structure   the twelve tiles, in order
+//   8 evidence    every command has its result and every result its command
+//   9 whats-next  role and effort, or the completion answer; no model name
+//
+// The numbers and the tile list are read out of K13.md at run time, not out
+// of a copy of it, so the checks move when the standard moves. The rules K13
+// names that no code checks are listed in NOT_IMPLEMENTED and the README, so a
+// clean result is never read as more than it is.
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,38 +58,59 @@ function section(heading) {
 }
 
 /**
- * The six normative levels, in ladder order, from the table in K13.md "The
- * response levels". `id` is the name with spaces as underscores, which is
- * how the reference HTML template names its panes.
+ * The limits table of K13.md "The quick squeeze": the longest word in letters,
+ * the longest sentence in words and the average sentence in words. Read from
+ * the table so the checker cannot hold a number the standard does not.
  */
-export const LEVELS = section("The response levels")
-  .split("\n")
-  .filter((l) => /^\| [a-z][a-z ]+ \| /.test(l))
-  .map((l) => l.split("|")[1].trim())
-  .filter((name) => name !== "level")
-  .map((name) => ({ name, id: name.replace(/ /g, "_") }));
+export const LIMITS = (() => {
+  const body = section("The quick squeeze");
+  const grab = (label) => {
+    const m = new RegExp(`^\\| ${label} \\| (\\d+) (?:letters|words) \\|`, "m").exec(body);
+    if (!m) throw new Error(`K13.md "The limits" has no "${label}" row`);
+    return Number(m[1]);
+  };
+  return {
+    longestWord: grab("longest word"),
+    longestSentence: grab("longest sentence"),
+    averageSentence: grab("average sentence"),
+  };
+})();
+
+/**
+ * Hype words and the long forms K13 replaces. Each is written in K13.md
+ * ("The limits", "How to hit the quick squeeze"). A stem matches its endings.
+ */
+const HYPE = [
+  /\brevolutionar(?:y|ies)\b/i,
+  /\bseamless(?:ly)?\b/i,
+  /\bgame[- ]changing\b/i,
+  /\bcutting[- ]edge\b/i,
+  /\bunlock(?:s|ed|ing)?\b/i,
+  /\butili[sz](?:e|es|ed|ing)\b/i,
+  /\bprior to\b/i,
+];
 
 /**
  * The twelve tiles in the order K13.md "The report template" lists them.
  * `key` must appear in the K13 list item; `tile` is the data-tile id in the
- * reference HTML template; `md` is the heading in the reference markdown one.
- * The markup names belong to the reference templates, which is why they are
- * spelled out here; the ORDER and the COUNT come from K13.md and are checked
- * against it below.
+ * reference HTML template; `md` is the heading in the reference markdown one;
+ * `data` marks the tiles whose cells are run data, not prose. The markup names
+ * belong to the reference templates; the ORDER and the COUNT come from K13.md
+ * and are checked against it below.
  */
 const TILE_MARKUP = [
-  { key: "header strip", tile: "header-strip", md: "### Report" },
-  { key: "finding", tile: "finding", md: "### Finding" },
-  { key: "verdict row", tile: "verdict-row", md: "### Verdict" },
-  { key: "how it fits", tile: "how-it-fits", md: "### How it fits" },
-  { key: "environment card", tile: "environment-card", md: "### Environment" },
-  { key: "checks table", tile: "checks-table", md: "### Checks" },
-  { key: "evidence blocks", tile: "evidence-blocks", md: "### Evidence" },
-  { key: "discrepancies", tile: "discrepancies", md: "### Discrepancies" },
-  { key: "what's next", tile: "whats-next", md: "### What's next" },
-  { key: "owner actions", tile: "owner-actions", md: "### Owner actions" },
-  { key: "what was not done", tile: "what-was-not-done", md: "### What was not done" },
-  { key: "aieds disclosure", tile: "aieds-disclosure", md: "### AiEDs disclosure" },
+  { key: "header strip", tile: "header-strip", md: "### Report", data: true },
+  { key: "finding", tile: "finding", md: "### Finding", data: false },
+  { key: "verdict row", tile: "verdict-row", md: "### Verdict", data: false },
+  { key: "how it fits", tile: "how-it-fits", md: "### How it fits", data: false },
+  { key: "environment card", tile: "environment-card", md: "### Environment", data: true },
+  { key: "checks table", tile: "checks-table", md: "### Checks", data: true },
+  { key: "evidence blocks", tile: "evidence-blocks", md: "### Evidence", data: true },
+  { key: "discrepancies", tile: "discrepancies", md: "### Discrepancies", data: false },
+  { key: "what's next", tile: "whats-next", md: "### What's next", data: false },
+  { key: "owner actions", tile: "owner-actions", md: "### Owner actions", data: false },
+  { key: "what was not done", tile: "what-was-not-done", md: "### What was not done", data: false },
+  { key: "aieds disclosure", tile: "aieds-disclosure", md: "### AiEDs disclosure", data: true },
 ];
 
 function reportTemplateList() {
@@ -114,63 +139,19 @@ export const TILES = (() => {
 
 /** Rules K13 writes down that this package does NOT check. */
 export const NOT_IMPLEMENTED = [
-  "machine gates 1, 2 and 3 on a whole file: they run on the passes of a report given to checkNumberAgreement, checkGradedValues and checkTraceable, because the passes of a free-text report cannot be located reliably",
-  "machine gate 6 for markdown reports: evidence block has a rendered result",
-  "the seventh check for markdown reports: no model name in What's next",
-  "response level of each pass (that it is written at its level)",
+  "that the writing is plain beyond the word and sentence limits (a program cannot judge a sentence)",
+  "that every claim was actually checked against its source (step 1 and step 13 as process)",
+  "that the confidence is the right confidence, only that it is stated with a reason",
   "the thirteen steps as process (cost logged, state verified, owner action named)",
-  "humor rules",
+  "the humor rules",
 ];
 
-// ---------------------------------------------------------------------------
-// Level identifiers and the levels registry (K13.md "Level identifiers").
-// ---------------------------------------------------------------------------
-
-/** Level name -> { id, legacy }, read from the identifier table in K13.md. */
-export const IDENTIFIERS = new Map(
-  section("Level identifiers")
-    .split("\n")
-    .filter((l) => /^\| [a-z][a-z ]+ \| [a-z_]+ \| /.test(l))
-    .map((l) => {
-      const [, name, id, legacy] = l.split("|").map((c) => c.trim());
-      return [name, { id, legacy: legacy === "same" ? null : legacy }];
-    })
-    .filter(([name]) => name !== "level"),
-);
-
-/**
- * The levels registry: the ladder table and the identifier table of K13.md as
- * data. This is the content of k13-levels.json on the site. It is generated,
- * never edited, so the ladder has one source.
- */
-export function levelsRegistry() {
-  const rows = section("The response levels")
-    .split("\n")
-    .map((l) => /^\| ([a-z][a-z ]+) \| ([^|]+) \| (\d+(?:\.\d+)?) \| U\+([0-9A-F]{4,6}) ([^|]+) \|$/.exec(l))
-    .filter(Boolean);
-  const dm = section("The default level").match(/^(\w+(?: \w+)?) is the default response level/im);
-  const defaultName = dm ? dm[1].toLowerCase() : "";
-  return {
-    k13Version: K13_VERSION,
-    source: "K13.md",
-    default: IDENTIFIERS.get(defaultName)?.id ?? null,
-    levels: rows.map(([, name, grades, step, hex, glyphName]) => ({
-      id: IDENTIFIERS.get(name)?.id ?? null,
-      name,
-      grades: grades.trim(),
-      step,
-      glyph: { codepoint: `U+${hex}`, name: glyphName.trim() },
-      legacyId: IDENTIFIERS.get(name)?.legacy ?? null,
-    })),
-  };
+function finding(check, message, line) {
+  return line === undefined ? { check, message } : { check, message, line };
 }
 
 // ---------------------------------------------------------------------------
-// Machine gate checks 1, 2 and 3 on the passes of a report.
-//
-// A "passes" argument is an object keyed by level name (or identifier) whose
-// values are the written text of that level. Checks 1 and 2 compare the passes
-// with each other; check 3 compares them with the run figures.
+// Figures (gate check 1).
 // ---------------------------------------------------------------------------
 
 const NUMBER_WORDS = new Map(
@@ -181,11 +162,11 @@ const NUMBER_WORDS = new Map(
 NUMBER_WORDS.set("zero", "0");
 
 /**
- * Every figure in a text, as a set of strings: digit figures such as "2.0.0"
+ * Every figure in a text, as a set of strings: digit figures such as "3.0.0"
  * or "12", and spelled numbers from zero to twelve, mapped to digits so "six"
  * and "6" are the same figure. "one" is not read as a figure, because it is
- * also a pronoun ("one of the copies"); a one-to-two disagreement is therefore
- * out of this check's reach and is listed in the README.
+ * also a pronoun ("one of the copies"); a figure of one is therefore out of
+ * this check's reach and is listed in the README.
  */
 export function extractFigures(text) {
   const out = new Set();
@@ -197,219 +178,172 @@ export function extractFigures(text) {
   return out;
 }
 
-function levelKey(k) {
-  const n = String(k).replace(/_/g, " ");
-  return LEVELS.find((l) => l.name === n) ? n : null;
-}
+const DERIVED = /Derived:\s*([^\s]+)\s+from\s+(.+?)\s+by\s+([^.\n]+)/gi;
 
-function normalizePasses(passes) {
-  const out = new Map();
-  for (const [k, v] of Object.entries(passes ?? {})) {
-    const name = levelKey(k);
-    if (name) out.set(name, typeof v === "string" ? v : v.text);
+/**
+ * Gate check 1 on prose. `runFigures` is the run data: the figures the run
+ * produced. A figure not in it must be declared in a sentence of the form
+ * "Derived: <figure> from <figures> by <how>", whose inputs are run figures or
+ * figures derived earlier. The declaration sentences themselves are not read
+ * as untraced figures; their inputs are checked instead.
+ */
+export function checkFigures(prose, runFigures) {
+  const known = new Set([...(runFigures ?? [])].map(String));
+  const out = [];
+  for (const m of prose.matchAll(DERIVED)) {
+    const [, fig, inputs, how] = m;
+    const outFigs = [...extractFigures(fig)];
+    const inFigs = [...extractFigures(inputs)];
+    if (outFigs.length === 0) {
+      out.push(finding("figures", `a Derived sentence names no figure: "${m[0].trim()}"`));
+      continue;
+    }
+    if (inFigs.length === 0) {
+      out.push(finding("figures", `derived figure "${outFigs[0]}" names no input figure`));
+    }
+    if (how.trim().split(/\s+/).filter(Boolean).length < 1) {
+      out.push(finding("figures", `derived figure "${outFigs[0]}" does not say how`));
+    }
+    for (const f of inFigs) {
+      if (!known.has(f)) {
+        out.push(finding("figures", `derived figure "${outFigs[0]}" comes from "${f}", which is not in the run data`));
+      }
+    }
+    for (const f of outFigs) known.add(f);
+  }
+  const body = prose.replace(DERIVED, " ");
+  for (const fig of [...extractFigures(body)].sort()) {
+    if (!known.has(fig)) {
+      out.push(finding("figures", `figure "${fig}" is not in the run data and is not declared derived`));
+    }
   }
   return out;
 }
 
-function missingLevels(map) {
-  return LEVELS.filter((l) => !map.has(l.name)).map((l) =>
-    finding("structure", `missing level "${l.name}"`),
-  );
+// ---------------------------------------------------------------------------
+// Confidence (gate check 2).
+// ---------------------------------------------------------------------------
+
+/** Gate check 2: "confidence" then high, moderate or low, then "because". */
+export function checkConfidence(prose) {
+  const flat = prose.replace(/[*_`]/g, "").replace(/\s+/g, " ");
+  const ok = /\bconfidence(?:\s+is)?\s*[:,]?\s*(?:high|moderate|low)\b[^.!?]*\bbecause\b/i.test(flat);
+  return ok
+    ? []
+    : [finding("confidence", 'no confidence statement: write "Confidence is high, because ..." (high, moderate or low, and what it rests on)')];
 }
 
-/** Machine gate 1: a figure at one level must be at every level, unchanged. */
-export function checkNumberAgreement(passes) {
-  const map = normalizePasses(passes);
-  const missing = missingLevels(map);
-  if (missing.length) return missing;
-  const sets = new Map(LEVELS.map((l) => [l.name, extractFigures(map.get(l.name))]));
-  const all = new Set([...sets.values()].flatMap((s) => [...s]));
+// ---------------------------------------------------------------------------
+// Plain words and short sentences (gate checks 3 and 4).
+// ---------------------------------------------------------------------------
+
+/** Split prose into paragraphs: blank lines and list markers start a new one. */
+function paragraphs(prose) {
   const out = [];
-  for (const fig of [...all].sort()) {
-    const absent = LEVELS.filter((l) => !sets.get(l.name).has(fig)).map((l) => l.name);
-    if (absent.length) {
+  let cur = [];
+  const flush = () => {
+    if (cur.length) out.push(cur.join(" "));
+    cur = [];
+  };
+  for (const raw of prose.split("\n")) {
+    const line = raw.trim();
+    if (line === "") {
+      flush();
+      continue;
+    }
+    if (/^(?:[-*]|\d+[.)])\s+/.test(line)) flush();
+    cur.push(line.replace(/^(?:[-*]|\d+[.)])\s+/, ""));
+  }
+  flush();
+  return out;
+}
+
+/** The sentences of prose, in order. A code span counts as one word. */
+export function sentencesOf(prose) {
+  const out = [];
+  for (const para of paragraphs(prose)) {
+    const text = para
+      .replace(/`[^`]*`/g, "code")
+      .replace(/https?:\/\/\S+/g, "link")
+      .replace(/[*_]{1,3}/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (text === "") continue;
+    for (const s of text.split(/(?<=[.!?])\s+(?=[A-Z0-9"'(])/)) {
+      const words = s.split(" ").filter((w) => /[A-Za-z0-9]/.test(w));
+      if (words.length) out.push({ text: s, words: words.length });
+    }
+  }
+  return out;
+}
+
+/**
+ * Words checked for length: code spans, quoted terms, links and anything with a
+ * digit or a path, version or address character in it are named things, not
+ * vocabulary, and are not read.
+ */
+function plainWordCandidates(prose) {
+  const stripped = prose
+    .replace(/`[^`]*`/g, " ")
+    .replace(/"[^"\n]*"/g, " ")
+    .replace(/https?:\/\/\S+/g, " ");
+  const out = [];
+  for (const tok of stripped.split(/\s+/)) {
+    if (/[0-9/\\@._:]/.test(tok.replace(/[.,;:!?)]+$/, ""))) continue;
+    for (const w of tok.match(/[A-Za-z]+/g) ?? []) out.push(w);
+  }
+  return out;
+}
+
+/** Gate check 3: no word over the letter limit outside a term, and no hype word. */
+export function checkPlainWords(prose) {
+  const out = [];
+  const seen = new Set();
+  for (const w of plainWordCandidates(prose)) {
+    if (w.length > LIMITS.longestWord && !seen.has(w.toLowerCase())) {
+      seen.add(w.toLowerCase());
+      out.push(finding("plain-words", `"${w}" is ${w.length} letters; the limit is ${LIMITS.longestWord}. Use a shorter word, or put a technical name in backticks`));
+    }
+  }
+  const flat = prose.replace(/`[^`]*`/g, " ");
+  for (const re of HYPE) {
+    const m = re.exec(flat);
+    if (m) out.push(finding("plain-words", `hype or long-form word "${m[0]}"`));
+  }
+  return out;
+}
+
+/** Gate check 4: no sentence over the word limit, and an average within its limit. */
+export function checkSentences(prose) {
+  const out = [];
+  const ss = sentencesOf(prose);
+  for (const s of ss) {
+    if (s.words > LIMITS.longestSentence) {
       out.push(
         finding(
-          "number-agreement",
-          `figure "${fig}" is at ${LEVELS.length - absent.length} level(s) and missing at: ${absent.join(", ")}`,
+          "sentences",
+          `a sentence has ${s.words} words; the limit is ${LIMITS.longestSentence}: "${s.text.slice(0, 60)}${s.text.length > 60 ? "..." : ""}"`,
         ),
+      );
+    }
+  }
+  if (ss.length) {
+    const avg = ss.reduce((n, s) => n + s.words, 0) / ss.length;
+    if (avg > LIMITS.averageSentence) {
+      out.push(
+        finding("sentences", `the average sentence is ${avg.toFixed(1)} words; the limit is ${LIMITS.averageSentence}`),
       );
     }
   }
   return out;
 }
 
-/** The graded values K13 machine gate check 2 names. */
-export const GRADED_VALUES = ["verdict", "confidence", "provenance"];
-
-/**
- * Machine gate 2. `graded` is keyed by level name; each value is
- * { verdict, confidence, provenance }, each of those { value, quote }. The
- * quote must appear in that level's text, and the value must be the same at
- * every level. The author declares the graded values; the check holds the
- * author to them.
- */
-export function checkGradedValues(passes, graded) {
-  const map = normalizePasses(passes);
-  const out = missingLevels(map);
-  if (out.length) return out;
-  const g = new Map(Object.entries(graded ?? {}).map(([k, v]) => [levelKey(k), v]));
-  const flat = (s) => s.replace(/\s+/g, " ").toLowerCase();
-  for (const key of GRADED_VALUES) {
-    const seen = new Map();
-    for (const l of LEVELS) {
-      const cell = g.get(l.name)?.[key];
-      if (!cell || !cell.value || !cell.quote) {
-        out.push(finding("graded-values", `${l.name}: no ${key}`));
-        continue;
-      }
-      if (!flat(map.get(l.name)).includes(flat(cell.quote))) {
-        out.push(finding("graded-values", `${l.name}: the ${key} quote is not in the pass`));
-      }
-      seen.set(l.name, cell.value);
-    }
-    if (new Set(seen.values()).size > 1) {
-      out.push(
-        finding(
-          "graded-values",
-          `${key} differs between levels: ${[...seen].map(([n, v]) => `${n}=${v}`).join(", ")}`,
-        ),
-      );
-    }
-  }
-  return out;
-}
-
-/** Machine gate 3: every figure in the passes is one of the run's figures. */
-export function checkTraceable(passes, runFigures) {
-  const map = normalizePasses(passes);
-  const known = new Set((runFigures ?? []).map(String));
-  const out = [];
-  for (const l of LEVELS) {
-    if (!map.has(l.name)) continue;
-    for (const fig of extractFigures(map.get(l.name))) {
-      if (!known.has(fig)) {
-        out.push(finding("traceable", `${l.name}: figure "${fig}" is not in the run data`));
-      }
-    }
-  }
-  return out;
-}
-
-/** Machine gate 4 over every pass of a report. */
-export function checkPassDashes(passes) {
-  const map = normalizePasses(passes);
-  const out = [];
-  for (const [name, text] of map) {
-    for (const f of checkDashes(text)) out.push({ ...f, message: `${name}: ${f.message}` });
-  }
-  return out;
-}
-
-/**
- * The six passes of "One fact, six ways" in K13.md, read at run time, with
- * whitespace collapsed. The worked example is held to its own gate.
- */
-export function exampleSixWays() {
-  const body = section("One fact, six ways");
-  const out = {};
-  for (const m of body.matchAll(/^\*\*([a-z ]+)\.\*\* ([^\n]+(?:\n[^\n]+)*)/gm)) {
-    out[m[1]] = m[2].replace(/\s+/g, " ").trim();
-  }
-  return out;
-}
-
 // ---------------------------------------------------------------------------
-// Glyph text alternatives (K13.md "The response levels").
+// Dashes (gate check 5).
 // ---------------------------------------------------------------------------
 
-const GLYPHS = new Set([0x1f9c3, 0x1f964, 0x1f9cb, 0x2615, 0x1fad6, 0x1f9c9]);
-
 /**
- * Every rendered level glyph in an HTML document must be hidden from
- * assistive technology with the level name written beside it, or be an image
- * role with an accessible name. Returns one finding per offending glyph.
- */
-export function checkGlyphAlternatives(html) {
-  const out = [];
-  const re = /&#x([0-9a-fA-F]{4,6});|&#(\d{4,7});|(\p{Extended_Pictographic})/gu;
-  for (const m of html.matchAll(re)) {
-    const cp = m[1] ? parseInt(m[1], 16) : m[2] ? parseInt(m[2], 10) : m[3].codePointAt(0);
-    if (!GLYPHS.has(cp)) continue;
-    const before = html.slice(0, m.index);
-    const open = before.lastIndexOf("<");
-    const tag = open >= 0 && before.indexOf(">", open) === before.length - 1 ? html.slice(open, m.index) : "";
-    const hidden = /aria-hidden="true"/.test(tag);
-    const labelled = /role="img"/.test(tag) && /aria-label="[^"]+"/.test(tag);
-    // A hidden glyph needs the level name written visibly right beside it.
-    const near = html.slice(m.index, m.index + 300).toLowerCase();
-    const named = LEVELS.some((l) => near.includes(l.name));
-    if (labelled || (hidden && named)) continue;
-    out.push(
-      finding(
-        "glyph-alt",
-        `U+${cp.toString(16).toUpperCase()} has no text alternative: hide it with aria-hidden="true" beside the visible level name, or give it role="img" and an aria-label`,
-        before.split("\n").length,
-      ),
-    );
-  }
-  return out;
-}
-
-// ---------------------------------------------------------------------------
-// Test vectors (packages/k13/vectors).
-// ---------------------------------------------------------------------------
-
-function vectorsDir() {
-  const p = join(here, "..", "vectors");
-  if (!existsSync(p)) throw new Error("vectors/ not found next to this package");
-  return p;
-}
-
-/** The vector list: a passing and a failing vector per machine gate check. */
-export function loadVectors() {
-  const dir = vectorsDir();
-  const list = JSON.parse(readFileSync(join(dir, "vectors.json"), "utf8"));
-  return list.map((v) => ({
-    ...v,
-    passes: v.passesFrom === "K13.md#one-fact-six-ways" ? exampleSixWays() : v.passes,
-    reportText: v.report ? readFileSync(join(dir, v.report.file), "utf8") : undefined,
-  }));
-}
-
-/**
- * Run the gate check a vector is for and return its findings. A passing
- * vector must return none; a failing one must return a finding whose message
- * contains the vector's `expectMessage`.
- */
-export function runVector(v) {
-  switch (v.gate) {
-    case 1:
-      return checkNumberAgreement(v.passes);
-    case 2:
-      return checkGradedValues(v.passes, v.graded);
-    case 3:
-      return checkTraceable(v.passes, v.runFigures);
-    case 4:
-      return checkPassDashes(v.passes);
-    case 5:
-      return (v.report.format === "html"
-        ? checkHtmlStructure(v.reportText)
-        : checkMarkdownStructure(v.reportText)
-      ).filter((f) => f.check === "structure");
-    case 6:
-      return checkHtmlStructure(v.reportText).filter((f) => f.check === "evidence");
-    default:
-      throw new Error(`vector ${v.id}: no gate ${v.gate}`);
-  }
-}
-
-function finding(check, message, line) {
-  return line === undefined ? { check, message } : { check, message, line };
-}
-
-/**
- * Machine gate 4: no em dash, no en dash, no double-hyphen surrogate.
+ * Machine gate 5: no em dash, no en dash, no double-hyphen surrogate.
  *
  * Em and en dashes fail anywhere, code included. The double hyphen fails when
  * it is USED AS A DASH, which K13 step 13 distinguishes from a command-line
@@ -439,187 +373,352 @@ export function checkDashes(text) {
   return out;
 }
 
-/** Is this a report in the reference markdown template's shape? */
-function mdLevelStarts(text) {
-  // A level heading starts its line, so a mention of "## energy drink" inside
-  // prose or inline code is not mistaken for one.
-  return LEVELS.map((l) => {
-    const m = new RegExp(`^## ${l.name}(?![a-z])`, "m").exec(text);
-    return m ? m.index : -1;
-  });
-}
+// ---------------------------------------------------------------------------
+// Reports in the reference template shape.
+//
+// A report is parsed into its twelve tiles. The reference markdown template
+// opens its pass with "## quick squeeze" and its tiles with "### " headings;
+// the reference HTML template wraps the pass in <div id="quick-squeeze"> and
+// marks tiles with data-tile. A file in any other shape is not parsed, and the
+// shape checks say they were skipped.
+// ---------------------------------------------------------------------------
 
-function mdPane(text, i) {
-  const starts = mdLevelStarts(text);
-  const from = starts[i];
-  const to = i + 1 < LEVELS.length ? starts[i + 1] : text.length;
-  return text.slice(from, to < 0 ? text.length : to);
-}
+const MD_PASS_HEADING = /^## quick squeeze\b/m;
+const HTML_PASS_MARK = 'id="quick-squeeze"';
 
-function htmlPane(text, id) {
-  const from = text.indexOf(`<div id="pane-${id}"`);
-  if (from < 0) return null;
-  const rest = text.slice(from + 1);
-  const end = rest.indexOf('<div id="pane-');
+/** The text of a markdown report's quick squeeze pass, or null. */
+function mdPass(text) {
+  const m = MD_PASS_HEADING.exec(text);
+  if (!m) return null;
+  const rest = text.slice(m.index + 1);
+  const end = rest.indexOf("\n## ");
   return end >= 0 ? rest.slice(0, end) : rest;
 }
 
-/**
- * Machine gate 5 and "Structural invariance" for a markdown report in the
- * reference template shape: every normative level present, and every level
- * carries every tile in K13 order.
- */
-export function checkMarkdownStructure(text) {
-  const out = [];
-  const starts = mdLevelStarts(text);
-  LEVELS.forEach((level, i) => {
-    if (starts[i] < 0) out.push(finding("structure", `missing level "${level.name}"`));
+/** The text of an HTML report's quick squeeze pass, or null. */
+function htmlPass(text) {
+  const from = text.indexOf(HTML_PASS_MARK);
+  return from < 0 ? null : text.slice(from);
+}
+
+function htmlToText(s) {
+  return s
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " | ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&middot;/g, ".")
+    .replace(/&#?\w+;/g, " ")
+    .replace(/[ \t]+/g, " ");
+}
+
+/** Split a markdown pass into tile bodies keyed by tile id (first one wins). */
+function mdTiles(pass) {
+  const tiles = new Map();
+  const heads = TILES.map((t) => ({ t, at: pass.indexOf(`\n${t.md}\n`) }));
+  const sorted = heads.filter((h) => h.at >= 0).sort((a, b) => a.at - b.at);
+  sorted.forEach((h, i) => {
+    const end = i + 1 < sorted.length ? sorted[i + 1].at : pass.length;
+    tiles.set(h.t.tile, pass.slice(h.at + h.t.md.length + 1, end));
   });
-  if (out.length) return out;
-  LEVELS.forEach((level, i) => {
-    const pane = mdPane(text, i);
-    let previous = -1;
-    let previousTile = "(start of level)";
-    for (const t of TILES) {
-      const at = pane.indexOf(t.md);
-      if (at < 0) {
-        out.push(finding("structure", `${level.name}: missing tile "${t.md}"`));
-        continue;
-      }
-      if (at < previous) {
-        out.push(
-          finding("structure", `${level.name}: "${t.md}" comes before "${previousTile}"`),
-        );
-      }
-      previous = at;
-      previousTile = t.md;
-    }
-  });
-  // What's next: the completion answer and the role and effort slots, once
-  // per level.
-  const flat = text.replace(/\s+/g, " ");
-  const completions = (flat.match(/No next step, this work is complete/g) || []).length;
-  if (completions !== LEVELS.length) {
-    out.push(
-      finding(
-        "whats-next",
-        `the completion answer appears ${completions} times; expected once per level (${LEVELS.length})`,
-      ),
-    );
+  return tiles;
+}
+
+/** Split an HTML pass into tile bodies keyed by data-tile id. */
+function htmlTiles(pass) {
+  const tiles = new Map();
+  const parts = pass.split('data-tile="').slice(1);
+  for (const p of parts) {
+    const id = p.slice(0, p.indexOf('"'));
+    if (!tiles.has(id)) tiles.set(id, p.slice(p.indexOf(">") + 1));
   }
-  for (const slot of ["| role |", "| effort |"]) {
-    const n = text.split(slot).length - 1;
-    if (n !== LEVELS.length) {
-      out.push(
-        finding(
-          "whats-next",
-          `the ${slot.replaceAll("|", "").trim()} slot appears ${n} times; expected once per level`,
-        ),
-      );
-    }
-  }
-  return out;
+  return tiles;
 }
 
 /**
- * Machine gate 5, machine gate 6 and the seventh check for an HTML report in
- * the reference template shape (level panes with data-tile ids).
+ * Parse a report. Returns { format, tiles, order } or null when the document
+ * is not in the reference template shape. `tiles` maps tile id to its raw
+ * text; `order` lists the tile ids as they appear.
  */
-export function checkHtmlStructure(text) {
+export function parseReport(text, format) {
+  if (format === "html") {
+    const pass = htmlPass(text);
+    if (pass === null) return null;
+    const order = [...pass.matchAll(/data-tile="([a-z-]+)"/g)].map((m) => m[1]);
+    return { format, pass, tiles: htmlTiles(pass), order };
+  }
+  const pass = mdPass(text);
+  if (pass === null) return null;
+  const heads = [...pass.matchAll(/^### .+$/gm)].map((m) => m[0]);
+  const order = heads
+    .map((h) => TILES.find((t) => t.md === h)?.tile)
+    .filter(Boolean);
+  return { format: "md", pass, tiles: mdTiles(pass), order };
+}
+
+/** The prose and the data of a parsed report. */
+function reportParts(rep) {
+  let prose = "";
+  let data = "";
+  for (const t of TILES) {
+    const raw = rep.tiles.get(t.tile);
+    if (raw === undefined) continue;
+    if (rep.format === "html") {
+      const body = raw;
+      const code = [...body.matchAll(/<(pre|code|table)[\s\S]*?<\/\1>/gi)].map((m) => m[0]).join("\n");
+      const rest = body
+        .replace(/<(pre|code|table)[\s\S]*?<\/\1>/gi, "\n")
+        .replace(/<h\d[\s\S]*?<\/h\d>/gi, " ");
+      const proseBody = t.data ? "" : htmlToText(rest.replace(/<\/(p|li|div|h\d)>/gi, "\n"));
+      prose += `${proseBody}\n`;
+      data += `${htmlToText(t.data ? body : code)}\n`;
+    } else {
+      const lines = raw.split("\n");
+      let fence = false;
+      const p = [];
+      const d = [];
+      for (const l of lines) {
+        if (/^\s*(```|~~~)/.test(l)) {
+          fence = !fence;
+          continue;
+        }
+        if (fence || /^\s*\|/.test(l) || t.data) d.push(l);
+        else p.push(l);
+      }
+      prose += `${p.join("\n")}\n`;
+      data += `${d.join("\n")}\n`;
+    }
+  }
+  return { prose, data };
+}
+
+/** Gate checks 7, 8 and 9 for a parsed report. */
+function shapeFindings(rep) {
   const out = [];
   const expected = TILES.map((t) => t.tile);
-  for (const level of LEVELS) {
-    const pane = htmlPane(text, level.id);
-    if (pane === null) {
-      out.push(finding("structure", `missing level pane "pane-${level.id}"`));
-      continue;
+  const label = (id) => (rep.format === "md" ? TILES.find((t) => t.tile === id).md : id);
+  const missing = expected.filter((id) => !rep.order.includes(id));
+  for (const id of missing) out.push(finding("structure", `missing tile "${label(id)}"`));
+  const present = rep.order.filter((id) => expected.includes(id));
+  let last = -1;
+  for (const id of present) {
+    const at = expected.indexOf(id);
+    if (at < last) {
+      out.push(finding("structure", `"${label(id)}" comes before "${label(expected[last])}"`));
     }
-    const found = [...pane.matchAll(/data-tile="([a-z-]+)"/g)].map((m) => m[1]);
-    if (found.join(",") !== expected.join(",")) {
-      out.push(
-        finding(
-          "structure",
-          `pane-${level.id}: tiles [${found.join(", ")}] differ from K13 order [${expected.join(", ")}]`,
-        ),
-      );
-    }
+    last = Math.max(last, at);
+  }
+  if (new Set(present).size !== present.length) {
+    out.push(finding("structure", "a tile appears more than once"));
+  }
 
-    // Machine gate 6: every evidence block in the evidence tile carries its
-    // command and its result, and the two counts match. Blocks are cut with
-    // string operations, not a regular expression, so a hostile file cannot
-    // make the check run in polynomial time.
-    const from = pane.indexOf('data-tile="evidence-blocks"');
-    const to = pane.indexOf('data-tile="discrepancies"');
-    const tile = from >= 0 && to > from ? pane.slice(from, to) : "";
-    const blocks = tile.split('<div class="evidence">').slice(1);
-    if (blocks.length === 0) {
-      out.push(finding("evidence", `pane-${level.id}: no evidence block`));
+  // Gate 8: every command in the evidence tile has a result and the counts match.
+  const ev = rep.tiles.get("evidence-blocks");
+  if (ev !== undefined) {
+    let codes;
+    let results;
+    if (rep.format === "html") {
+      // Cut with string operations, not a regular expression, so a hostile file
+      // cannot make the check run in polynomial time.
+      const blocks = ev.split('<div class="evidence">').slice(1);
+      if (blocks.length === 0) out.push(finding("evidence", "no evidence block"));
+      blocks.forEach((b, i) => {
+        if (!b.includes('class="ev-code"')) out.push(finding("evidence", `evidence block ${i + 1} has no command`));
+        if (!b.includes('class="ev-result"')) {
+          out.push(finding("evidence", `evidence block ${i + 1} has a command with no result`));
+        }
+      });
+      codes = ev.split('class="ev-code"').length - 1;
+      results = ev.split('class="ev-result"').length - 1;
+    } else {
+      codes = ev.split("\nCommand or query:").length - 1 + (ev.startsWith("Command or query:") ? 1 : 0);
+      results = ev.split("\nResult:").length - 1 + (ev.startsWith("Result:") ? 1 : 0);
+      if (codes === 0) out.push(finding("evidence", "no evidence block"));
     }
-    blocks.forEach((b, i) => {
-      if (!b.includes('class="ev-code"')) {
-        out.push(finding("evidence", `pane-${level.id}: evidence block ${i + 1} has no command`));
-      }
-      if (!b.includes('class="ev-result"')) {
-        out.push(
-          finding("evidence", `pane-${level.id}: evidence block ${i + 1} has a command with no result`),
-        );
-      }
-    });
-    const codes = tile.split('class="ev-code"').length - 1;
-    const results = tile.split('class="ev-result"').length - 1;
     if (codes !== results) {
-      out.push(
-        finding(
-          "evidence",
-          `pane-${level.id}: ${codes} commands and ${results} results in the evidence tile`,
-        ),
-      );
+      out.push(finding("evidence", `${codes} commands and ${results} results in the evidence tile`));
     }
+  }
 
-    // The seventh check: What's next asks for a role and an effort, always
-    // offers the completion answer, and names no model.
-    const wFrom = pane.indexOf('data-tile="whats-next"');
-    const wTo = pane.indexOf('data-tile="owner-actions"');
-    if (wFrom < 0 || wTo <= wFrom) {
-      out.push(finding("whats-next", `pane-${level.id}: no What's next tile`));
-      continue;
-    }
-    const w = pane.slice(wFrom, wTo);
-    for (const slot of ["role", "effort"]) {
-      if (!w.includes(`>${slot}<`)) {
-        out.push(finding("whats-next", `pane-${level.id}: What's next has no ${slot} slot`));
+  // Gate 9: What's next.
+  const wn = rep.tiles.get("whats-next");
+  if (wn !== undefined) {
+    const w = rep.format === "html" ? wn : wn;
+    const slot = (name) =>
+      rep.format === "html" ? w.includes(`>${name}<`) : new RegExp(`\\|\\s*${name}\\s*\\|`).test(w);
+    const done = /No next step, this work is complete/.test(w.replace(/\s+/g, " "));
+    if (!done) {
+      for (const s of ["role", "effort"]) {
+        if (!slot(s)) {
+          out.push(
+            finding(
+              "whats-next",
+              `What's next has no ${s} slot and does not say "No next step, this work is complete"`,
+            ),
+          );
+        }
       }
-    }
-    if (!/No next step, this work is complete/.test(w)) {
-      out.push(
-        finding("whats-next", `pane-${level.id}: What's next does not offer the completion answer`),
-      );
     }
     if (/claude|gpt-|gemini|sonnet|opus|haiku|llama|mistral/i.test(w)) {
-      out.push(finding("whats-next", `pane-${level.id}: What's next names a model`));
+      out.push(finding("whats-next", "What's next names a model"));
     }
   }
   return out;
 }
+
+/** Gate check 6: the AiEDs tile gives energyKWh and gCO2e, each a figure or "not reported". */
+export function checkCostLine(tileText) {
+  const flat = tileText.replace(/<[^>]+>/g, " | ").replace(/\s+/g, " ");
+  const out = [];
+  for (const key of ["energyKWh", "gCO2e"]) {
+    const re = new RegExp(`${key}[\\s|:*]+(?:[0-9][0-9.,]*|not reported)`, "i");
+    if (!re.test(flat)) {
+      out.push(finding("cost-line", `the AiEDs tile has no ${key} value (a figure, or the words "not reported")`));
+    }
+  }
+  return out;
+}
+
+/** The figures in a block of run data. */
+function dataFigures(data) {
+  return extractFigures(data.replace(/\|[\s:-]+\|/g, " "));
+}
+
+/** Checks 1 to 4 and 6 over a parsed report. */
+function contentFindings(rep) {
+  const { prose, data } = reportParts(rep);
+  const out = [];
+  out.push(...checkFigures(prose, dataFigures(data)));
+  out.push(...checkConfidence(prose));
+  out.push(...checkPlainWords(prose));
+  out.push(...checkSentences(prose));
+  const aieds = rep.tiles.get("aieds-disclosure");
+  out.push(...(aieds === undefined ? [finding("cost-line", "no AiEDs disclosure tile")] : checkCostLine(aieds)));
+  return out;
+}
+
+/** Checks 1 to 5 over a bare passage and the run figures it came from. */
+export function checkPassage(text, runFigures) {
+  return [
+    ...checkFigures(text, runFigures),
+    ...checkConfidence(text),
+    ...checkPlainWords(text),
+    ...checkSentences(text),
+    ...checkDashes(text),
+  ];
+}
+
+/**
+ * The quick squeeze of "One fact, one pass" in K13.md and its run data, read at
+ * run time. The worked example is held to its own gate.
+ */
+export function exampleQuickSqueeze() {
+  const body = section("One fact, one pass");
+  const quote = body
+    .split("\n")
+    .filter((l) => l.startsWith("> "))
+    .map((l) => l.slice(2))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const run = /^Run data:\s*([\s\S]*?)\n\n/m.exec(body);
+  return { passage: quote, runFigures: run ? [...extractFigures(run[1])] : [] };
+}
+
+// ---------------------------------------------------------------------------
+// Test vectors (packages/k13/vectors).
+// ---------------------------------------------------------------------------
+
+function vectorsDir() {
+  const p = join(here, "..", "vectors");
+  if (!existsSync(p)) throw new Error("vectors/ not found next to this package");
+  return p;
+}
+
+/**
+ * The vector list: a passing and a failing vector per machine gate check.
+ * A vector is a bare `passage` with its `runFigures` (checks 1 to 5), or a
+ * `report` file, optionally with `replace` pairs that plant one defect in it
+ * (checks 6 to 9).
+ */
+export function loadVectors() {
+  const dir = vectorsDir();
+  const list = JSON.parse(readFileSync(join(dir, "vectors.json"), "utf8"));
+  return list.map((v) => {
+    if (v.passageFrom === "K13.md#one-fact-one-pass") {
+      const ex = exampleQuickSqueeze();
+      return { ...v, passage: ex.passage, runFigures: ex.runFigures };
+    }
+    if (!v.report) return v;
+    let text = readFileSync(join(dir, v.report.file), "utf8");
+    for (const [from, to] of v.report.replace ?? []) {
+      if (!text.includes(from)) throw new Error(`vector ${v.id}: "${from}" is not in ${v.report.file}`);
+      text = text.replace(from, to);
+    }
+    return { ...v, reportText: text };
+  });
+}
+
+/**
+ * Run the gate check a vector is for and return its findings. A passing
+ * vector must return none; a failing one must return a finding whose message
+ * contains the vector's `expectMessage`.
+ */
+export function runVector(v) {
+  const only = (names) => (fs) => fs.filter((f) => names.includes(f.check));
+  switch (v.gate) {
+    case 1:
+      return only(["figures"])(checkPassage(v.passage, v.runFigures));
+    case 2:
+      return only(["confidence"])(checkPassage(v.passage, v.runFigures));
+    case 3:
+      return only(["plain-words"])(checkPassage(v.passage, v.runFigures));
+    case 4:
+      return only(["sentences"])(checkPassage(v.passage, v.runFigures));
+    case 5:
+      return checkDashes(v.passage);
+    case 6:
+    case 7:
+    case 8:
+    case 9: {
+      const names = { 6: ["cost-line"], 7: ["structure"], 8: ["evidence"], 9: ["whats-next"] }[v.gate];
+      return only(names)(checkText(v.reportText, v.report.format).findings);
+    }
+    default:
+      throw new Error(`vector ${v.id}: no gate ${v.gate}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Whole documents.
+// ---------------------------------------------------------------------------
 
 /**
  * Check one document. `format` is "md", "html" or "text". The dash check runs
- * on every document. The structure checks run only when the document is a
- * report in the reference template shape; otherwise they are listed as skipped.
+ * on every document. The report checks run only when the document is a report
+ * in the reference template shape; otherwise they are listed as skipped. An
+ * unfilled template (it still carries FILL markers) runs the shape checks and
+ * skips the content checks, which have nothing to read yet.
  */
 export function checkText(text, format = "text") {
   const findings = checkDashes(text);
   const ran = ["dash"];
   const skipped = [];
-  if (format === "md" && mdLevelStarts(text).some((s) => s >= 0)) {
-    findings.push(...checkMarkdownStructure(text));
-    ran.push("structure", "whats-next");
-  } else if (format === "html" && text.includes('<div id="pane-')) {
-    findings.push(...checkHtmlStructure(text));
-    findings.push(...checkGlyphAlternatives(text));
-    ran.push("structure", "evidence", "whats-next", "glyph-alt");
+  const rep = format === "md" || format === "html" ? parseReport(text, format) : null;
+  if (rep === null) {
+    skipped.push("report checks (not a report in the reference template shape)");
   } else {
-    skipped.push("structure (not a report in the reference template shape)");
+    findings.push(...shapeFindings(rep));
+    ran.push("structure", "evidence", "whats-next");
+    if (/\bFILL\b/.test(text)) {
+      skipped.push("content checks: figures, confidence, plain-words, sentences, cost-line (unfilled template: FILL markers)");
+    } else {
+      findings.push(...contentFindings(rep));
+      ran.push("figures", "confidence", "plain-words", "sentences", "cost-line");
+    }
   }
   return { ok: findings.length === 0, findings, ran, skipped };
 }

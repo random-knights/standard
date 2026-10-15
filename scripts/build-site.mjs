@@ -4,7 +4,7 @@
 //
 // ARCHITECTURE (owner decision, encoded here, not revisited):
 //   standard.rand0m.ai   MACHINE artifacts at versioned, permanent paths.
-//                         Schemas, tables, the K13 level registry. Things
+//                         Schemas, tables, the K13 text. Things
 //                         pin to these URLs, so nothing here ever moves.
 //   randomknights.xyz     HUMAN home. Spec pages, demos, get-started.
 // This script builds the first. It links to the second; it does not
@@ -30,7 +30,6 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { levelsRegistry } from "../packages/k13/src/index.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const outputRoot = join(repoRoot, ".firebase", "standard-site");
@@ -99,14 +98,13 @@ export const PROPERTY_NAME_HTML = PROPERTY_NAME;
 const XYZ = "https://randomknights.xyz";
 
 // K13 lives in this repository under CC BY 4.0 (see LICENSE-DOCS): K13.md is
-// at the root. Its level registry, k13-levels.json, is GENERATED from K13.md
-// when the site is built (packages/k13 levelsRegistry), so the ladder has one
-// source and there is no committed second copy to drift. Whether K13.md is
-// present is a FACT about the filesystem, not a flag a human sets and might
-// forget to flip, so it is checked here, not asserted.
+// at the root. Through 2.2.0 the site also served a generated level registry,
+// k13-levels.json. K13 3.0.0 has one pass and no levels, so that file is no
+// longer built or served. Whether K13.md is present is a FACT about the
+// filesystem, not a flag a human sets and might forget to flip, so it is
+// checked here, not asserted.
 const K13_DIR = "k13/v1";
 const k13MdPresent = existsSync(join(repoRoot, "K13.md"));
-const k13LevelsPresent = k13MdPresent;
 
 // K13's version is READ OUT OF K13.md, exactly as E+ reads its own and AiEDs
 // reads the methodology document. It used to be the literal "1.1.0" typed
@@ -131,11 +129,6 @@ const K13 = {
   xyzHref: `${XYZ}/k13/`,
   files: [
     { label: "K13.md", name: "K13.md", present: k13MdPresent },
-    {
-      label: "level registry",
-      name: "k13-levels.json",
-      present: k13LevelsPresent,
-    },
   ],
 };
 
@@ -496,13 +489,6 @@ export function expectedFiles() {
   ]);
   if (k13MdPresent) {
     files.set(join(K13_DIR, "K13.md"), readFileSync(join(repoRoot, "K13.md")));
-  }
-  if (k13LevelsPresent) {
-    files.set(
-      join(K13_DIR, "k13-levels.json"),
-      Buffer.from(`${JSON.stringify(levelsRegistry(), null, 2)}
-`),
-    );
   }
   return files;
 }

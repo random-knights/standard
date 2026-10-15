@@ -7,12 +7,20 @@ import { checkFile, K13_VERSION, NOT_IMPLEMENTED } from "../src/index.mjs";
 
 const USAGE = `usage: k13 check [--json] <file...>
 
-Checks each file against the K13 ${K13_VERSION} rules this package implements:
-  dash         machine gate 4, every file
-  structure    machine gate 5, for .md and .html reports in the reference
-               template shape
-  evidence     machine gate 6, for .html reports in that shape
-  whats-next   the What's next rules, for reports in that shape
+Checks each file against the K13 ${K13_VERSION} machine gate. The dash check runs
+on every file. The rest run on a report in the reference template shape (a
+"## quick squeeze" markdown pass or an HTML pass with id="quick-squeeze"):
+  figures      check 1, every figure has a source or is declared derived
+  confidence   check 2, the confidence is stated with a reason
+  plain-words  check 3, no long word, no hype word
+  sentences    check 4, no long sentence, a short average
+  dash         check 5, every file
+  cost-line    check 6, energyKWh and gCO2e in the AiEDs tile
+  structure    check 7, the twelve tiles in order
+  evidence     check 8, every command has its result
+  whats-next   check 9, role and effort or the completion answer, no model
+
+An unfilled template (FILL markers) runs checks 5, 7, 8 and 9 only.
 
 Not checked (see the README): ${NOT_IMPLEMENTED.join("; ")}.`;
 
