@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you adopt K13, cite the version you adopted."
-title: "K13 - AI Response Standard"
+title: "K13 - Ai General Response Standard"
 # CFF 1.2.0 allows only 'dataset' or 'software' at the top level. K13 is a
 # standard; 'software' is the closest option the format offers, and it is the
 # same choice CITATION.cff makes for AiEDs. GitHub reads only CITATION.cff, so
@@ -23,7 +23,7 @@ abstract: >-
   Model-agnostic. The canonical text is
   K13.md in this repository.
 keywords:
-  - AI response standard
+  - Ai general response standard
   - response levels
   - open standard
 authors:

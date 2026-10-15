@@ -390,7 +390,7 @@ function k13Section() {
       </p>\n`;
   return `    <section class="standard${allPresent ? "" : " unpublished"}">
       <h2>K13</h2>
-      <p class="version">response standard ${escapeHtml(K13.version)}</p>
+      <p class="version">Ai General Response Standard ${escapeHtml(K13.version)}</p>
 ${note}      <ul class="artifact-list">
 ${rows}
       </ul>

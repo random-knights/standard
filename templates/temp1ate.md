@@ -30,7 +30,7 @@
 
 ## juice box (K-5) &#x1F9C3;
 
-Normative level 1 of 6. Register: No jargon at all. One idea per sentence.
+Normative level 1 of 6. Register: No jargon at all. One idea per sentence. The default level.
 
 ### Report
 
@@ -316,7 +316,7 @@ FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and
 
 ## energy drink (9-12) &#x1F9CB;
 
-Normative level 3 of 6. Register: Real terms, defined once. The default level.
+Normative level 3 of 6. Register: Real terms, defined once.
 
 ### Report
 

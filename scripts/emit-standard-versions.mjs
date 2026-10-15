@@ -104,7 +104,7 @@ export function buildVersions() {
         version: displayVersion(k13Version, k13Status),
         semver: k13Version,
         status: k13Status,
-        description: "AI Response Summary",
+        description: "Ai General Response",
         canonicalText: "K13.md",
       },
       {
