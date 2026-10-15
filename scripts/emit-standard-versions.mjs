@@ -86,7 +86,7 @@ export function buildVersions() {
         version: displayVersion(eplusVersion, eplusStatus),
         semver: eplusVersion,
         status: eplusStatus,
-        description: "Earth Health Scoring",
+        description: "Earth + Ai Impact",
         canonicalText: "eplus/v1/methodology.md",
       },
       {

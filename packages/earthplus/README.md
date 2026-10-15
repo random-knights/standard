@@ -1,7 +1,8 @@
 # @randomknights/earthplus
 
-Earth+ (E+), the Earth Health Score standard, version 1.2.0 (ratified
-2026-09-22), as an npm package.
+Earth+ (E+), the Earth + Ai Impact Standard, version 1.2 (ratified
+2026-09-22, renamed by the wording-only patch 1.2.1 of 2026-10-15), as an npm
+package.
 
 ## What Earth+ is
 
@@ -89,7 +90,7 @@ the score. The table with each check is in the
 ## Versions
 
 The package's MAJOR and MINOR are the E+ standard version it implements, so
-1.2.x implements E+ 1.2.0. The PATCH is this checker's own, and it moves when
+1.2.x implements the E+ 1.2 line. The PATCH is this checker's own, and it moves when
 the checker is fixed without the standard moving: a patch release never changes
 a rule, a threshold or a published number. It is not the producer's
 `methodologyVersion`; the methodology, section 9, explains the difference.
@@ -121,7 +122,7 @@ Two licenses, see `NOTICE`:
 
 - The checker code (`dist/`): Apache 2.0, in `LICENSE`.
 - The methodology text (`methodology.md`): CC BY 4.0, in `LICENSE-DOCS`.
-  Attribute "Random Knights, LLC, E+ Earth Health Score Methodology" with the
+  Attribute "Random Knights, LLC, E+ Earth + Ai Impact Standard" with the
   version and a link to <https://standard.rand0m.ai>.
 
 SPDX: `Apache-2.0 AND CC-BY-4.0`.

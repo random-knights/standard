@@ -1,11 +1,12 @@
-# E+ Methodology
+# E+ Methodology (Earth + Ai Impact Standard)
 
-> **CURRENT VERSION: 1.2.0, RATIFIED 2026-09-22.** This is the first ratified
-> text of the E+ (Earth Health Score) methodology. The owner ratified it on
+> **CURRENT VERSION: 1.2.1, RATIFIED 2026-09-22 (1.2.1 is a wording-only
+> patch of 2026-10-15).** This is the ratified text of the E+ (Earth + Ai
+> Impact Standard) methodology. The owner ratified 1.2.0 on
 > 2026-09-22 with the instruction "i approve the scoring-rule changes. if we're
 > going to do all this work on Earth+ to make it an official standard let's do
 > it right now." Versions 1.0.0 and 1.1.0 were drafts and were never ratified;
-> implement 1.2.0. It states the normative requirements a v1 document and a v1
+> implement 1.2.1 (every rule is the 1.2.0 rule). It states the normative requirements a v1 document and a v1
 > implementation must meet. Nothing in it is new science. Every constant,
 > weight, threshold and number was taken from a ratified ADR, from the producer
 > source, from the four independent audits of 2026-09-10, from a named
@@ -19,9 +20,19 @@
 > is read against this text by the conformance checker (section 7); the text is
 > not bent to match the code.
 
+> **The name, from 1.2.1.** The long name of this standard is now "Earth + Ai
+> Impact Standard". The short names E+ and Earth+ are unchanged, and the 0 to
+> 100 score keeps the name Earth Health Score. The name is the only thing that
+> moved: no rule, weight, threshold, schema field or published number changed,
+> and the schema id `earth.healthscore.v1` and the URL path `/eplus/v1/` stay.
+> This version carries no Ai impact data. Where a later version adds an
+> impact part, that part is context shown beside the score, it never feeds the
+> score, and it is worded as location and modeled demand, never as cause.
+> Co-location is not causation.
+
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 1.2.0 (E+ standard semver - distinct from the implementation's `methodologyVersion`, see section 9)
+**Version:** 1.2.1 (E+ standard semver - distinct from the implementation's `methodologyVersion`, see section 9)
 **Status:** Ratified
 **Effective:** 2026-09-22
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
@@ -30,6 +41,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 1.2.1   | 2026-10-15 | **WORDING ONLY. No rule, weight, threshold, schema field or published number moves.** The long name of the standard changes from "Earth Health Score Methodology" to "Earth + Ai Impact Standard" (owner decision 2026-10-15, plan EPLUS-RENAME-PLAN). The short names E+ and Earth+ are unchanged. The 0 to 100 score keeps the name "Earth Health Score". The schema id `earth.healthscore.v1`, `meta.eplusVersion`, `methodologyVersion`, the `/eplus/v1/` path and the npm name `@randomknights/earthplus` are unchanged. A document that names 1.2.0 still conforms. This patch adds no impact data; an impact part, if ratified, is a later minor version that never feeds the score. |
 | Proposed | 2026-09-22 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Proposed version 1.3.0. Section 3.3 gains 3.3.1, a second numerator source where the reference source does not retrieve (R8, RK-136). MODIS MOD44B v061 writes zero where it does not estimate, and the 2025 band proves it: of 29,729 cells reading 15 percent canopy or more, 5,136 read zero forest area and every one is at or above 60 N. The rule declares a NON-RETRIEVAL ZONE as a published geometry (cells at or above 60 N, MODIS sinusoidal tile rows v00 to v02) rather than testing single cells for zeros; sets per-cell source precedence with no blending and a common 15 percent quantity; requires a per-cell source code, a `sources` array and `secondarySourceShare` on every sub-score; declares a merged input at its weakest rung, oldest vintage and oldest source's freshness window, with no exemption for a closed series; and, when a second source is missing, drops the zone from BOTH numerator and denominator and publishes NO land-cover sub-score for a region that cannot read more than 5 percent of its potential forest (a Random Knights parameter, OQ-13). Proposes CGLS-LC100 collection 3 epoch 2019 tree cover fraction (CC BY 4.0, no credential, verified to retrieve across the whole zone) as the second source, with a normative seam check that disqualifies a source whose mean signed difference from the reference source over the five degrees south of the zone exceeds 10 percentage points. NUMBERS: nothing moves. Land cover is absent today and stays absent; the rule makes it absent by measurement instead of by pin. |
 | 1.2.0   | 2026-09-22 | **RATIFIED. The document leaves Draft.** The owner ratified every Proposed rule on 2026-09-22 (RK-136, RK-125; ADR 0018 amendment Accepted; xyz-docs ADR 0019 "E+ 1.2.0 data program"). Seven rules become normative: **R1** assessed mode for the breach panel (6.1; `mode` on every entry, `liveBreachCount` and `assessedBreachCount` never summed). **R2** a live control value is evaluated on the basis its threshold is stated on; the aerosol entry is the trailing 12-month mean, never one month (6.2). **R3** fire is scored by the trailing self-sourced percentile and its input is on; with fewer than 30 baseline days it publishes no weight-carrying sub-score, and a new visible-but-no-weight representation (`warmUpDomains`, `warmUpReadings`) is defined (3.6, 4.2). **R4** land cover is forest remaining as a share of POTENTIAL forest (RESOLVE Ecoregions 2017, forest biomes 1 to 6), canopy threshold 15 percent, high-risk floor 54 (was 30), decision D8 lifted (2, 3.3). **R5** cryosphere = 0.5 sea ice + 0.5 glaciers with F 0.40 and the +-100 mm w.e. band (3.7, replacing the reference-table input). **R6** a synthetic input never feeds the score; biodiversity and conservation are absent until a commercially usable source exists (3.8, 5.2, 7.1). **R7** freshness by source cadence: a domain's window is its publication interval plus its stated lag, 48 h for daily sources (5.3). Section 10: OQ-2, OQ-3 and OQ-8 move to Decided, the fire cross-processing calibration moves to Dated, OQ-12 (biodiversity and conservation sources) is added, and OQ-11 stays open as the list of Random Knights parameters. Conformance checker: new check 10 (R3 warm-up), check 7 applies per-domain windows (R7), new check 11 (R6), check 9 gains the mode rules (R1). NUMBERS: the reference implementation still publishes under the 1.1.0 draft rules until its code lane flips the input flags; the would-be moves are stated in the implementation changelog below and in ADR 0019, and each flip gets its own changelog line with the old and new headline. The two Proposed rows below are the proposals this version ratifies; they are kept as written. |
 | Proposed | 2026-09-21 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Section 3.7 gains 3.7.1, the cryosphere domain from published observations (RK-136): cryosphere = 0.5 sea ice + 0.5 glaciers. Sea ice is the NSIDC Sea Ice Index daily extent per hemisphere against the day-of-year 1981 to 2010 median, health = clamp(100 x (1 - max(0, (median - extent) / median) / F), 0, 100) with F = 0.40, averaged over the Arctic and the Antarctic. Glaciers keep improving 80 / stable 60 / worsening 25, the category taken from the latest 10-year mean of the WGMS reference-glacier balance against the prior 10-year mean with a +-100 mm w.e. band. The glacier half is exempt from the 48 h freshness window and is stale 18 months after its newest hydrological year ends; a missing or stale half leaves the other half alone, and the reading says so; never a synthetic input. F and the band are Random Knights parameters with no framework citation, added as OQ-11. The reference implementation builds this behind an input pin that stays off until ratification. |
@@ -1034,7 +1046,8 @@ A conforming E+ document contains, at minimum:
    which rules a document was written against without inferring it from the
    producer's release history (owner decision D4, 2026-09-13). A document
    without `meta.eplusVersion` does not conform to 1.0.0. A document written
-   against this version names `1.2.0`.
+   against this version names `1.2.1` (a document that names `1.2.0`
+   still conforms: 1.2.1 moves no rule).
 2. `meta.weights` for every domain, `meta.domainBasis`, `meta.domainScience`
    (control variable, units, safe, high risk, normalization, citation, basis
    per domain), and `meta.derivation.rawWeightSum`.
@@ -1231,7 +1244,7 @@ not compute does not.
    number, the new number, and whether it is a change in the method or in the
    world. The changelog is append-only.
 4. **Two version series, not one.** This document carries the E+ STANDARD
-   version (semver, 1.2.0 here). The reference implementation stamps its own
+   version (semver, 1.2.1 here). The reference implementation stamps its own
    `methodologyVersion` (0.4 through 0.8 to date) in every document. The
    implementation series predates the standard and is not renumbered. A
    document names the standard version it conforms to in `meta.eplusVersion`
