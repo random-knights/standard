@@ -106,14 +106,27 @@ test("the index page lists E+ at the version and status its own text declares", 
   );
 });
 
-test("the index page still says the K13 level registry is not yet published", () => {
-  // canon/k13-levels.json has not moved in. The page must say so rather than
-  // link to a path that 404s; this flips deliberately when the registry lands.
-  const indexKey = [...files.keys()].find((k) => k === "index.html");
-  const html = files.get(indexKey).toString("utf8");
-  assert.match(html, /not yet published/);
+test("the K13 level registry is generated from K13.md and served", () => {
+  // k13-levels.json is not a committed file: the build generates it from the
+  // ladder and identifier tables in K13.md, so there is one source.
+  const key = [...files.keys()].find((k) => k.replaceAll("\\", "/") === "k13/v1/k13-levels.json");
+  assert.ok(key, "no output file for k13/v1/k13-levels.json");
+  const reg = JSON.parse(files.get(key).toString("utf8"));
+  assert.deepEqual(
+    reg.levels.map((l) => l.id),
+    ["juice_box", "soda_pop", "energy_drink", "black_coffee", "loose_leaf", "yerba_mate"],
+  );
+  assert.deepEqual(
+    reg.levels.map((l) => l.step),
+    ["9", "10", "11", "12", "12.1", "12.2"],
+  );
+  assert.equal(reg.default, "juice_box");
+  assert.equal(reg.levels.find((l) => l.id === "soda_pop").legacyId, "vending_machine");
+  assert.equal(reg.k13Version, readFileSync(resolve(repoRoot, "K13.md"), "utf8").match(/\*\*Version:\*\*\s*(\S+)/)[1]);
+  const html = files.get("index.html").toString("utf8");
   assert.match(html, /level registry/);
-  assert.doesNotMatch(html, /standard\.rand0m\.ai\/k13\/v1\/k13-levels\.json/);
+  assert.match(html, /standard\.rand0m\.ai\/k13\/v1\/k13-levels\.json/);
+  assert.doesNotMatch(html, /not yet published/);
 });
 
 test("chrome values match rk_branding/canon/site-canon.md verbatim", () => {

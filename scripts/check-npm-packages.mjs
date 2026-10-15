@@ -42,6 +42,11 @@ const EXPECTED = {
     "bin/k13.mjs",
     "package.json",
     "src/index.mjs",
+    "vectors/gate-5-fail.md",
+    "vectors/gate-5-pass.md",
+    "vectors/gate-6-fail.html",
+    "vectors/gate-6-pass.html",
+    "vectors/vectors.json",
   ],
   earthplus: [
     "LICENSE",

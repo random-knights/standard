@@ -35,6 +35,6 @@ authors:
 contact:
   - name: "Random Knights, LLC"
     email: knights@rand0m.ai
-# K13 - AI Response Standard lives in this same repository (K13.md) and has
+# K13 - Ai General Response Standard lives in this same repository (K13.md) and has
 # its own citation file, CITATION.k13.cff. A CFF file describes one work, so
 # the two standards are not folded into one entry here.

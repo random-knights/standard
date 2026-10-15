@@ -11,8 +11,8 @@
 // checks both templates against it, level by level.
 //
 // It also holds the template rules the rest of the repository's gates cannot
-// see: the dash rule now bans a double hyphen used as punctuation, K13 step 11
-// names energy drink as the level a picker opens on, every evidence block
+// see: the dash rule now bans a double hyphen used as punctuation, K13 step 9
+// names juice box as the level a picker opens on, every evidence block
 // carries a rendered result, and the What's next tile names a role and an
 // effort rather than a model.
 import assert from "node:assert/strict";
@@ -257,26 +257,26 @@ test("both templates carry all six normative levels", () => {
   }
 });
 
-test("the html template opens on energy drink, the K13 step 11 default", () => {
+test("the html template opens on juice box, the K13 step 9 default", () => {
   assert.match(
     htmlTemplate,
-    /class="tab-btn active" data-level="energy_drink"/,
-    "the active tab must be energy drink",
+    /class="tab-btn active" data-level="juice_box"/,
+    "the active tab must be juice box",
   );
   assert.match(
     htmlTemplate,
-    /<div id="pane-energy_drink" class="level-pane">/,
-    "the energy drink pane must be the one that is not hidden",
+    /<div id="pane-juice_box" class="level-pane">/,
+    "the juice box pane must be the one that is not hidden",
   );
   assert.match(
     htmlTemplate,
-    /<div id="pane-juice_box" class="level-pane" hidden>/,
-    "the juice box pane must start hidden",
+    /<div id="pane-energy_drink" class="level-pane" hidden>/,
+    "the energy drink pane must start hidden",
   );
   assert.match(
     htmlTemplate,
-    /saved : 'energy_drink'/,
-    "the stored-level fallback must be energy drink",
+    /saved : 'juice_box'/,
+    "the stored-level fallback must be juice box",
   );
 });
 

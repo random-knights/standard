@@ -1,7 +1,7 @@
 {
   "name": "@randomknights/k13",
-  "version": "2.1.0",
-  "description": "K13 - AI Response Standard 2.1.0: the standard text and a checker (k13 check <file>) for the machine-gate rules that are implemented in code",
+  "version": "2.2.0",
+  "description": "K13 - Ai General Response Standard 2.2.0: the standard text and a checker (k13 check <file>) for the machine-gate rules that are implemented in code, and test vectors for gate checks 1 to 6",
   "type": "module",
   "main": "./src/index.mjs",
   "exports": {
@@ -15,6 +15,7 @@
   "files": [
     "src/index.mjs",
     "bin/k13.mjs",
+    "vectors",
     "K13.md",
     "LICENSE",
     "LICENSE-DOCS",
@@ -28,7 +29,7 @@
     "k13",
     "ai",
     "response-standard",
-    "reading-level",
+    "response-level",
     "em-dash",
     "lint",
     "standard"

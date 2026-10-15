@@ -25,7 +25,15 @@ const EN_DASH = String.fromCharCode(0x2013);
 
 /** Where K13.md is: in the package, or at the repository root when run from source. */
 function k13Path() {
-  for (const p of [join(here, "..", "K13.md"), join(here, "..", "..", "..", "K13.md")]) {
+  // In a source checkout the repository root K13.md is the one source, and a
+  // staged copy next to the package may be stale, so the root wins there. An
+  // installed package has no scripts/ directory three levels up, and uses its
+  // own bundled copy.
+  const fromSource = existsSync(join(here, "..", "..", "..", "scripts", "stage-npm-package.mjs"));
+  const order = fromSource
+    ? [join(here, "..", "..", "..", "K13.md"), join(here, "..", "K13.md")]
+    : [join(here, "..", "K13.md"), join(here, "..", "..", "..", "K13.md")];
+  for (const p of order) {
     if (existsSync(p)) return p;
   }
   throw new Error("K13.md not found next to this package");
@@ -47,10 +55,10 @@ function section(heading) {
 
 /**
  * The six normative levels, in ladder order, from the table in K13.md "The
- * learning level ladder". `id` is the name with spaces as underscores, which is
+ * response levels". `id` is the name with spaces as underscores, which is
  * how the reference HTML template names its panes.
  */
-export const LEVELS = section("The learning level ladder")
+export const LEVELS = section("The response levels")
   .split("\n")
   .filter((l) => /^\| [a-z][a-z ]+ \| /.test(l))
   .map((l) => l.split("|")[1].trim())
@@ -106,15 +114,295 @@ export const TILES = (() => {
 
 /** Rules K13 writes down that this package does NOT check. */
 export const NOT_IMPLEMENTED = [
-  "machine gate 1: number agreement across levels",
-  "machine gate 2: every graded value (verdict, confidence, provenance) at every level",
-  "machine gate 3: no untraceable figure (needs the run data)",
+  "machine gates 1, 2 and 3 on a whole file: they run on the passes of a report given to checkNumberAgreement, checkGradedValues and checkTraceable, because the passes of a free-text report cannot be located reliably",
   "machine gate 6 for markdown reports: evidence block has a rendered result",
   "the seventh check for markdown reports: no model name in What's next",
-  "reading level of each pass",
+  "response level of each pass (that it is written at its level)",
   "the thirteen steps as process (cost logged, state verified, owner action named)",
   "humor rules",
 ];
+
+// ---------------------------------------------------------------------------
+// Level identifiers and the levels registry (K13.md "Level identifiers").
+// ---------------------------------------------------------------------------
+
+/** Level name -> { id, legacy }, read from the identifier table in K13.md. */
+export const IDENTIFIERS = new Map(
+  section("Level identifiers")
+    .split("\n")
+    .filter((l) => /^\| [a-z][a-z ]+ \| [a-z_]+ \| /.test(l))
+    .map((l) => {
+      const [, name, id, legacy] = l.split("|").map((c) => c.trim());
+      return [name, { id, legacy: legacy === "same" ? null : legacy }];
+    })
+    .filter(([name]) => name !== "level"),
+);
+
+/**
+ * The levels registry: the ladder table and the identifier table of K13.md as
+ * data. This is the content of k13-levels.json on the site. It is generated,
+ * never edited, so the ladder has one source.
+ */
+export function levelsRegistry() {
+  const rows = section("The response levels")
+    .split("\n")
+    .map((l) => /^\| ([a-z][a-z ]+) \| ([^|]+) \| (\d+(?:\.\d+)?) \| U\+([0-9A-F]{4,6}) ([^|]+) \|$/.exec(l))
+    .filter(Boolean);
+  const dm = section("The default level").match(/^(\w+(?: \w+)?) is the default response level/im);
+  const defaultName = dm ? dm[1].toLowerCase() : "";
+  return {
+    k13Version: K13_VERSION,
+    source: "K13.md",
+    default: IDENTIFIERS.get(defaultName)?.id ?? null,
+    levels: rows.map(([, name, grades, step, hex, glyphName]) => ({
+      id: IDENTIFIERS.get(name)?.id ?? null,
+      name,
+      grades: grades.trim(),
+      step,
+      glyph: { codepoint: `U+${hex}`, name: glyphName.trim() },
+      legacyId: IDENTIFIERS.get(name)?.legacy ?? null,
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Machine gate checks 1, 2 and 3 on the passes of a report.
+//
+// A "passes" argument is an object keyed by level name (or identifier) whose
+// values are the written text of that level. Checks 1 and 2 compare the passes
+// with each other; check 3 compares them with the run figures.
+// ---------------------------------------------------------------------------
+
+const NUMBER_WORDS = new Map(
+  ["two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"].map(
+    (w, i) => [w, String(i + 2)],
+  ),
+);
+NUMBER_WORDS.set("zero", "0");
+
+/**
+ * Every figure in a text, as a set of strings: digit figures such as "2.0.0"
+ * or "12", and spelled numbers from zero to twelve, mapped to digits so "six"
+ * and "6" are the same figure. "one" is not read as a figure, because it is
+ * also a pronoun ("one of the copies"); a one-to-two disagreement is therefore
+ * out of this check's reach and is listed in the README.
+ */
+export function extractFigures(text) {
+  const out = new Set();
+  for (const m of text.matchAll(/\b\d+(?:\.\d+)*\b|\b[A-Za-z]+\b/g)) {
+    const t = m[0];
+    if (/^\d/.test(t)) out.add(t);
+    else if (NUMBER_WORDS.has(t.toLowerCase())) out.add(NUMBER_WORDS.get(t.toLowerCase()));
+  }
+  return out;
+}
+
+function levelKey(k) {
+  const n = String(k).replace(/_/g, " ");
+  return LEVELS.find((l) => l.name === n) ? n : null;
+}
+
+function normalizePasses(passes) {
+  const out = new Map();
+  for (const [k, v] of Object.entries(passes ?? {})) {
+    const name = levelKey(k);
+    if (name) out.set(name, typeof v === "string" ? v : v.text);
+  }
+  return out;
+}
+
+function missingLevels(map) {
+  return LEVELS.filter((l) => !map.has(l.name)).map((l) =>
+    finding("structure", `missing level "${l.name}"`),
+  );
+}
+
+/** Machine gate 1: a figure at one level must be at every level, unchanged. */
+export function checkNumberAgreement(passes) {
+  const map = normalizePasses(passes);
+  const missing = missingLevels(map);
+  if (missing.length) return missing;
+  const sets = new Map(LEVELS.map((l) => [l.name, extractFigures(map.get(l.name))]));
+  const all = new Set([...sets.values()].flatMap((s) => [...s]));
+  const out = [];
+  for (const fig of [...all].sort()) {
+    const absent = LEVELS.filter((l) => !sets.get(l.name).has(fig)).map((l) => l.name);
+    if (absent.length) {
+      out.push(
+        finding(
+          "number-agreement",
+          `figure "${fig}" is at ${LEVELS.length - absent.length} level(s) and missing at: ${absent.join(", ")}`,
+        ),
+      );
+    }
+  }
+  return out;
+}
+
+/** The graded values K13 machine gate check 2 names. */
+export const GRADED_VALUES = ["verdict", "confidence", "provenance"];
+
+/**
+ * Machine gate 2. `graded` is keyed by level name; each value is
+ * { verdict, confidence, provenance }, each of those { value, quote }. The
+ * quote must appear in that level's text, and the value must be the same at
+ * every level. The author declares the graded values; the check holds the
+ * author to them.
+ */
+export function checkGradedValues(passes, graded) {
+  const map = normalizePasses(passes);
+  const out = missingLevels(map);
+  if (out.length) return out;
+  const g = new Map(Object.entries(graded ?? {}).map(([k, v]) => [levelKey(k), v]));
+  const flat = (s) => s.replace(/\s+/g, " ").toLowerCase();
+  for (const key of GRADED_VALUES) {
+    const seen = new Map();
+    for (const l of LEVELS) {
+      const cell = g.get(l.name)?.[key];
+      if (!cell || !cell.value || !cell.quote) {
+        out.push(finding("graded-values", `${l.name}: no ${key}`));
+        continue;
+      }
+      if (!flat(map.get(l.name)).includes(flat(cell.quote))) {
+        out.push(finding("graded-values", `${l.name}: the ${key} quote is not in the pass`));
+      }
+      seen.set(l.name, cell.value);
+    }
+    if (new Set(seen.values()).size > 1) {
+      out.push(
+        finding(
+          "graded-values",
+          `${key} differs between levels: ${[...seen].map(([n, v]) => `${n}=${v}`).join(", ")}`,
+        ),
+      );
+    }
+  }
+  return out;
+}
+
+/** Machine gate 3: every figure in the passes is one of the run's figures. */
+export function checkTraceable(passes, runFigures) {
+  const map = normalizePasses(passes);
+  const known = new Set((runFigures ?? []).map(String));
+  const out = [];
+  for (const l of LEVELS) {
+    if (!map.has(l.name)) continue;
+    for (const fig of extractFigures(map.get(l.name))) {
+      if (!known.has(fig)) {
+        out.push(finding("traceable", `${l.name}: figure "${fig}" is not in the run data`));
+      }
+    }
+  }
+  return out;
+}
+
+/** Machine gate 4 over every pass of a report. */
+export function checkPassDashes(passes) {
+  const map = normalizePasses(passes);
+  const out = [];
+  for (const [name, text] of map) {
+    for (const f of checkDashes(text)) out.push({ ...f, message: `${name}: ${f.message}` });
+  }
+  return out;
+}
+
+/**
+ * The six passes of "One fact, six ways" in K13.md, read at run time, with
+ * whitespace collapsed. The worked example is held to its own gate.
+ */
+export function exampleSixWays() {
+  const body = section("One fact, six ways");
+  const out = {};
+  for (const m of body.matchAll(/^\*\*([a-z ]+)\.\*\* ([^\n]+(?:\n[^\n]+)*)/gm)) {
+    out[m[1]] = m[2].replace(/\s+/g, " ").trim();
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Glyph text alternatives (K13.md "The response levels").
+// ---------------------------------------------------------------------------
+
+const GLYPHS = new Set([0x1f9c3, 0x1f964, 0x1f9cb, 0x2615, 0x1fad6, 0x1f9c9]);
+
+/**
+ * Every rendered level glyph in an HTML document must be hidden from
+ * assistive technology with the level name written beside it, or be an image
+ * role with an accessible name. Returns one finding per offending glyph.
+ */
+export function checkGlyphAlternatives(html) {
+  const out = [];
+  const re = /&#x([0-9a-fA-F]{4,6});|&#(\d{4,7});|(\p{Extended_Pictographic})/gu;
+  for (const m of html.matchAll(re)) {
+    const cp = m[1] ? parseInt(m[1], 16) : m[2] ? parseInt(m[2], 10) : m[3].codePointAt(0);
+    if (!GLYPHS.has(cp)) continue;
+    const before = html.slice(0, m.index);
+    const open = before.lastIndexOf("<");
+    const tag = open >= 0 && before.indexOf(">", open) === before.length - 1 ? html.slice(open, m.index) : "";
+    const hidden = /aria-hidden="true"/.test(tag);
+    const labelled = /role="img"/.test(tag) && /aria-label="[^"]+"/.test(tag);
+    // A hidden glyph needs the level name written visibly right beside it.
+    const near = html.slice(m.index, m.index + 300).toLowerCase();
+    const named = LEVELS.some((l) => near.includes(l.name));
+    if (labelled || (hidden && named)) continue;
+    out.push(
+      finding(
+        "glyph-alt",
+        `U+${cp.toString(16).toUpperCase()} has no text alternative: hide it with aria-hidden="true" beside the visible level name, or give it role="img" and an aria-label`,
+        before.split("\n").length,
+      ),
+    );
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Test vectors (packages/k13/vectors).
+// ---------------------------------------------------------------------------
+
+function vectorsDir() {
+  const p = join(here, "..", "vectors");
+  if (!existsSync(p)) throw new Error("vectors/ not found next to this package");
+  return p;
+}
+
+/** The vector list: a passing and a failing vector per machine gate check. */
+export function loadVectors() {
+  const dir = vectorsDir();
+  const list = JSON.parse(readFileSync(join(dir, "vectors.json"), "utf8"));
+  return list.map((v) => ({
+    ...v,
+    passes: v.passesFrom === "K13.md#one-fact-six-ways" ? exampleSixWays() : v.passes,
+    reportText: v.report ? readFileSync(join(dir, v.report.file), "utf8") : undefined,
+  }));
+}
+
+/**
+ * Run the gate check a vector is for and return its findings. A passing
+ * vector must return none; a failing one must return a finding whose message
+ * contains the vector's `expectMessage`.
+ */
+export function runVector(v) {
+  switch (v.gate) {
+    case 1:
+      return checkNumberAgreement(v.passes);
+    case 2:
+      return checkGradedValues(v.passes, v.graded);
+    case 3:
+      return checkTraceable(v.passes, v.runFigures);
+    case 4:
+      return checkPassDashes(v.passes);
+    case 5:
+      return (v.report.format === "html"
+        ? checkHtmlStructure(v.reportText)
+        : checkMarkdownStructure(v.reportText)
+      ).filter((f) => f.check === "structure");
+    case 6:
+      return checkHtmlStructure(v.reportText).filter((f) => f.check === "evidence");
+    default:
+      throw new Error(`vector ${v.id}: no gate ${v.gate}`);
+  }
+}
 
 function finding(check, message, line) {
   return line === undefined ? { check, message } : { check, message, line };
@@ -328,7 +616,8 @@ export function checkText(text, format = "text") {
     ran.push("structure", "whats-next");
   } else if (format === "html" && text.includes('<div id="pane-')) {
     findings.push(...checkHtmlStructure(text));
-    ran.push("structure", "evidence", "whats-next");
+    findings.push(...checkGlyphAlternatives(text));
+    ran.push("structure", "evidence", "whats-next", "glyph-alt");
   } else {
     skipped.push("structure (not a report in the reference template shape)");
   }

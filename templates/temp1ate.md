@@ -11,7 +11,7 @@
        - No em dashes (U+2014). Gate fails on one.
        - No en dashes (U+2013), and no double hyphen used as a dash. Use a
          comma, a colon, or a new sentence.
-       - Levels are "levels," never "reading levels."
+       - Levels are "response levels," never "reading levels" or "learning levels."
        - STRUCTURAL INVARIANCE. Every level carries all twelve tiles, in this
          order. Only the register changes: the finding sentence, the narrative
          prose and the wording of actions. Data cells are byte-identical at
@@ -30,7 +30,7 @@
 
 ## juice box (K-5) &#x1F9C3;
 
-Normative level 1 of 6. Register: No jargon at all. One idea per sentence.
+Normative level 1 of 6. Register: No jargon at all. One idea per sentence. The default level.
 
 ### Report
 
@@ -316,7 +316,7 @@ FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and
 
 ## energy drink (9-12) &#x1F9CB;
 
-Normative level 3 of 6. Register: Real terms, defined once. The default level.
+Normative level 3 of 6. Register: Real terms, defined once.
 
 ### Report
 
