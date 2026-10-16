@@ -106,13 +106,16 @@ test("the index page lists E+ at the version and status its own text declares", 
   );
 });
 
-test("K13 3.0.0 serves K13.md only: the level registry is gone", () => {
+test("K13 3.0.0 serves K13.md and its two companions: the level registry is gone", () => {
   // K13 3.0.0 has one pass and no response levels, so k13-levels.json is no
   // longer built or served. This test replaces the one that pinned the six
   // level identifiers, their steps and the default (2026-10-15, K13 3.0.0).
   const keys = [...files.keys()].map((k) => k.replaceAll("\\", "/"));
-  assert.equal(keys.filter((k) => k.startsWith("k13/")).length, 1, "k13/ must hold K13.md only");
-  assert.ok(keys.includes("k13/v1/K13.md"));
+  assert.deepEqual(
+    keys.filter((k) => k.startsWith("k13/")).sort(),
+    ["k13/v1/CHANGELOG-K13.md", "k13/v1/K13-REFERENCE.md", "k13/v1/K13.md"],
+    "k13/ must hold K13.md and its two companion files only",
+  );
   assert.ok(!keys.includes("k13/v1/k13-levels.json"), "k13-levels.json must not be served");
   const html = files.get("index.html").toString("utf8");
   assert.doesNotMatch(html, /level registry/);

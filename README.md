@@ -128,8 +128,9 @@ no sentence is long. The `@randomknights/k13` package checks all of that.
 in your own pipeline.
 
 The standard is [K13.md](K13.md), about 245 lines. Longer detail is in
-[K13-REFERENCE.md](K13-REFERENCE.md) and the full version history is in
-[CHANGELOG-K13.md](CHANGELOG-K13.md).
+[K13-REFERENCE.md](https://standard.rand0m.ai/k13/v1/K13-REFERENCE.md). What
+changed in each version is in
+[CHANGELOG-K13.md](https://standard.rand0m.ai/k13/v1/CHANGELOG-K13.md).
 
 <!-- AiEDs -->
 

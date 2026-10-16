@@ -100,7 +100,8 @@ const XYZ = "https://randomknights.xyz";
 // K13 lives in this repository under CC BY 4.0 (see LICENSE-DOCS): K13.md is
 // at the root. Through 2.2.0 the site also served a generated level registry,
 // k13-levels.json. K13 3.0.0 has one pass and no levels, so that file is no
-// longer built or served. Whether K13.md is present is a FACT about the
+// longer built or served. The companion files K13-REFERENCE.md and
+// CHANGELOG-K13.md are served beside K13.md. Whether K13.md is present is a FACT about the
 // filesystem, not a flag a human sets and might forget to flip, so it is
 // checked here, not asserted.
 const K13_DIR = "k13/v1";
@@ -129,6 +130,16 @@ const K13 = {
   xyzHref: `${XYZ}/k13/`,
   files: [
     { label: "K13.md", name: "K13.md", present: k13MdPresent },
+    {
+      label: "K13-REFERENCE.md",
+      name: "K13-REFERENCE.md",
+      present: existsSync(join(repoRoot, "K13-REFERENCE.md")),
+    },
+    {
+      label: "CHANGELOG-K13.md",
+      name: "CHANGELOG-K13.md",
+      present: existsSync(join(repoRoot, "CHANGELOG-K13.md")),
+    },
   ],
 };
 
@@ -489,6 +500,13 @@ export function expectedFiles() {
   ]);
   if (k13MdPresent) {
     files.set(join(K13_DIR, "K13.md"), readFileSync(join(repoRoot, "K13.md")));
+  }
+  // The two companion files are served beside K13.md at fixed, version-pinned
+  // paths, byte for byte from the repository.
+  for (const name of ["K13-REFERENCE.md", "CHANGELOG-K13.md"]) {
+    if (existsSync(join(repoRoot, name))) {
+      files.set(join(K13_DIR, name), readFileSync(join(repoRoot, name)));
+    }
   }
   return files;
 }

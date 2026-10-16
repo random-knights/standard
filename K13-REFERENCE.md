@@ -342,18 +342,5 @@ the answer is written. It never changes whether its cost is shown.
 
 ## What changed from 2.x
 
-K13 2.x had six response levels. They were juice box, soda pop, energy drink,
-black coffee, loose leaf and yerba mate. An answer was written six times and a
-reader picked one. K13 3.0.0 keeps one of them.
-
-- A 2.x juice box pass conforms to 3.0.0 unchanged. It must also meet the
-  limits above and state its confidence. It was already the same text.
-- The other five passes are not part of the standard. A product may still offer
-  them. K13 does not require them and does not check them.
-- The ladder, the level names for storage, the level icons and the file
-  `k13-levels.json` are gone. So are the default-level rules.
-- Steps 9 to 12.2 are replaced by steps 9 to 12. They make and check the one
-  pass. There are still thirteen steps, so the name K13 is still true.
-
-The reason is in the changelog. In short, a standard has no business training
-readers to climb a ladder. One short pass was the part that was ever checked.
+Versions 1 and 2 asked for several passes of one answer. Version 3 asks for one.
+A 2.x juice box pass conforms to 3.0.0 unchanged. See the changelog for the rest.

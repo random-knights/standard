@@ -5,8 +5,7 @@ standard text and a checker for the nine checks of its machine gate.
 
 K13 3.0.0 asks for one pass, the quick squeeze: plain words, one idea per
 sentence, the outcome first, short, with every figure traced and the confidence
-stated. The six response levels of 2.x are gone from the standard. See "What
-changed from 2.x" in K13.md.
+stated. See the changelog for what changed from 2.x.
 
 The canonical text is `K13.md` in
 [random-knights/standard](https://github.com/random-knights/standard). The

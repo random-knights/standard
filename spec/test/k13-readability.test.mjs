@@ -65,7 +65,7 @@ export function proseOf(src, stop) {
 const DOCS = [
   { file: "K13.md", stop: null },
   { file: "K13-REFERENCE.md", stop: null },
-  { file: "CHANGELOG-K13.md", stop: NL + "### 2.2.0" },
+  { file: "CHANGELOG-K13.md", stop: null },
 ];
 const prose = Object.fromEntries(DOCS.map((d) => [d.file, proseOf(read(d.file), d.stop)]));
 
@@ -108,3 +108,31 @@ test("measured numbers are printed so a reader can see the margin", () => {
     assert.ok(longest <= LIMITS.longestSentence);
   }
 });
+
+// Served at standard.rand0m.ai/k13/v1/. Nothing served may carry the retired
+// reader-level or school framing (owner decision 2026-10-15). Matched on the
+// whole file, code and tables included, not only the prose.
+const FORBIDDEN = [
+  /kindergarten/i,
+  /grade/i,
+  /school/i,
+  /college/i,
+  /masters/i,
+  /doctorate/i,
+  /elementary/i,
+  /reading level/i,
+  /learning level/i,
+  /reader level/i,
+  /response level/i,
+  /ladder/i,
+  /K-5/,
+  /12th/i,
+];
+
+for (const d of DOCS) {
+  test(`${d.file} (served) has none of the forbidden words`, () => {
+    const whole = read(d.file);
+    const hits = FORBIDDEN.filter((re) => re.test(whole)).map((re) => String(re));
+    assert.deepEqual(hits, [], `${d.file} carries retired framing`);
+  });
+}
