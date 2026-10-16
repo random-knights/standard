@@ -66,7 +66,7 @@ adopt either without asking. E+ 1.2.0 was ratified on 2026-09-22, its wording-on
 | Standard                                  | Version                   | License                                              | Canonical text                                                          | Read it                                                                                                        |
 | ----------------------------------------- | ------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | **AiEDs - AI Energy Disclosure Standard** | methodology 2.4.0         | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai)                                                               |
-| **K13 - Ai General Response Standard**            | 2.2.0                     | CC BY 4.0 prose, Apache 2.0 reference templates      | [K13.md](K13.md) with `templates/`                                      | [randomknights.xyz/k13](https://randomknights.xyz/k13/)                                                        |
+| **K13 - Ai General Response Standard**            | 3.0.0                     | CC BY 4.0 prose, Apache 2.0 reference templates      | [K13.md](K13.md) with `templates/`                                      | [randomknights.xyz/k13](https://randomknights.xyz/k13/)                                                        |
 | **E+ - Earth + Ai Impact Standard**       | 1.2.1, ratified           | CC BY 4.0 prose, Apache 2.0 conformance checker      | [eplus/v1/methodology.md](eplus/v1/methodology.md)                      | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md)               |
 
 <!-- E+ -->
@@ -94,71 +94,43 @@ Co-location is not causation.
 ## <span style="color:#ff4124"><u>**K13**</u></span> Ai General Response Standard
 
 Thirteen steps, run in order, every time. Every time does not mean every step
-takes real work: on short replies the steps collapse to a second each and the
-six passes come out identical. That is the standard being met, not skipped.
+takes real work: on short replies the steps collapse to a second each. That is
+the standard being met, not skipped.
 
-Steps 9 to 12 are one ladder. A reader picks a level and the answer is
-**written at that level, never rewritten from another one.** All levels state
-the same facts and the same figures. If two levels disagree on a number, the
-answer is wrong.
+K13 3.0.0 asks for **one pass: the quick squeeze.** Plain words, one idea per
+sentence, the outcome first, short, with every figure traced to its source and
+the confidence stated. The six response levels of 2.x are no longer part of the
+standard. A 2.x juice box pass is a quick squeeze and conforms unchanged.
 
-<div align="center">
-  
-| Level                  | Grades    | Step        |
-| ---------------------- | --------- | ----------- |
-| &#129475; juice box    | K-5       | 9, default  |
-| &#129380; soda pop     | 6-8       | 10          |
-| &#129483; energy drink | 9-12      | 11          |
-| &#9749; black coffee   | College   | 12          |
-| &#129750; loose leaf   | Masters   | 12.1        |
-| &#129481; yerba mate   | Doctorate | 12.2        |
+Steps 9 to 12 make and check that one pass: draft it, cut it to the limits,
+source every figure, state the confidence. Step 13 runs the gate.
 
-</div> 
+The limits are numbers a program can check:
 
-All six levels are NORMATIVE as of 2.0.0. Loose leaf and yerba mate were
-reserved names in 1.1.0 and are required now, which is why 2.0.0 is a breaking
-version: a four-level 1.1.0 report does not conform to it. They are numbered
-inside the step 12 drafting block, so the standard is still thirteen steps.
+| Limit            | Value    |
+| ---------------- | -------- |
+| longest word     | 12 letters |
+| longest sentence | 20 words |
+| average sentence | 14 words |
 
-Level three is named "energy drink" and carries the bubble tea glyph. That
-mismatch is an intentional owner decision. Do not reconcile one to the other.
+### Demo: one fact, one pass
 
-### Demo: one fact, written at every level
+> Six of our copies of the rules are old. They say version 1.1.0. The new rules
+> are version 3.0.0. We looked in four places, so there may be an old copy we
+> did not find. Confidence is high that these six are old, because we read each
+> version number. Confidence is moderate that six is the whole count, because
+> we searched four places.
 
-The same fact about the same feed on the same date. Only the sentences change.
-This is the whole claim, so it is worth reading all four rather than one.
+Every figure is in the run data, the confidence is stated with its reason, and
+no sentence is long. The `@randomknights/k13` package checks all of that.
 
-> **&#129475; juice box.** The ocean map is old. New data stopped arriving on
-> 12 July. The map still draws. It is showing you an average of past years,
-> not the water today.
-
-> **&#129380; soda pop.** This map shows ocean currents, the paths that water
-> moves along. The data behind it stopped updating on 12 July. Since then the
-> map uses a climatology, which is an average worked out from many past years
-> rather than a reading taken today. The map still draws, but what it shows is
-> that average, not the water as it is now.
-
-> **&#129483; energy drink.** The OSCAR ocean current feed has not refreshed
-> since 12 July. With no new data, the renderer falls back to a climatology
-> grid: a field of long-term average values for each point on the map,
-> computed from years of past observations. The map still renders, and every
-> value on it is one of those averages rather than a measurement taken since
-> 12 July.
-
-> **&#9749; black coffee.** The OSCAR near-real-time surface current product
-> has not refreshed since 12 July. The renderer degrades to the representative
-> climatology grid and marks freshness stale, so the field stays fully
-> populated while every rendered vector is a climatological mean rather than a
-> near-real-time observation. A consumer that treats the surface as current
-> will read means as observations.
-
-Every version says the feed stopped on 12 July and that the map now shows an
-average. Same fact, same date, four readers.
-
-The interactive version, including the loose leaf and yerba mate levels, is at
-[randomknights.xyz/k13/demo](https://randomknights.xyz/k13/demo/).
 [Get started](https://randomknights.xyz/k13/get-started/) covers adopting it
 in your own pipeline.
+
+The standard is [K13.md](K13.md), about 245 lines. Longer detail is in
+[K13-REFERENCE.md](https://standard.rand0m.ai/k13/v1/K13-REFERENCE.md). What
+changed in each version is in
+[CHANGELOG-K13.md](https://standard.rand0m.ai/k13/v1/CHANGELOG-K13.md).
 
 <!-- AiEDs -->
 
@@ -499,7 +471,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Reference library    | `lib/`                       | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested)                                       |
 | MCP server           | `mcp/`                       | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose                                                                                                           |
 | Claude Code plugin   | `plugins/random-knights/`    | Apache 2.0 | An AiEDs receipt after every Claude Code or Codex response, computed locally from token usage with the reference library; Grok Build session files, Ollama and Hugging Face responses are read too (see the plugin README for what is verified). Marketplace: `.claude-plugin/marketplace.json` |
-| K13                  | `K13.md`                     | CC BY 4.0  | K13 - Ai General Response Standard, 2.2.0. The canonical text.                                                                                                       |
+| K13                  | `K13.md`                     | CC BY 4.0  | K13 - Ai General Response Standard, 3.0.0. The canonical text.                                                                                                       |
 | K13 report templates | `templates/`                 | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement.                                                 |
 | E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth + Ai Impact Standard, 1.2.1, ratified 2026-09-22. The canonical text, including the public implementation changelog.                              |
 
@@ -545,7 +517,7 @@ used.
 > Random Knights, LLC (2026). AiEDs - AI Energy Disclosure Standard,
 > version 2.2.0. CC BY 4.0. https://standard.rand0m.ai
 
-> Random Knights, LLC (2026). K13 - Ai General Response Standard, version 2.2.0.
+> Random Knights, LLC (2026). K13 - Ai General Response Standard, version 3.0.0.
 > CC BY 4.0. https://github.com/random-knights/standard
 
 E+ 1.2.1 is ratified (1.2.0, 2026-09-22; 1.2.1 renames the standard and moves

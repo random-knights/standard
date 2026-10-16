@@ -3,563 +3,385 @@
     "id": "gate-1-pass",
     "gate": 1,
     "expect": "pass",
-    "note": "Every figure is at every level and unchanged.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
-    }
+    "note": "Every figure is a run figure.",
+    "passage": "Six of our copies of the rules are old. They say version 1.1.0. The new rules are version 3.0.0. We looked in four places, so there may be an old copy we did not find. Confidence is high that these six are old, because we read each version number. Confidence is moderate that six is the whole count, because we searched four places.",
+    "runFigures": [
+      "6",
+      "4",
+      "1.1.0",
+      "3.0.0"
+    ]
   },
   {
-    "id": "gate-1-fail-disagree",
+    "id": "gate-1-pass-derived",
     "gate": 1,
-    "expect": "fail",
-    "expectMessage": "figure \"13\"",
-    "note": "A figure disagrees at one level (13 against 14).",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 13 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
-    }
+    "expect": "pass",
+    "note": "A figure that is not a run figure is declared derived, with its inputs and how.",
+    "passage": "Eight of the checks ran. Derived: 8 from 5 and 3 by adding them. Confidence is high, because we watched each check finish.",
+    "runFigures": [
+      "5",
+      "3"
+    ]
   },
   {
-    "id": "gate-1-fail-detail-ladder",
+    "id": "gate-1-fail-untraced",
     "gate": 1,
     "expect": "fail",
-    "expectMessage": "figure \"3.2\"",
-    "note": "A figure appears only at the top level: a detail ladder.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other. The suite took 3.2 seconds."
-    }
+    "expectMessage": "figure \"7\"",
+    "note": "A figure that is in no run data and is not derived.",
+    "passage": "Seven of our copies of the rules are old. They say version 1.1.0. The new rules are version 3.0.0. We looked in four places, so there may be an old copy we did not find. Confidence is high that these six are old, because we read each version number. Confidence is moderate that six is the whole count, because we searched four places.",
+    "runFigures": [
+      "6",
+      "4",
+      "1.1.0",
+      "3.0.0"
+    ]
+  },
+  {
+    "id": "gate-1-fail-derived-input",
+    "gate": 1,
+    "expect": "fail",
+    "expectMessage": "comes from \"9\"",
+    "note": "A derived figure whose input is not a run figure.",
+    "passage": "Eight of the checks ran. Derived: 8 from 9 and 3 by adding them. Confidence is high, because we watched each check finish.",
+    "runFigures": [
+      "5",
+      "3"
+    ]
   },
   {
     "id": "gate-2-pass",
     "gate": 2,
     "expect": "pass",
-    "note": "Verdict, confidence and provenance at every level, with the same values.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
-    },
-    "graded": {
-      "juice box": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build worked"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "We are sure"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "we watched each one finish"
-        }
-      },
-      "soda pop": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "We are sure of this"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "we watched each check finish"
-        }
-      },
-      "energy drink": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "each check was observed finishing"
-        }
-      },
-      "black coffee": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "each check was observed to completion"
-        }
-      },
-      "loose leaf": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "each check was observed to completion"
-        }
-      },
-      "yerba mate": {
-        "verdict": {
-          "value": "pass",
-          "quote": "observed to completion; 14 of 14 passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "every check was observed directly"
-        }
-      }
-    }
+    "note": "Confidence is stated with what it rests on.",
+    "passage": "Six of our copies of the rules are old. They say version 1.1.0. The new rules are version 3.0.0. We looked in four places, so there may be an old copy we did not find. Confidence is high that these six are old, because we read each version number. Confidence is moderate that six is the whole count, because we searched four places.",
+    "runFigures": [
+      "6",
+      "4",
+      "1.1.0",
+      "3.0.0"
+    ]
   },
   {
-    "id": "gate-2-fail-missing-confidence",
+    "id": "gate-2-fail-no-confidence",
     "gate": 2,
     "expect": "fail",
-    "expectMessage": "loose leaf: no confidence",
-    "note": "One level carries the verdict but drops the confidence.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
-    },
-    "graded": {
-      "juice box": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build worked"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "We are sure"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "we watched each one finish"
-        }
-      },
-      "soda pop": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "We are sure of this"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "we watched each check finish"
-        }
-      },
-      "energy drink": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "each check was observed finishing"
-        }
-      },
-      "black coffee": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "each check was observed to completion"
-        }
-      },
-      "loose leaf": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "each check was observed to completion"
-        }
-      },
-      "yerba mate": {
-        "verdict": {
-          "value": "pass",
-          "quote": "observed to completion; 14 of 14 passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "every check was observed directly"
-        }
-      }
-    }
+    "expectMessage": "no confidence statement",
+    "note": "The verdict is given and the confidence is dropped.",
+    "passage": "Six of our copies of the rules are old. They say version 1.1.0. The new rules are version 3.0.0. We looked in four places.",
+    "runFigures": [
+      "6",
+      "4",
+      "1.1.0",
+      "3.0.0"
+    ]
   },
   {
-    "id": "gate-2-fail-confidence-differs",
+    "id": "gate-2-fail-no-reason",
     "gate": 2,
     "expect": "fail",
-    "expectMessage": "confidence differs between levels",
-    "note": "Confidence is high at five levels and moderate at one.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
-    },
-    "graded": {
-      "juice box": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build worked"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "We are sure"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "we watched each one finish"
-        }
-      },
-      "soda pop": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "We are sure of this"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "we watched each check finish"
-        }
-      },
-      "energy drink": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "each check was observed finishing"
-        }
-      },
-      "black coffee": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "moderate",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "each check was observed to completion"
-        }
-      },
-      "loose leaf": {
-        "verdict": {
-          "value": "pass",
-          "quote": "The build passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "each check was observed to completion"
-        }
-      },
-      "yerba mate": {
-        "verdict": {
-          "value": "pass",
-          "quote": "observed to completion; 14 of 14 passed"
-        },
-        "confidence": {
-          "value": "high",
-          "quote": "Confidence is high"
-        },
-        "provenance": {
-          "value": "observed",
-          "quote": "every check was observed directly"
-        }
-      }
-    }
+    "expectMessage": "no confidence statement",
+    "note": "Confidence is named but nothing says what it rests on.",
+    "passage": "Six of our copies of the rules are old. Confidence is high.",
+    "runFigures": [
+      "6",
+      "4",
+      "1.1.0",
+      "3.0.0"
+    ]
   },
   {
     "id": "gate-3-pass",
     "gate": 3,
     "expect": "pass",
-    "note": "Every figure is in the run data.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
-    },
-    "runFigures": [
-      "14"
-    ]
+    "note": "Short words, and a technical name kept inside backticks.",
+    "passage": "The build passed. We ran `interoperability-suite` and it was clean. Confidence is high, because we watched it finish.",
+    "runFigures": []
   },
   {
-    "id": "gate-3-fail-untraceable",
+    "id": "gate-3-fail-long-word",
     "gate": 3,
     "expect": "fail",
-    "expectMessage": "figure \"14\" is not in the run data",
-    "note": "The run recorded 12 checks; the report says 14.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
-    },
-    "runFigures": [
-      "12"
-    ]
+    "expectMessage": "\"interoperability\" is 16 letters",
+    "note": "A word over 12 letters, not a named term.",
+    "passage": "The build passed. We tested interoperability and it was clean. Confidence is high, because we watched it finish.",
+    "runFigures": []
+  },
+  {
+    "id": "gate-3-fail-hype",
+    "gate": 3,
+    "expect": "fail",
+    "expectMessage": "hype or long-form word \"seamless\"",
+    "note": "A hype word, though it is short.",
+    "passage": "The build passed. The upgrade was seamless. Confidence is high, because we watched it finish.",
+    "runFigures": []
   },
   {
     "id": "gate-4-pass",
     "gate": 4,
     "expect": "pass",
-    "note": "No em dash, no en dash, no double-hyphen surrogate.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
-    }
+    "note": "Short sentences, a short average.",
+    "passage": "Six of our copies of the rules are old. They say version 1.1.0. The new rules are version 3.0.0. We looked in four places, so there may be an old copy we did not find. Confidence is high that these six are old, because we read each version number. Confidence is moderate that six is the whole count, because we searched four places.",
+    "runFigures": [
+      "6",
+      "4",
+      "1.1.0",
+      "3.0.0"
+    ]
   },
   {
-    "id": "gate-4-fail-em-dash",
+    "id": "gate-4-fail-long-sentence",
     "gate": 4,
     "expect": "fail",
-    "expectMessage": "black coffee: em dash",
-    "note": "An em dash in one pass.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed. We are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high \u2014 each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
-    }
+    "expectMessage": "the limit is 20",
+    "note": "One sentence of 28 words.",
+    "passage": "The build passed. We ran every test in the suite on the build machine and each of them passed on the first try without any retry or skip at all today.",
+    "runFigures": []
   },
   {
-    "id": "gate-4-fail-double-hyphen",
+    "id": "gate-4-fail-average",
     "gate": 4,
+    "expect": "fail",
+    "expectMessage": "the average sentence",
+    "note": "No sentence is over 20 words, but the average is over 14.",
+    "passage": "We ran the whole test suite on the build machine and every test in it passed on the first try. We checked the output twice and the same tests passed both times with no change at all. We read the log of the run and we saw no error or warning in it anywhere.",
+    "runFigures": []
+  },
+  {
+    "id": "gate-5-pass",
+    "gate": 5,
+    "expect": "pass",
+    "note": "Commas, colons and periods only. A flag and a table rule are not dashes.",
+    "passage": "The build passed, and we ran it with `--json`. The table rule | --- | is not a dash.",
+    "runFigures": []
+  },
+  {
+    "id": "gate-5-fail-em-dash",
+    "gate": 5,
+    "expect": "fail",
+    "expectMessage": "em dash",
+    "note": "One em dash.",
+    "passage": "The build passed \u2014 and it was clean.",
+    "runFigures": []
+  },
+  {
+    "id": "gate-5-fail-en-dash",
+    "gate": 5,
+    "expect": "fail",
+    "expectMessage": "en dash",
+    "note": "One en dash.",
+    "passage": "The build passed \u2013 and it was clean.",
+    "runFigures": []
+  },
+  {
+    "id": "gate-5-fail-double-hyphen",
+    "gate": 5,
     "expect": "fail",
     "expectMessage": "double hyphen used as a dash",
-    "note": "A double hyphen used as a dash.",
-    "passes": {
-      "juice box": "The build worked. All 14 checks ran and every one passed -- we are sure, because we watched each one finish.",
-      "soda pop": "The build passed. A check is a small test, and all 14 of the 14 checks ran. We are sure of this because we watched each check finish.",
-      "energy drink": "The build passed: 14 of 14 checks ran and each returned pass. Confidence is high, since each check was observed finishing.",
-      "black coffee": "The build passed with 14 of 14 checks run and passing. Confidence is high; each check was observed to completion.",
-      "loose leaf": "The build passed, with all 14 of 14 checks run against the single suite. Confidence is high, because each check was observed to completion.",
-      "yerba mate": "Method: the suite was run once and each of its 14 checks observed to completion; 14 of 14 passed. Confidence is high, because every check was observed directly. The result covers this suite and no other."
+    "note": "A double hyphen standing in for a dash.",
+    "passage": "The build passed -- and it was clean.",
+    "runFigures": []
+  },
+  {
+    "id": "gate-6-pass",
+    "gate": 6,
+    "expect": "pass",
+    "note": "The AiEDs tile gives energyKWh and gCO2e, here both as not reported.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md"
+    }
+  },
+  {
+    "id": "gate-6-fail-missing-value",
+    "gate": 6,
+    "expect": "fail",
+    "expectMessage": "energyKWh",
+    "note": "energyKWh has no figure and does not say not reported.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "| energyKWh | not reported |",
+          "| energyKWh | unknown |"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-7-pass",
+    "gate": 7,
+    "expect": "pass",
+    "note": "Twelve tiles, in order (markdown).",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md"
+    }
+  },
+  {
+    "id": "gate-7-fail-dropped-tile",
+    "gate": 7,
+    "expect": "fail",
+    "expectMessage": "missing tile \"### Discrepancies\"",
+    "note": "A tile is dropped (markdown).",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "### Discrepancies",
+          "### Something else"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-7-fail-order",
+    "gate": 7,
+    "expect": "fail",
+    "expectMessage": "comes before",
+    "note": "Two tiles swapped (html).",
+    "report": {
+      "file": "filled-pass.html",
+      "format": "html",
+      "replace": [
+        [
+          "data-tile=\"finding\"",
+          "data-tile=\"__swap__\""
+        ],
+        [
+          "data-tile=\"verdict-row\"",
+          "data-tile=\"finding\""
+        ],
+        [
+          "data-tile=\"__swap__\"",
+          "data-tile=\"verdict-row\""
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-8-pass",
+    "gate": 8,
+    "expect": "pass",
+    "note": "Every command has its result (html).",
+    "report": {
+      "file": "filled-pass.html",
+      "format": "html"
+    }
+  },
+  {
+    "id": "gate-8-fail-no-result",
+    "gate": 8,
+    "expect": "fail",
+    "expectMessage": "a command with no result",
+    "note": "A command with no result (html).",
+    "report": {
+      "file": "filled-pass.html",
+      "format": "html",
+      "replace": [
+        [
+          "class=\"ev-result\"",
+          "class=\"ev-nothing\""
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-8-fail-md-no-result",
+    "gate": 8,
+    "expect": "fail",
+    "expectMessage": "1 commands and 0 results",
+    "note": "A command with no result (markdown).",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "Result:\n\n```\n6\n```\n",
+          ""
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-9-pass",
+    "gate": 9,
+    "expect": "pass",
+    "note": "Role and effort, no model (markdown).",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md"
+    }
+  },
+  {
+    "id": "gate-9-fail-model",
+    "gate": 9,
+    "expect": "fail",
+    "expectMessage": "names a model",
+    "note": "A model name in What's next (markdown).",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "| role | builder |",
+          "| role | opus builder |"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-9-fail-no-effort",
+    "gate": 9,
+    "expect": "fail",
+    "expectMessage": "no effort slot",
+    "note": "No effort slot and no completion answer (markdown).",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "| effort | low |\n",
+          ""
+        ]
+      ]
     }
   },
   {
     "id": "example-gate-1",
     "gate": 1,
     "expect": "pass",
-    "note": "K13.md 'One fact, six ways', read at run time, held to check 1.",
-    "passesFrom": "K13.md#one-fact-six-ways"
+    "note": "The passage of \"One fact, one pass\" in K13.md, read at run time.",
+    "passageFrom": "K13.md#one-fact-one-pass"
   },
   {
     "id": "example-gate-2",
     "gate": 2,
     "expect": "pass",
-    "note": "K13.md 'One fact, six ways', read at run time, held to check 2.",
-    "passesFrom": "K13.md#one-fact-six-ways",
-    "graded": {
-      "juice box": {
-        "verdict": {
-          "value": "stale",
-          "quote": "Six of our copies of the rules are old"
-        },
-        "confidence": {
-          "value": "high-stale-moderate-count",
-          "quote": "We are sure about that"
-        },
-        "provenance": {
-          "value": "read-directly",
-          "quote": "opened each one and read its version number"
-        }
-      },
-      "soda pop": {
-        "verdict": {
-          "value": "stale",
-          "quote": "six of those copies are still on version 1.1.0"
-        },
-        "confidence": {
-          "value": "high-stale-moderate-count",
-          "quote": "We are highly confident of that"
-        },
-        "provenance": {
-          "value": "read-directly",
-          "quote": "we read the version number in each copy ourselves"
-        }
-      },
-      "energy drink": {
-        "verdict": {
-          "value": "stale",
-          "quote": "Six downstream copies are still on 1.1.0"
-        },
-        "confidence": {
-          "value": "high-stale-moderate-count",
-          "quote": "Confidence that all six are stale is high"
-        },
-        "provenance": {
-          "value": "read-directly",
-          "quote": "each was read directly at its version line"
-        }
-      },
-      "black coffee": {
-        "verdict": {
-          "value": "stale",
-          "quote": "Six downstream artifacts remain pinned at 1.1.0"
-        },
-        "confidence": {
-          "value": "high-stale-moderate-count",
-          "quote": "Confidence that all six are stale is high"
-        },
-        "provenance": {
-          "value": "read-directly",
-          "quote": "each was read directly at its version line"
-        }
-      },
-      "loose leaf": {
-        "verdict": {
-          "value": "stale",
-          "quote": "the six stale artifacts come from"
-        },
-        "confidence": {
-          "value": "high-stale-moderate-count",
-          "quote": "Confidence that all six are stale is high"
-        },
-        "provenance": {
-          "value": "read-directly",
-          "quote": "each was read directly at its version line"
-        }
-      },
-      "yerba mate": {
-        "verdict": {
-          "value": "stale",
-          "quote": "each of the six stale mirrors"
-        },
-        "confidence": {
-          "value": "high-stale-moderate-count",
-          "quote": "Confidence that all six are stale is high"
-        },
-        "provenance": {
-          "value": "read-directly",
-          "quote": "every version line was read directly"
-        }
-      }
-    }
+    "note": "The passage of \"One fact, one pass\" in K13.md, read at run time.",
+    "passageFrom": "K13.md#one-fact-one-pass"
   },
   {
-    "id": "gate-5-pass",
+    "id": "example-gate-3",
+    "gate": 3,
+    "expect": "pass",
+    "note": "The passage of \"One fact, one pass\" in K13.md, read at run time.",
+    "passageFrom": "K13.md#one-fact-one-pass"
+  },
+  {
+    "id": "example-gate-4",
+    "gate": 4,
+    "expect": "pass",
+    "note": "The passage of \"One fact, one pass\" in K13.md, read at run time.",
+    "passageFrom": "K13.md#one-fact-one-pass"
+  },
+  {
+    "id": "example-gate-5",
     "gate": 5,
     "expect": "pass",
-    "note": "All six levels carry all twelve tiles in order.",
-    "report": {
-      "format": "md",
-      "file": "gate-5-pass.md"
-    }
-  },
-  {
-    "id": "gate-5-fail-missing-tile",
-    "gate": 5,
-    "expect": "fail",
-    "expectMessage": "black coffee: missing tile \"### Discrepancies\"",
-    "note": "One level omits the Discrepancies tile.",
-    "report": {
-      "format": "md",
-      "file": "gate-5-fail.md"
-    }
-  },
-  {
-    "id": "gate-6-pass",
-    "gate": 6,
-    "expect": "pass",
-    "note": "Every evidence block has its command and its rendered result.",
-    "report": {
-      "format": "html",
-      "file": "gate-6-pass.html"
-    }
-  },
-  {
-    "id": "gate-6-fail-no-result",
-    "gate": 6,
-    "expect": "fail",
-    "expectMessage": "pane-soda_pop: evidence block 1 has a command with no result",
-    "note": "A command with no result at one level.",
-    "report": {
-      "format": "html",
-      "file": "gate-6-fail.html"
-    }
+    "note": "The passage of \"One fact, one pass\" in K13.md, read at run time.",
+    "passageFrom": "K13.md#one-fact-one-pass"
   }
 ]

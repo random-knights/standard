@@ -1,0 +1,130 @@
+<title>K13 Report: Copy check</title>
+<!-- A filled document in the shape of templates/temp1ate.html, without the
+     styles. Every gate check of K13 3.0.0 accepts it. The failing vectors in
+     vectors.json plant one defect in a copy of it. -->
+<div class="page">
+  <div id="quick-squeeze" class="pass">
+    <div class="tile-grid">
+      <section class="tile t-header-strip" data-tile="header-strip">
+        <h3 class="tile-label">Report</h3>
+        <div class="tile-body">
+        <div class="hs-eyebrow">K13 Evaluation Report &middot; Lab 14 &middot; 2026-10-15</div>
+        <div class="hs-title">Copy check</div>
+        <div class="hs-sub">Which copies of the rules are old</div>
+        <div class="hs-meta">
+          <span class="gate-badge pass">passed</span>
+          <span>Model: none</span>
+          <span>Runs: 1</span>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-finding" data-tile="finding">
+        <h3 class="tile-label">Finding</h3>
+        <div class="tile-body">
+        <p class="finding-stmt">Six copies of the rules are old.</p>
+        </div>
+      </section>
+      <section class="tile t-verdict-row" data-tile="verdict-row">
+        <h3 class="tile-label">Verdict</h3>
+        <div class="tile-body">
+        <div class="verdict-row"><span class="vr-key">gate</span><span class="vr-val">passed</span></div>
+        <div class="verdict-row"><span class="vr-key">confidence</span><span class="vr-val">Confidence is high, because we read each version number ourselves.</span></div>
+        <p>We also looked in four places, so there may be a copy we did not find.</p>
+        </div>
+      </section>
+      <section class="tile t-how-it-fits" data-tile="how-it-fits">
+        <h3 class="tile-label">How it fits</h3>
+        <div class="tile-body">
+        <p>This check is part of keeping every copy of the rules in step. It lets the team replace the old copies in one pass.</p>
+        <p>The earlier check found one old copy. This one found six.</p>
+        </div>
+      </section>
+      <section class="tile t-environment-card" data-tile="environment-card">
+        <h3 class="tile-label">Environment</h3>
+        <div class="tile-body">
+        <div class="env-row"><span class="env-key">what was run</span><span class="env-val">grep for the version line in each copy</span></div>
+        <div class="env-row"><span class="env-key">where</span><span class="env-val">the shared workspace</span></div>
+        <div class="env-row"><span class="env-key">version</span><span class="env-val">grep 3.11</span></div>
+        <div class="env-row"><span class="env-key">commit</span><span class="env-val"><code>762926f</code></span></div>
+        <div class="env-row"><span class="env-key">branch</span><span class="env-val">main</span></div>
+        <div class="env-row"><span class="env-key">when</span><span class="env-val">2026-10-15T09:00:00Z</span></div>
+        </div>
+      </section>
+      <section class="tile t-checks-table" data-tile="checks-table">
+        <h3 class="tile-label">Checks</h3>
+        <div class="tile-body">
+        <table class="checks">
+          <thead><tr><th>check</th><th>how it was verified</th><th>result</th></tr></thead>
+          <tbody>
+            <tr><td class="name">old copies counted</td><td>grep over 4 places found 6 old version lines</td><td class="verdict pass">PASS</td></tr>
+            <tr><td class="name">current version known</td><td>K13.md reads 3.0.0</td><td class="verdict pass">PASS</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </section>
+      <section class="tile t-evidence-blocks" data-tile="evidence-blocks">
+        <h3 class="tile-label">Evidence</h3>
+        <div class="tile-body">
+        <div class="evidence">
+          <div class="ev-label">Command or query</div>
+          <pre class="ev-code">grep -rn "Version:" copies/ | grep 1.1.0 | wc -l</pre>
+          <div class="ev-label">Result</div>
+          <pre class="ev-result">6</pre>
+        </div>
+        </div>
+      </section>
+      <section class="tile t-discrepancies" data-tile="discrepancies">
+        <h3 class="tile-label">Discrepancies</h3>
+        <div class="tile-body">
+        <p>Nothing did not match.</p>
+        </div>
+      </section>
+      <section class="tile t-whats-next" data-tile="whats-next">
+        <h3 class="tile-label">What's next</h3>
+        <div class="tile-body">
+        <p>Replace the six old copies with the new one.</p>
+        <div class="wn-slot"><span class="wn-key">role</span><span class="wn-val">builder</span></div>
+        <div class="wn-slot"><span class="wn-key">why that role</span><span class="wn-val">the work is a copy, with a clear check at the end</span></div>
+        <div class="wn-slot"><span class="wn-key">effort</span><span class="wn-val">low</span></div>
+        <div class="ev-label">Command</div>
+        <pre class="ev-code">task: replace the six old copies of K13.md
+repo: the repo that holds each copy
+scope: the copy files only
+verify: the version line reads 3.0.0</pre>
+        </div>
+      </section>
+      <section class="tile t-owner-actions" data-tile="owner-actions">
+        <h3 class="tile-label">Owner actions</h3>
+        <div class="tile-body">
+        <ol class="oa-list">
+          <li><span class="oa-why">Approve the replacement for the six copies.</span>
+            <pre class="ev-code">gh pr list --search "replace old K13 copies"</pre></li>
+        </ol>
+        </div>
+      </section>
+      <section class="tile t-what-was-not-done" data-tile="what-was-not-done">
+        <h3 class="tile-label">What was not done</h3>
+        <div class="tile-body">
+        <p>We did not replace any copy. This document only counts them.</p>
+        </div>
+      </section>
+      <section class="tile t-aieds-disclosure" data-tile="aieds-disclosure">
+        <h3 class="tile-label">AiEDs disclosure</h3>
+        <div class="tile-body">
+        <p class="aieds-lead">AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. One search tool ran and no personal data was read.</p>
+        <div class="aieds-grid">
+          <div class="aieds-item"><span class="key">energyKWh</span><span class="val">not reported</span></div>
+          <div class="aieds-item"><span class="key">gCO2e</span><span class="val">not reported</span></div>
+          <div class="aieds-item"><span class="key">compute.tokens</span><span class="val">not reported</span></div>
+          <div class="aieds-item"><span class="key">confidence</span><span class="val">low</span></div>
+          <div class="aieds-item"><span class="key">provenance</span><span class="val">unknown</span></div>
+          <div class="aieds-item"><span class="key">subject.name</span><span class="val">copy-check</span></div>
+          <div class="aieds-item"><span class="key">generatedAt</span><span class="val">2026-10-15</span></div>
+          <div class="aieds-item"><span class="key">scope</span><span class="val">usage</span></div>
+        </div>
+        <p class="aieds-ppi">No member PPI accessed.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
