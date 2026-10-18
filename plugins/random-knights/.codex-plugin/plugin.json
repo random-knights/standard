@@ -1,6 +1,6 @@
 {
   "name": "random-knights",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "An AiEDs receipt (energy in Wh, carbon in gCO2e, tree-time in minutes) after every Codex response, computed locally from the session's token usage with the AiEDs reference library.",
   "author": {
     "name": "Random Knights",

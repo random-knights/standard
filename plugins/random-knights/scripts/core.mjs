@@ -31,14 +31,18 @@ import {
   MODELED_ESTIMATE_COPY,
   MODELED_GRID_INTENSITY_GRAMS_PER_KWH,
   UNKNOWN_MODEL_PROFILE,
+  WATER_MODELED_ESTIMATE_COPY,
   disclosureFromResponse,
   energyProfileForModel,
   treeTimeLabel,
+  waterFromEnergyWh,
+  waterLine,
 } from "../vendor/lib/dist/index.js";
 
 export const REQUIRED_COPY = Object.freeze([
   MODELED_ESTIMATE_COPY,
   EDUCATIONAL_COMPARISON_COPY,
+  WATER_MODELED_ESTIMATE_COPY,
 ]);
 
 // -- Transcript parsing --------------------------------------------------------
@@ -275,6 +279,9 @@ export function disclose(calls) {
     carbonGrams,
     treeTimeMinutes,
     treeTimeLabel: treeTimeLabel(treeTimeMinutes),
+    // Water is linear in energy (methodology 2.6), so it is taken from the
+    // summed energy. The library's estimate carries the range and the basis.
+    water: waterFromEnergyWh(energyWh),
     provenance: calls.length === 0 ? "unknown" : weakest(provenances),
     // True when every model has its own row in the coefficient table, even a
     // row whose provenance is "unknown" (Grok has one).
@@ -329,6 +336,14 @@ function basisLabel(provenance, models, inTable = false) {
   return `${known}, ${provenance}, low confidence`;
 }
 
+/**
+ * The water line for a disclosure: plain words, the range, "Modeled estimate."
+ * Empty when there is no usable energy, so no water claim is made (2.6.12).
+ */
+export function formatWater(d) {
+  return d.water ? waterLine(d.water) : "";
+}
+
 function figures(d) {
   return `${formatEnergy(d.energyWh)}, ${formatCarbon(d.carbonGrams)}, ${d.treeTimeLabel} tree-time`;
 }
@@ -344,13 +359,16 @@ export function formatReceipt(receipt) {
   const callWord = (n) => (n === 1 ? "call" : "calls");
   return [
     `AiEDs receipt: ${figures(r)} (this response).`,
+    formatWater(r),
     `Session: ${figures(s)} (${s.calls} model ${callWord(s.calls)}).`,
     `Tokens this response: ${formatCount(r.tokens.input)} in ` +
       `(${formatCount(r.tokens.cacheRead)} cache read, ${formatCount(r.tokens.cacheCreation)} cache write), ` +
       `${formatCount(r.tokens.output)} out.`,
     `Basis: ${s.aiedsVersion}, ${basisLabel(s.provenance, s.models, s.modelsInTable)}.`,
     REQUIRED_COPY.join(" "),
-  ].join(" ");
+  ]
+    .filter((x) => x.length > 0)
+    .join(" ");
 }
 
 /**
@@ -366,22 +384,26 @@ export function formatResponseReceipt(d) {
       : "";
   return [
     `AiEDs receipt: ${figures(d)} (this response).`,
+    formatWater(d),
     `Tokens: ${formatCount(t.input)} in${cache}, ${formatCount(t.output)} out.`,
     `Basis: ${d.aiedsVersion}, ${basisLabel(d.provenance, d.models, d.modelsInTable)}.`,
     REQUIRED_COPY.join(" "),
-  ].join(" ");
+  ]
+    .filter((x) => x.length > 0)
+    .join(" ");
 }
 
 export function formatSessionReceipt(session) {
   const lines = [
     `AiEDs session receipt: ${figures(session)} over ${session.calls} model ${session.calls === 1 ? "call" : "calls"}.`,
+    formatWater(session),
     `Tokens: ${formatCount(session.tokens.input)} in ` +
       `(${formatCount(session.tokens.plain)} plain, ${formatCount(session.tokens.cacheCreation)} cache write, ` +
       `${formatCount(session.tokens.cacheRead)} cache read), ${formatCount(session.tokens.output)} out. ` +
       `Cache tokens are counted as input at the full input rate (methodology 2.4.1).`,
     `Basis: ${session.aiedsVersion}, methodology ${session.methodologyVersion}; ${basisLabel(session.provenance, session.models, session.modelsInTable)}.`,
     REQUIRED_COPY.join(" "),
-  ];
+  ].filter((x) => x.length > 0);
   return lines.join("\n");
 }
 
@@ -419,6 +441,17 @@ export function formatExplanation() {
       "That is a conservative bias, not a measurement.",
   );
   lines.push("");
+  lines.push("Water (methodology section 2.6, Table 5): consumed water, inference only.");
+  for (const f of FACTORS.water.formula) lines.push("  " + f);
+  lines.push(
+    `  site ${FACTORS.water.siteWue.value} L/kWh (${FACTORS.water.siteWue.low} to ${FACTORS.water.siteWue.high}), ` +
+      `grid ${FACTORS.water.gridWaterIntensity.value} L/kWh (${FACTORS.water.gridWaterIntensity.low} to ${FACTORS.water.gridWaterIntensity.high}), ` +
+      `${FACTORS.water.gridBasisDefaultLabel} for any region without its own figure`,
+  );
+  lines.push("  source: LBNL-2001637 (Shehabi et al. 2024); the range ends cite Microsoft FY25, Siddik et al. 2021 and Li et al. 2025");
+  lines.push("  Water covers cooling at the data center and the power plants that supply it.");
+  lines.push("  It is not a measure of scarcity: a liter in a wet place and a dry place count the same here.");
+  lines.push("");
   lines.push("Constants:");
   lines.push(
     `  grid intensity ${MODELED_GRID_INTENSITY_GRAMS_PER_KWH} gCO2e/kWh (pinned, project modeled constant)`,
@@ -440,7 +473,7 @@ export function formatExplanation() {
   lines.push(`    source: ${UNKNOWN_MODEL_PROFILE.citation}`);
   lines.push("");
   lines.push(
-    "Confidence is low: a token count is a proxy for energy, not a measurement of it.",
+    "Confidence is low: a token count is a proxy for energy, not a measurement of it. Water confidence is low by rule.",
   );
   lines.push("Full text: https://standard.rand0m.ai");
   lines.push(REQUIRED_COPY.join(" "));

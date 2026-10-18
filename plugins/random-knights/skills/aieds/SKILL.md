@@ -1,6 +1,6 @@
 ---
 name: aieds
-description: Show the AiEDs energy, carbon and tree-time receipt for this Claude Code session so far.
+description: Show the AiEDs energy, carbon, tree-time and water receipt for this Claude Code session so far.
 disable-model-invocation: true
 allowed-tools: 'Bash(node "${CLAUDE_PLUGIN_ROOT}/scripts/aieds.mjs" *)'
 ---

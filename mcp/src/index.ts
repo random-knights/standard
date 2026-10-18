@@ -37,7 +37,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         "Estimate energy consumption (kWh) and CO2e emissions (gCO2e) for an AI subject " +
         "from compute metrics. Returns a deterministic result from AiEDs v1 factor tables. " +
         "Confidence reflects the input path: gpuSeconds + known hardware -> 'med'; " +
-        "tokens or flops only -> 'low'. Direct power measurement -> 'high' (not emitted by this tool).",
+        "tokens or flops only -> 'low'. Direct power measurement -> 'high' (not emitted by this tool). " +
+        "For inference it also returns a modeled water estimate (consumption, a low to high range, " +
+        "confidence 'low', US average grid water) with a one-line plain-words summary.",
       inputSchema: {
         type: "object",
         required: ["subject", "compute"],
@@ -69,6 +71,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           gridRegion: {
             type: "string",
             description: "Grid region key from aieds_factors() gridFactors. Defaults to 'global_average'.",
+          },
+          scope: {
+            type: "string",
+            enum: ["device", "usage", "inference", "training"],
+            description: "Measurement boundary. Water is returned for 'inference' (the default) only.",
           },
         },
       },

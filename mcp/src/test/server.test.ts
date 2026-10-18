@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { estimate } from "../estimate.js";
+import { waterFromEnergyKWh } from "../water.js";
 import {
   DEFAULT_POWER_W,
   FACTORS,
@@ -309,5 +310,64 @@ describe("factor tables come from the published file", () => {
     assert.strictEqual(energyProfileForModel("gpt-4o").confidence, "vendor-published");
     assert.strictEqual(energyProfileForModel("o3-mini").confidence, "vendor-published");
     assert.strictEqual(energyProfileForModel("nobody-elses").confidence, "unknown");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Water (methodology 2.6): same vectors as lib/src/test/water.test.ts
+// ---------------------------------------------------------------------------
+describe("aieds_estimate water", () => {
+  const near = (a: number, b: number) =>
+    assert.ok(Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(b)), `${a} !== ${b}`);
+
+  it("V1: 0.00024 kWh gives 1.1712 mL, range 0.4248 to 2.712 mL, 0.23424 teaspoons", () => {
+    const w = waterFromEnergyKWh(0.00024)!;
+    near(w.waterMl.default, 1.1712);
+    near(w.waterMl.low, 0.4248);
+    near(w.waterMl.high, 2.712);
+    near(w.teaspoons.default, 0.23424);
+    assert.strictEqual(w.confidence, "low");
+    assert.strictEqual(w.basis, "US average");
+    assert.strictEqual(
+      w.line,
+      "Water: about 1.2 mL (0.4 to 2.7 mL), about a quarter of a teaspoon. Modeled estimate.",
+    );
+    assert.strictEqual(w.requiredCopy, "Water is a modeled estimate.");
+  });
+
+  it("V2 and V6: 1 kWh is 4.88 L, range 1.77 to 11.3 L, shown in liters", () => {
+    const w = waterFromEnergyKWh(1)!;
+    near(w.waterMl.default / 1000, 4.88);
+    near(w.waterMl.low / 1000, 1.77);
+    near(w.waterMl.high / 1000, 11.3);
+    assert.strictEqual(w.line, "Water: about 4.9 L (1.8 to 11.3 L). Modeled estimate.");
+  });
+
+  it("V3: no usable energy, no water", () => {
+    assert.strictEqual(waterFromEnergyKWh(Number.NaN), null);
+    assert.strictEqual(waterFromEnergyKWh(-1), null);
+  });
+
+  it("the estimate result carries water for inference and leaves it out otherwise", () => {
+    const base = { subject: { kind: "model" as const, name: "m" }, compute: { tokens: 1_000_000, modelScale: "medium" as const } };
+    const r = estimate(base);
+    assert.ok(r.water, "water present when scope is omitted");
+    assert.ok(/\(.+ to .+\)/.test(r.water!.line), "the line carries the range");
+    assert.ok(estimate({ ...base, scope: "inference" }).water);
+    for (const scope of ["training", "device", "usage"] as const) {
+      assert.strictEqual(estimate({ ...base, scope }).water, undefined, scope);
+    }
+    // Energy and carbon are untouched by water.
+    assert.strictEqual(r.energyKWh, estimate({ ...base, scope: "training" }).energyKWh);
+    assert.strictEqual(r.gCO2e, estimate({ ...base, scope: "training" }).gCO2e);
+  });
+
+  it("the water line uses no banned word", () => {
+    for (const kwh of [0.00001, 0.00024, 0.7, 5, 400]) {
+      const line = waterFromEnergyKWh(kwh)!.line.toLowerCase();
+      for (const w of ["offset", "credit", "neutral", "positive", "saved", "restored", "replenished"]) {
+        assert.ok(!line.includes(w), `${w} in ${line}`);
+      }
+    }
   });
 });

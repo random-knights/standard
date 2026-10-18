@@ -52,6 +52,12 @@ interface ScopedGridValue {
   readonly note?: string;
 }
 
+interface WaterTerm {
+  readonly low: number;
+  readonly value: number;
+  readonly high: number;
+}
+
 interface FactorFile {
   readonly methodologyVersion: string;
   readonly impactModelVersion: string;
@@ -73,6 +79,16 @@ interface FactorFile {
     readonly confidenceTiers: readonly AiedsConfidenceTier[];
     readonly profiles: readonly ModelEnergyProfile[];
     readonly unknownProfile: ModelEnergyProfile;
+  };
+  readonly water: {
+    readonly gridBasisDefaultLabel: string;
+    readonly siteWue: WaterTerm;
+    readonly gridWaterIntensity: WaterTerm;
+    readonly comparison: {
+      readonly milliliters: number;
+      readonly showLitersAboveTeaspoons: number;
+    };
+    readonly requiredCopy: string;
   };
   readonly computePaths: {
     readonly hardwareTdp: {
