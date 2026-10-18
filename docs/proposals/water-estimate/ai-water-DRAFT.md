@@ -30,9 +30,9 @@ waterL = siteL + gridL
 - `energyKWh` is the energy already disclosed by sections 2.1 to 2.4.
   Do not compute it twice, and do not change it for water.
 - `siteWUE` is water consumed on site for cooling and humidity, in liters per
-  kWh. Default: 1.15 L/kWh (Table 5).
+  kWh. Default: 0.36 L/kWh (Table 5).
 - `gridWaterIntensity` is water consumed to make one kWh of grid electricity,
-  in liters per kWh, on a consumption basis. Default: 3.1 L/kWh (Table 5).
+  in liters per kWh, on a consumption basis. Default: 4.52 L/kWh (Table 5).
 - `waterL` is liters. A producer MAY also show milliliters.
 
 `siteL` and `gridL` MUST be kept apart in the record. The total MUST equal
@@ -58,8 +58,10 @@ region and period. `high` is not defined for water in this version.
 
 A producer SHOULD use a regional grid figure when Table 5 has one for the
 region that served the work. When it has none, the producer MUST use the
-default. It MUST record that (`gridBasis` is `default`). A producer MUST NOT apply a figure from one region to a work
-served in another and call it regional.
+default, which is a US average. It MUST record that (`gridBasis` is
+`default`). A rendered view MUST label that figure "US average". A producer
+MUST NOT apply a figure from one region to a work served in another and call
+it regional.
 
 ### 2.6.6 Location-based only
 
@@ -113,16 +115,37 @@ shown as a number of anything to give back.
 
 | Term | Low | Default | High | Basis | Source (see PROPOSAL source table) |
 |------|-----|---------|------|-------|-------------------------------------|
-| siteWUE (L/kWh) | 0.27 | 1.15 | 1.8 | consumption | S9, S2, S13 |
-| gridWaterIntensity (L/kWh) | 1.5 | 3.1 | 9.5 | consumption | S1 |
+| siteWUE (L/kWh) | 0.27 | 0.36 | 1.8 | consumption | default S14; low S9; high S13 |
+| gridWaterIntensity (L/kWh) | 1.5 | 4.52 | 9.5 | consumption | default S14; low and high S1 |
 
-Vintage: siteWUE default is Google fleet 2024. Grid default is a US average
-read from Li et al. (2025, v5). Both are to confirm against their primary
-data before publish. A regional table is not drafted here. It would come from
-the LBNL Water IMPACT dataset (S13) for US regions only.
+Defaults come from one primary source: LBNL 2024 (S14), the US average for
+2023. Site: "just over 0.36 L/kWh" (section 4, Figure 4.7, report page 48).
+Grid: "4.52 L/kWh" for data-center electricity (section 5, report page 57).
+Cross-checks, not defaults: Google fleet WUE 1.15 L/kWh (S2); Li et al. 3.1
+L/kWh (S1); Siddik et al. about 5.3 L/kWh (S13). Low and high stay as drafted.
+The defaults were checked against the text of the LBNL PDF on 2026-10-18.
+A person still signs off the check in the publish lane (see 2.6.13).
+
+Source citation to carry with the table: Shehabi, A., Smith, S.J., Hubbard,
+A., Newkirk, A., Lei, N., Siddik, M.A.B., Holecek, B., Koomey, J., Masanet,
+E., Sartor, D. 2024. 2024 United States Data Center Energy Usage Report.
+Lawrence Berkeley National Laboratory, Berkeley, California. LBNL-2001637.
+The report prints no open license. Cite facts only. Do not copy its tables or
+charts without a rights check with LBNL.
+
+A regional table is not drafted here. It would come from the LBNL Water IMPACT
+dataset (S15) for US regions only.
 
 ### 2.6.12 Document contract (DRAFT)
 
 The optional block is named `water`. See the JSON shape in the proposal.
 When it is absent, the disclosure makes no water claim. When a value cannot
 be sourced, it is `null`. It is never zero and never a placeholder.
+
+### 2.6.13 First release (DRAFT)
+
+The owner decided on 2026-10-18 that the first release holds back the
+rendered water line until the coefficients are checked against the primary
+text. In the first release the `water` block MAY be written to the record. No
+rendered view shows a water line. A later release lifts the hold after a
+person records the check.
