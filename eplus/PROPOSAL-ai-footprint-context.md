@@ -1,9 +1,32 @@
 # Proposal: your Ai footprint in context, inside E+
 
 **Status:** DRAFT proposal for owner review. Nothing here is ratified.
-**Written:** 2026-10-18 (lane `standard--eplus-ai-context-1018`)
+**Written:** 2026-10-18 (lane `standard--eplus-ai-context-1018`), updated the
+same day with the seven owner decisions of 2026-10-18.
 **Companion draft text:** `eplus/drafts/ai-footprint-context-DRAFT.md`
-**Changes no version.** E+ stays at 1.2.1. AiEDs stays at 2.4.0.
+**Option B research:** `eplus/PROPOSAL-option-b-baselines.md`
+**Changes no version.** E+ stays at 1.2.1. AiEDs stays at 2.4.0. The draft
+carries the working label 1.4.0. The final number is assigned at publish.
+
+## Owner decisions applied (2026-10-18)
+
+1. The word "offset" has one narrow exception. It may appear only inside the
+   name of a third-party project, dataset or map layer, in a marked field, as a
+   quoted proper name. It never describes anything about the reader's figures.
+   The draft has the rule (12.8) and the test vectors (12.11).
+2. The standard defines the per-reader report block. Personal numbers never
+   appear in the public score document (12.3).
+3. With no region set, the region is estimated from the connection, at country
+   or state level only. It is labeled, never stored beyond the request, and
+   disclosed in the privacy text. A VPN can make it wrong, and the label says
+   so. If the estimate fails, the AiEDs global average is used and labeled
+   (12.5).
+4. Tree-Time is not in the E+ panel. It stays in EQ (12.2, check 20).
+5. The version label is 1.4.0 as a draft label. The final number is assigned at
+   publish.
+6. The banned-word list is a hard checker failure (12.8, check 15).
+7. The question of who checks baseline licenses is replaced by the research in
+   `eplus/PROPOSAL-option-b-baselines.md`.
 
 ## The short version
 
@@ -71,7 +94,8 @@ Both are in one view. Each is labeled for what it is.
 4. That the score "moves" because of the reader. The score is the same for
    every reader on the same day.
 5. That Tree-Time is a credit. Tree-Time is an educational comparison. AiEDs
-   2.5 already says so, and this proposal copies the rule.
+   2.5 already says so, and this proposal copies the rule. The E+ panel does
+   not show Tree-Time at all (owner decision 4). It stays in EQ.
 
 A good test for any wording: would the sentence still be true if the reader
 used no Ai at all? If the sentence says the score would differ, it is wrong.
@@ -81,8 +105,8 @@ used no Ai at all? If the sentence says the score would differ, it is wrong.
 ### Option A: side by side
 
 Two labeled panels in one view. Panel one is the Earth Health Score, its date
-and its scope. Panel two is the reader's modeled energy, carbon and Tree-Time,
-with period and confidence. No arithmetic between them.
+and its scope. Panel two is the reader's modeled energy and carbon, with period,
+confidence and region. No Tree-Time. No arithmetic between them.
 
 | Honesty gain | Honesty cost |
 | --- | --- |
@@ -134,7 +158,8 @@ source (owner decision 2026-10-14). Option C cannot be done honestly with the
 quantities AiEDs has.
 
 **Deferred:** option B rules, any baseline source, any mapping to domains, any
-water or land quantity, any change to a weight or number.
+water or land quantity, any change to a weight or number. The option B research
+is written up in `eplus/PROPOSAL-option-b-baselines.md`.
 
 ## 4. Where the block lives
 
@@ -148,10 +173,26 @@ not share a document.
 This follows the structure that already exists. The standard defines the score
 document. The ruok report document is a view built per reader.
 
-One consequence for the owner (open question 2): the standard today defines
-only the score document. This proposal asks the standard to also name the
-report block and to let its checker read a report document. That is a small
-widening of scope.
+The owner has decided (decision 2) that the standard defines the per-reader
+block. The rule is firm: personal numbers never appear in the public score
+document, under any key name, at any depth. The report document says it is
+personal with `meta.audience` set to `"reader"`. The checker reads both kinds of
+document. That is a small widening of scope, and it is approved.
+
+### The region for carbon
+
+Carbon needs a grid factor, so the block needs a region.
+
+- If the reader set a region, use it.
+- If not, estimate one from the connection. Country or state only. Label it
+  "estimated from your connection, change it". Say that a VPN can make it
+  wrong. Do not store it beyond the request. Say so in the privacy text.
+- If the estimate fails, use the AiEDs global average and label it.
+
+The estimate never raises the confidence label. A guessed region is a reason to
+say so, not a reason to trust the figure more. The document cannot show what a
+server stores, so "do not store" rests on the document check plus a written
+statement from the implementer. The draft says this plainly (12.5).
 
 ## 5. Data and licensing
 
@@ -233,11 +274,18 @@ Other rules:
 - Confidence comes from AiEDs (`high`, `med`, `low`) and is never raised.
 - The footprint panel names the period, the AiEDs version and the grid region.
 - A missing footprint says "no reading" and why. It is never zero.
-- These words and phrases are banned in any text the block makes:
+- These words and phrases are banned in any text the block makes. A hit is a
+  hard checker failure, not a warning:
 
 ```
-offset, credit, neutral, compensate, cancel, caused by you, because of you
+offset, credit, neutral, compensat, cancel, caused by you, because of you, your use moved
 ```
+
+- One narrow exception. "offset" may appear inside the name of a third-party
+  project, dataset, map layer or registry, in a marked `thirdPartyNames` field,
+  as a quoted proper name with its kind and https source address. It never
+  describes the reader's figures. The other banned terms have no exception.
+  Rules and vectors are in draft 12.8 and 12.11.
 
 ## 7. Document contract changes
 
@@ -256,7 +304,6 @@ full shape and rules are in the draft, section 12.4. In short:
       "reading": "reading",
       "energyWh": null,
       "carbonGco2e": null,
-      "treeTimeMinutes": null,
       "confidence": null,
       "provenance": null,
       "aiedsMethodologyVersion": "2.4.0",
@@ -271,7 +318,10 @@ full shape and rules are in the draft, section 12.4. In short:
 ```
 
 The values are shape only. They are not data. A real report fills them from
-the AiEDs record and the live score, or shows "no reading".
+the AiEDs record and the live score, or shows "no reading". This sketch is the
+short form. The full shape, with `meta.audience`, `region` and
+`thirdPartyNames`, is in the draft, section 12.4. The sketch has no Tree-Time
+field, by owner decision 4.
 
 ### Null and "no reading"
 
@@ -284,35 +334,32 @@ the AiEDs record and the live score, or shows "no reading".
 ### Version number
 
 This is an additive, optional block. The standard's own pattern is a minor
-version for that. Version 1.1.0 added breach-panel fields the same way. The 1.2.1 banner says an
-impact part "is a later minor version that never feeds the score".
+version for that. Version 1.1.0 added breach-panel fields the same way.
 
-I recommend **1.4.0**. The reason is this. **1.3.0 is already held by a PROPOSED
-rule (R8, the second land-cover source), still pending ratification.** Using
-1.3.0 here would collide with it. If the owner drops R8, or ratifies this
-first, the number can be 1.3.0. The owner assigns it at ratification.
+The draft is labeled **1.4.0**. That is a working label. The final number is
+assigned at publish. 1.3.0 is already held by a PROPOSED rule (R8, the second
+land-cover source), still pending ratification, so 1.3.0 would collide with it
+today.
 
-I looked for a written "impact data 1.4.0" plan in this repository and in the
-workspace lane files. I did not find one. The 1.4.0 above is my reading of the
-numbering, not a quote of a plan. If a plan exists elsewhere, it wins.
-
-A document that names 1.4.0 in `meta.eplusVersion` MAY carry `aiContext`. A
-document that names an earlier version MUST NOT. No existing rule, weight or
-number changes.
+A document that names the final number in `meta.eplusVersion` MAY carry
+`aiContext`. A document that names an earlier version MUST NOT. No existing
+rule, weight or number changes.
 
 ### Conformance checker rules to add
 
-Numbering continues from check 11. Full wording is in the draft, section 12.8.
+Numbering continues from check 11. Full wording is in the draft, section 12.10.
 
 | # | Rule |
 | --- | --- |
-| 12 | `aiContext` is optional. A public score document that carries it FAILS. |
+| 12 | Personal numbers stay out of public documents. `aiContext` needs `meta.audience` of `"reader"`. |
 | 13 | `blendedIntoScore` is the literal `false`, and the headline still derives with the block removed. |
-| 14 | The three required sentences are present and exact. |
-| 15 | No banned term appears in the block. |
+| 14 | The three required sentences are present and exact, plus the region sentences when they apply. |
+| 15 | No banned term appears in the block. The one exception is "offset" inside a marked third-party name. Hard failure. |
 | 16 | Null handling: "no reading" has null figures; a reading has finite, non-negative figures; zero never stands for missing. |
 | 17 | `earthScore` equals `global.score` and its date. |
 | 18 | In side-by-side mode, `baseline` is `null` and no ratio, share or difference is present. |
+| 19 | Region source and level are valid, an estimated region has a privacy notice, and no address or coordinate key appears. |
+| 20 | No Tree-Time key appears in `aiContext`. |
 
 ### Test vectors
 
@@ -322,17 +369,31 @@ fixture, and the checker's own fixtures keep that flag.
 
 | Id | What it holds | Expected |
 | --- | --- | --- |
-| TV-1 | A reading with all fields filled, `blendedIntoScore` false, exact sentences | pass |
-| TV-2 | `reading` is "no reading", all figures null | pass |
+| TV-1 | A reading, reader audience, reader-set region, exact sentences | pass |
+| TV-2 | `reading` is "no reading", both figures null | pass |
 | TV-3 | A true zero energy reading with `reading` set to "reading" | pass |
-| TV-4 | No `aiContext` at all | pass (unchanged from 1.2.1) |
+| TV-4 | No `aiContext`, public document | pass (unchanged from 1.2.1) |
+| TV-5 | Region estimated from connection, both region sentences, privacy notice | pass |
+| TV-6 | Global average region, its sentence exact, null code | pass |
+| TV-7 | `thirdPartyNames` holds a layer named "carbon-offset-projects" with an https URL | pass |
 | FV-1 | `blendedIntoScore` is true | fail, check 13 |
 | FV-2 | "no reading" with energy 0 | fail, check 16 |
 | FV-3 | A statement contains a banned term | fail, check 15 |
 | FV-4 | `earthScore.score` differs from `global.score` | fail, check 17 |
 | FV-5 | A required sentence is missing or changed | fail, check 14 |
-| FV-6 | `aiContext` inside the public score document | fail, check 12 |
+| FV-6 | `aiContext` inside a public document | fail, check 12 |
 | FV-7 | `baseline` present in side-by-side mode | fail, check 18 |
+| FV-8 | "offset" in `statements` | fail, check 15 |
+| FV-9 | "offset" in `footprint.provenance` | fail, check 15 |
+| FV-10 | "offset" in a third-party name with no source address | fail, check 15 |
+| FV-11 | "Offsets" or "off-set" in `subject.label` | fail, check 15 |
+| FV-12 | "offset" in a `name` key outside `thirdPartyNames` | fail, check 15 |
+| FV-13 | "credit" inside a third-party name | fail, check 15 |
+| FV-14 | A public document with `energyWh` under another key path | fail, check 12 |
+| FV-15 | Estimated region with no VPN sentence | fail, check 14 |
+| FV-16 | Region holds a `city` key | fail, check 19 |
+| FV-17 | Global-average source with level "country" | fail, check 19 |
+| FV-18 | A Tree-Time key in `aiContext` | fail, check 20 |
 
 ## 8. Rollout
 
@@ -351,26 +412,28 @@ Order matters. Each step waits for the one before.
 Not in this proposal: publishing, tagging, deploying, or merging. Those stay
 with the owner.
 
-## 9. Open questions for the owner
+## 9. Still open
 
-1. Do you approve option A first, with option B only after a baseline is cleared?
-2. Should the standard define the per-reader report block, or stay at the public
-   score document?
-3. Is 1.4.0 right, given that 1.3.0 is held by the pending R8 rule, or should this
-   go first as 1.3.0?
-4. Is there a written "impact data 1.4.0" plan I should align to (I could not find one)?
-5. Should the Tree-Time comparison appear in the panel, or only energy and carbon?
-6. If the reader has set no region, does carbon use the AiEDs global average, or
-   show "no reading"?
-7. Who confirms the license of each candidate baseline, and which one do you want
-   tried first?
-8. Do you want the banned-word list to be a hard checker failure (the draft's
-   choice) or a warning?
+The seven decisions of 2026-10-18 closed the earlier list. What remains:
+
+1. Do you approve option A first, with option B only after the research in
+   `eplus/PROPOSAL-option-b-baselines.md` is read and a baseline is chosen?
+2. Which IP-to-region service will the reference implementation use, and do its
+   own license and privacy terms allow it? The draft names none.
+3. AiEDs Table 3 has a `global_average` row (436 gCO2e/kWh, cited to IEA 2023,
+   `spec/methodology.md`). The app surface pins a different constant, 429. Which
+   one does the E+ block use when no region is known? The draft says the Table 3
+   row. Confirm that, and see the IEA license finding in
+   `eplus/PROPOSAL-option-b-baselines.md`.
+4. Does the checker read a report document through the same package entry or a
+   new one? That is an implementation choice for step 2 of the rollout.
 
 ## 10. What was not verified
 
-- No baseline license was checked against live terms. All are "to confirm".
-- No "impact data 1.4.0" plan was found, so that name is unconfirmed.
-- This lane changed no checker code and ran no new checks. The checks are
-  described, not built. The existing test suite was run to show that adding
-  these files breaks nothing.
+- Baseline licenses are no longer all "to confirm". The research file reads each
+  publisher's own page and marks what it could not read. See
+  `eplus/PROPOSAL-option-b-baselines.md`. The older table in section 5 of this
+  file is kept as written and is superseded by the research file.
+- The IP-to-region service is not chosen, so its terms are not read.
+- This lane changed no checker code. The checks are described, not built. The
+  existing test suite was run to show that adding these files breaks nothing.

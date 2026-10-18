@@ -12,7 +12,7 @@
 
 **Status:** Draft for owner review
 **Written:** 2026-10-18, updated the same day with the owner decisions
-**Option drafted:** A, juxtaposition only. Option B text is in 12.12.
+**Option drafted:** A, juxtaposition only. Option B is held (see 12.12).
 
 ## 12. Ai footprint context (draft text)
 
