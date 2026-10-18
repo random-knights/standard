@@ -1,5 +1,11 @@
 # DRAFT: AiEDs section 2.6, Water (proposed for 2.5.0)
 
+> **SUPERSEDED 2026-10-18.** The owner approved this section with the Berkeley
+> Lab defaults, and it is now implemented in `spec/methodology.md` section 2.6
+> (AiEDs 2.5.0, a working label until publish). The rendered-line hold in
+> 2.6.13 and rule W11 below was lifted by that approval; the shipped W11 says a
+> rendered line shows the range. This file is kept as the record of the draft.
+
 > **DRAFT. NOT NORMATIVE. NOT WIRED IN.**
 > This file is not part of `spec/methodology.md`, the schema, the site build or
 > any package. Nobody may build from it. The version number 2.5.0 is a
