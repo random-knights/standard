@@ -241,10 +241,10 @@ owner or a data lane reads the live terms.
 | Ember yearly electricity data | electricity by country | believed CC BY 4.0 | yearly | to confirm |
 | Our World in Data energy and CO2 sets | per-person electricity and CO2 | believed CC BY 4.0 | yearly | to confirm |
 | World Bank electric power use per person | per-person electricity | believed CC BY 4.0 | yearly, with lag | to confirm |
-| Global Carbon Project national CO2 | national fossil CO2 | believed CC BY 4.0 | yearly | to confirm |
+| Global Carbon Project national CO2 | national fossil CO2 | free use with citation and acknowledgement; no named license (owner read, 2026-10-18) | yearly | usable with conditions; not a per-person electricity baseline |
 | EDGAR (EU JRC) | national emissions | believed CC BY 4.0 | yearly | to confirm |
 | US EIA | US electricity per person | believed US government, open | monthly and yearly | to confirm, US only |
-| IEA data | electricity and emissions | restricted, paid for most sets | yearly | to confirm, likely excluded |
+| IEA data | electricity and emissions | report text and figures CC BY 4.0; datasets and WEO annexes Non-CC (owner read, 2026-10-18) | yearly | text and figures: conditions; datasets: not usable without a grant |
 
 ### Traps a baseline must avoid
 
@@ -423,15 +423,21 @@ The seven decisions of 2026-10-18 closed the earlier list. What remains:
 3. AiEDs Table 3 has a `global_average` row (436 gCO2e/kWh, cited to IEA 2023,
    `spec/methodology.md`). The app surface pins a different constant, 429. Which
    one does the E+ block use when no region is known? The draft says the Table 3
-   row. Confirm that, and see the IEA license finding in
-   `eplus/PROPOSAL-option-b-baselines.md`.
+   row. Two parts. First, the IEA license finding (see the Table 3 finding in
+   `eplus/PROPOSAL-option-b-baselines.md`): the 436 must be traced to a report
+   page (CC BY 4.0, cite the exact page) or to a data annex (Non-CC, replace it
+   or get a grant). Second, confirm which constant the E+ block uses.
 4. Does the checker read a report document through the same package entry or a
    new one? That is an implementation choice for step 2 of the rollout.
 
 ## 10. What was not verified
 
 - Baseline licenses are no longer all "to confirm". The research file reads each
-  publisher's own page and marks what it could not read. See
+  publisher's own page and marks what it could not read. The owner then read
+  the Electricity Maps, IEA, Global Carbon Project and Berkeley Lab sources by
+  hand on 2026-10-18, and the research file carries those verdicts. The
+  recommendation (option B, energy only, first baseline Ember yearly, EIA for
+  US readers) is unchanged by that evidence. See
   `eplus/PROPOSAL-option-b-baselines.md`. The older table in section 5 of this
   file is kept as written and is superseded by the research file.
 - The IP-to-region service is not chosen, so its terms are not read.
