@@ -230,3 +230,51 @@ test("the published table is ASCII", () => {
     `non-ASCII in the published table: ${[...new Set(bad)].join(" ")}`,
   );
 });
+
+test("Table 5 water coefficients match the published table", () => {
+  const start = doc.indexOf("#### 2.6.11 Table 5");
+  assert.ok(start >= 0, "methodology.md no longer contains Table 5");
+  const body = doc.slice(start, doc.indexOf("\n#### 2.6.12", start));
+  const rows = body
+    .split("\n")
+    .filter((l) => l.trim().startsWith("|"))
+    .map((l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(norm))
+    .slice(2); // header and separator
+  assert.equal(rows.length, 2);
+  const byTerm = {
+    "siteWUE (L/kWh)": factors.water.siteWue,
+    "gridWaterIntensity (L/kWh)": factors.water.gridWaterIntensity,
+  };
+  for (const [term, low, def, high, basis] of rows) {
+    const f = byTerm[term];
+    assert.ok(f, `unknown Table 5 term ${term}`);
+    assert.equal(num(low), f.low, `${term} low`);
+    assert.equal(num(def), f.value, `${term} default`);
+    assert.equal(num(high), f.high, `${term} high`);
+    assert.equal(basis, factors.water.basis);
+    assert.ok(f.low <= f.value && f.value <= f.high, `${term} range brackets default`);
+    assert.ok(f.citation.includes("LBNL-2001637") || f.rangeSources, `${term} is cited`);
+  }
+  // The headline totals the methodology prose states.
+  const sum = (k) => factors.water.siteWue[k] + factors.water.gridWaterIntensity[k];
+  assert.ok(Math.abs(sum("value") - 4.88) < 1e-12);
+  assert.ok(Math.abs(sum("low") - 1.77) < 1e-12);
+  assert.ok(Math.abs(sum("high") - 11.3) < 1e-12);
+});
+
+test("water copy rules match the methodology prose", () => {
+  assert.equal(factors.water.requiredCopy, "Water is a modeled estimate.");
+  assert.ok(doc.includes(`- "${factors.water.requiredCopy}"`));
+  assert.equal(factors.water.confidence, "low");
+  assert.equal(factors.water.gridBasisDefaultLabel, "US average");
+  assert.equal(factors.water.comparison.milliliters, 5);
+  const banned = doc.match(/```\noffset credit[^\n]*\n```/)[0].split("\n")[1].split(" ");
+  assert.deepEqual(banned, factors.water.bannedWords);
+});
+
+test("2.5.0 is additive: the pre-water numbers did not move", () => {
+  assert.equal(factors.gridIntensity.responseSurfacePinned.value, 429);
+  assert.equal(factors.gridIntensity.tableGlobalAverage.value, 436);
+  assert.equal(factors.constants.matureReferenceTreeCo2eGramsPerYear.value, 21000);
+  assert.equal(factors.humanEquivalencies.phoneChargeWh, 12);
+});

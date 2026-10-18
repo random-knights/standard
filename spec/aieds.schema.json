@@ -153,6 +153,125 @@
       ],
       "description": "Optional. Where the emission or energy factor came from, on the section 5.1 ladder: measured, vendor-published, class-estimated, or unknown. This is a DIFFERENT ladder from `confidence`, which grades how the energy figure itself was arrived at. A record may carry both; neither implies the other. Never upgrade either because an estimate looks plausible."
     },
+    "water": {
+      "type": "object",
+      "description": "Optional. Modeled water consumed (methodology 2.6, added in 2.5.0), inference only. A record without this block makes no water claim. A value that cannot be sourced is null, never zero. Water is a modeled estimate: confidence is 'low' by rule and the range is always present when waterL is.",
+      "required": [
+        "waterL",
+        "siteL",
+        "gridL",
+        "rangeL",
+        "basis",
+        "siteWueLPerKWh",
+        "gridWaterLPerKWh",
+        "gridBasis",
+        "confidence",
+        "comparison",
+        "factorsVersion"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "waterL": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Liters consumed: siteL + gridL (rule W2, within rounding). Null when either term is unsourced."
+        },
+        "siteL": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Liters consumed on site for cooling: energyKWh x siteWueLPerKWh. Kept apart from gridL."
+        },
+        "gridL": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Liters consumed to make the grid electricity: energyKWh x gridWaterLPerKWh. Kept apart from siteL."
+        },
+        "rangeL": {
+          "description": "Low and high liters from the Table 5 range ends. Null only when waterL is null (rule W4).",
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["low", "high"],
+              "additionalProperties": false,
+              "properties": {
+                "low": { "type": "number", "minimum": 0 },
+                "high": { "type": "number", "minimum": 0 }
+              }
+            }
+          ]
+        },
+        "basis": {
+          "const": "consumption",
+          "description": "Consumption (water that leaves the local source), never withdrawal (rule W5)."
+        },
+        "siteWueLPerKWh": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Site water coefficient applied, liters per kWh."
+        },
+        "gridWaterLPerKWh": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Grid water coefficient applied, liters per kWh."
+        },
+        "gridBasis": {
+          "type": "string",
+          "enum": ["default", "region"],
+          "description": "'default' is the US average and must be labeled 'US average' when shown (rule W10). 'region' requires gridRegion."
+        },
+        "gridRegion": {
+          "type": "string",
+          "description": "The region whose grid figure was used. Present only when gridBasis is 'region' (rule W8)."
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["low", "med"],
+          "description": "Confidence in the water figure. 'low' by rule; 'med' only with metered site water and a regional grid figure (rule W3). 'high' is not defined for water."
+        },
+        "comparison": {
+          "description": "Level 3 educational comparison in teaspoons (5 mL). Null when waterL is null.",
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["unit", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "unit": { "const": "teaspoon" },
+                "value": { "type": "number", "minimum": 0 }
+              }
+            }
+          ]
+        },
+        "factorsVersion": {
+          "type": "string",
+          "pattern": "^2[.][0-9]+[.][0-9]+$",
+          "description": "Methodology version whose Table 5 supplied the coefficients."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "gridBasis": { "const": "region" } }, "required": ["gridBasis"] },
+          "then": { "required": ["gridRegion"] },
+          "else": { "not": { "required": ["gridRegion"] } }
+        },
+        {
+          "if": { "properties": { "waterL": { "type": "null" } }, "required": ["waterL"] },
+          "then": {
+            "properties": { "rangeL": { "type": "null" }, "comparison": { "type": "null" } }
+          },
+          "else": {
+            "properties": {
+              "siteL": { "type": "number" },
+              "gridL": { "type": "number" },
+              "rangeL": { "type": "object" },
+              "comparison": { "type": "object" }
+            }
+          }
+        }
+      ]
+    },
     "methodologyVersion": {
       "type": "string",
       "pattern": "^2[.][0-9]+[.][0-9]+$",

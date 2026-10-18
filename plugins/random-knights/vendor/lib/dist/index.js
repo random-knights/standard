@@ -22,11 +22,14 @@
 // them. The v1 carbon-first reader is retained ONLY to read pre-v2 rows.
 import { AIEDS_IMPACT_MODEL_VERSION, CAR_DRIVING_GRAMS_CO2E_PER_KM, LAPTOP_WATTS, LED_BULB_WATTS, MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR, METHODOLOGY_VERSION, MINUTES_PER_YEAR, MODELED_GRID_INTENSITY_GRAMS_PER_KWH, PHONE_CHARGE_WH, energyProfileForModel, } from "./factors.js";
 import { provenanceForSchema } from "./factors.js";
+import { waterBlockFromEnergyKWh } from "./water.js";
 // The coefficient table, the confidence tiers, the grid intensities and the
 // Level-3 constants all come from spec/v2/aieds-factors.json through
 // ./factors.js. Nothing is restated here. Re-exported so the package's public
 // surface is unchanged for callers.
 export { AIEDS_IMPACT_MODEL_VERSION, CAR_DRIVING_GRAMS_CO2E_PER_KM, FACTORS, LAPTOP_WATTS, LED_BULB_WATTS, MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR, METHODOLOGY_VERSION, MINUTES_PER_YEAR, MEASURED_DEVICES, MODEL_ENERGY_PROFILES, MODELED_GRID_INTENSITY_GRAMS_PER_KWH, PHONE_CHARGE_WH, SCHEMA_PROVENANCE_VALUES, TABLE_GLOBAL_AVERAGE_GRAMS_PER_KWH, UNKNOWN_MODEL_PROFILE, energyProfileForModel, measuredDeviceById, measuredPrefillBandFor, provenanceForSchema, } from "./factors.js";
+export { GRID_BASIS_DEFAULT_LABEL, GRID_WATER_L_PER_KWH, LITERS_ABOVE_TEASPOONS, SITE_WUE_L_PER_KWH, TEASPOON_ML, WATER_COPY, } from "./factors.js";
+export { WATER_BANNED_WORDS, WATER_MODELED_ESTIMATE_COPY, teaspoonPhrase, waterBlockFromEnergyKWh, waterFromEnergyWh, waterLine, } from "./water.js";
 /** Human-facing version label. Tracks the impact-model version in the table. */
 export const AIEDS_VERSION = `AiEDs ${AIEDS_IMPACT_MODEL_VERSION}`;
 // -- Tree-Time (Level 3) -----------------------------------------------------
@@ -139,6 +142,9 @@ export function disclosureFromResponse(input) {
  * schema has somewhere to put the parts.
  */
 export function schemaRecordFromDisclosure(disclosure, options) {
+    const water = options.includeWater
+        ? waterBlockFromEnergyKWh(disclosure.energyWh / 1000)
+        : null;
     return {
         id: options.id,
         subject: options.subject,
@@ -156,6 +162,7 @@ export function schemaRecordFromDisclosure(disclosure, options) {
         methodologyVersion: disclosure.methodologyVersion,
         source: options.source,
         generatedAt: options.generatedAt ?? new Date().toISOString(),
+        ...(water === null ? {} : { water }),
     };
 }
 /**

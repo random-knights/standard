@@ -36,6 +36,8 @@ import {
   measuredPrefillBandFor,
 } from "./factors.js";
 import { provenanceForSchema } from "./factors.js";
+import { waterBlockFromEnergyKWh } from "./water.js";
+import type { AiedsWaterBlock } from "./water.js";
 import type {
   AiedsConfidence,
   AiedsProvenance,
@@ -67,6 +69,24 @@ export {
   measuredPrefillBandFor,
   provenanceForSchema,
 } from "./factors.js";
+export {
+  GRID_BASIS_DEFAULT_LABEL,
+  GRID_WATER_L_PER_KWH,
+  LITERS_ABOVE_TEASPOONS,
+  SITE_WUE_L_PER_KWH,
+  TEASPOON_ML,
+  WATER_COPY,
+} from "./factors.js";
+export type { WaterFactors, WaterTerm } from "./factors.js";
+export {
+  WATER_BANNED_WORDS,
+  WATER_MODELED_ESTIMATE_COPY,
+  teaspoonPhrase,
+  waterBlockFromEnergyKWh,
+  waterFromEnergyWh,
+  waterLine,
+} from "./water.js";
+export type { AiedsWaterBlock, WaterEstimate, WaterRange } from "./water.js";
 export type {
   AiedsConfidence,
   AiedsConfidenceTier,
@@ -292,6 +312,8 @@ export interface AiedsSchemaRecord {
   methodologyVersion: string;
   source: string;
   generatedAt: string;
+  /** Optional modeled water (methodology 2.6). Absent unless asked for. */
+  water?: AiedsWaterBlock;
 }
 
 /** The record fields the caller must supply; the rest come from the disclosure. */
@@ -306,6 +328,8 @@ export interface SchemaRecordOptions {
   generatedAt?: string;
   /** Grid region label for the pinned response-surface intensity. */
   gridRegion?: string;
+  /** Add the optional `water` block (methodology 2.6). Off by default. */
+  includeWater?: boolean;
 }
 
 /**
@@ -330,6 +354,9 @@ export function schemaRecordFromDisclosure(
   disclosure: AiedsResponseDisclosure,
   options: SchemaRecordOptions,
 ): AiedsSchemaRecord {
+  const water = options.includeWater
+    ? waterBlockFromEnergyKWh(disclosure.energyWh / 1000)
+    : null;
   return {
     id: options.id,
     subject: options.subject,
@@ -347,6 +374,7 @@ export function schemaRecordFromDisclosure(
     methodologyVersion: disclosure.methodologyVersion,
     source: options.source,
     generatedAt: options.generatedAt ?? new Date().toISOString(),
+    ...(water === null ? {} : { water }),
   };
 }
 

@@ -36,6 +36,7 @@ const conforming = [
   "disclosure-agent-session.json",
   "disclosure-app-monthly.json",
   "disclosure-model-inference-no-provenance.json",
+  "disclosure-model-inference-water.json",
 ];
 
 // Deprecated-reader fixtures. Kept so a reader can see what a v1 record looked
@@ -89,6 +90,109 @@ for (const name of rejected) {
     const why = (validate.errors ?? []).map((e) => `${e.instancePath || "(root)"} ${e.message}`).join("; ");
     console.log(`  ok    ${name} rejected  (${why})`);
     pass++;
+  }
+}
+
+// -- Water (methodology 2.6, rules W1 to W5, W8, W9) -------------------------
+//
+// The schema checks shape. These checks are the arithmetic and the "never a
+// placeholder" rules a schema cannot say. They run on the conforming water
+// example, then on mutated copies that MUST each be rejected, so the rules are
+// proven to bite and not only to pass.
+const factors = JSON.parse(readFileSync(resolve(__dirname, "../v2/aieds-factors.json"), "utf-8"));
+const TOL = 1e-9;
+
+/** Returns a list of broken-rule messages; empty means the block conforms. */
+function waterProblems(record) {
+  const w = record.water;
+  if (w === undefined) return [];
+  const bad = [];
+  if (typeof record.energyKWh !== "number") bad.push("W1 water requires energyKWh");
+  if (w.basis !== "consumption") bad.push("W5 basis must be consumption");
+  if (w.gridBasis === "default" && "gridRegion" in w) bad.push("W8 default grid basis forbids gridRegion");
+  if (w.waterL === null) {
+    if (w.siteL !== null && w.gridL !== null) bad.push("W9 waterL is null but both terms are present");
+    return bad;
+  }
+  if (!(w.waterL > 0) && record.energyKWh > 0) bad.push("W9 zero or negative waterL with energy present");
+  if (Math.abs(w.siteL + w.gridL - w.waterL) > TOL) bad.push("W2 waterL must equal siteL + gridL");
+  if (w.rangeL === null || w.rangeL === undefined) {
+    bad.push("W4 rangeL is required when waterL is present");
+  } else if (!(w.rangeL.low <= w.waterL && w.waterL <= w.rangeL.high)) {
+    bad.push("W4 rangeL must bracket waterL");
+  }
+  if (Math.abs(w.siteL - record.energyKWh * w.siteWueLPerKWh) > TOL) bad.push("W2 siteL must be energyKWh x siteWue");
+  if (Math.abs(w.gridL - record.energyKWh * w.gridWaterLPerKWh) > TOL) bad.push("W2 gridL must be energyKWh x gridWater");
+  if (w.gridBasis === "default" && w.rangeL) {
+    if (w.siteWueLPerKWh !== factors.water.siteWue.value) bad.push("default site coefficient must be the Table 5 default");
+    if (w.gridWaterLPerKWh !== factors.water.gridWaterIntensity.value) bad.push("default grid coefficient must be the Table 5 default");
+    const lo = record.energyKWh * (factors.water.siteWue.low + factors.water.gridWaterIntensity.low);
+    const hi = record.energyKWh * (factors.water.siteWue.high + factors.water.gridWaterIntensity.high);
+    if (Math.abs(w.rangeL.low - lo) > TOL || Math.abs(w.rangeL.high - hi) > TOL) bad.push("rangeL must be the Table 5 low and high");
+  }
+  return bad;
+}
+
+console.log("\nwater rules (W1 to W5, W8, W9):");
+const waterExample = read("disclosure-model-inference-water.json");
+{
+  const problems = waterProblems(waterExample);
+  if (problems.length === 0) {
+    console.log("  ok    disclosure-model-inference-water.json satisfies the water rules");
+    pass++;
+  } else {
+    console.error(`  FAIL  water example: ${problems.join("; ")}`);
+    fail++;
+  }
+}
+const mutations = {
+  "withdrawal basis": (r) => { r.water.basis = "withdrawal"; },
+  "total is not siteL + gridL": (r) => { r.water.waterL = 0.5; },
+  "range missing": (r) => { r.water.rangeL = null; },
+  "range does not bracket the total": (r) => { r.water.rangeL = { low: 0.01, high: 0.02 }; },
+  "default basis claims a region": (r) => { r.water.gridRegion = "France"; },
+  "region basis without a region": (r) => { r.water.gridBasis = "region"; },
+  "confidence high": (r) => { r.water.confidence = "high"; },
+  "zero as a placeholder": (r) => { r.water.waterL = 0; r.water.siteL = 0; r.water.gridL = 0; },
+  "comparison unit swapped": (r) => { r.water.comparison.unit = "cup"; },
+  "extra field": (r) => { r.water.extraL = 1; },
+  "wrong site coefficient": (r) => { r.water.siteWueLPerKWh = 1; r.water.siteL = r.energyKWh; r.water.waterL = r.water.siteL + r.water.gridL; },
+};
+for (const [name, mutate] of Object.entries(mutations)) {
+  const r = structuredClone(waterExample);
+  mutate(r);
+  const schemaOk = validate(r);
+  const rulesOk = waterProblems(r).length === 0;
+  if (schemaOk && rulesOk) {
+    console.error(`  FAIL  mutation accepted: ${name}`);
+    fail++;
+  } else {
+    console.log(`  ok    rejected: ${name}`);
+    pass++;
+  }
+}
+{
+  // V3 and V4: a record without water still validates; an unsourced term is
+  // null, never zero, and the total, range and comparison follow it to null.
+  const nullBlock = structuredClone(waterExample);
+  nullBlock.water = {
+    ...nullBlock.water, waterL: null, gridL: null, rangeL: null, comparison: null, gridWaterLPerKWh: null,
+  };
+  if (validate(nullBlock) && waterProblems(nullBlock).length === 0) {
+    console.log("  ok    V4 an unsourced grid term is null and the total, range and comparison follow it");
+    pass++;
+  } else {
+    console.error("  FAIL  V4 null block should conform");
+    fail++;
+  }
+  const noWater = structuredClone(waterExample);
+  delete noWater.water;
+  if (validate(noWater)) {
+    console.log("  ok    V3 a record without water still validates");
+    pass++;
+  } else {
+    console.error("  FAIL  V3 a record without water must validate");
+    fail++;
   }
 }
 
