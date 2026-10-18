@@ -306,7 +306,14 @@ shipped or shown to a reader. Each real fixture carries `"testVector": true`.
 
 ### 12.12 Deferred: scale against a baseline (option B)
 
-This part is held until the baseline research is read. See `eplus/PROPOSAL-option-b-baselines.md`. No baseline field is part of this draft yet.
+This part is held. The research is in `eplus/PROPOSAL-option-b-baselines.md`.
+No baseline field is part of this draft yet.
+
+The research recommends one form if the owner approves it: a scale line for
+energy only, under the energy figure. It shows the reader's energy, a cited
+baseline for the same length of time, the baseline's name, region, year and
+license, and a scale bar drawn to true scale. No carbon baseline in the first
+step. No Tree-Time. No causal wording. This paragraph is a note, not rule text.
 
 ### 12.13 Out of scope
 
