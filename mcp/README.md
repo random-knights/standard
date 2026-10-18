@@ -17,7 +17,16 @@ Deterministic energy + CO2e estimate from compute metrics.
 }
 ```
 
-Returns `{ energyKWh, gCO2e, confidence, methodologyVersion, gridIntensity, notes }`.
+Returns `{ energyKWh, gCO2e, confidence, methodologyVersion, gridIntensity, notes, water }`.
+
+`water` (AiEDs 2.6, inference only; pass `"scope": "training"`, `"device"` or
+`"usage"` to leave it out) is `{ waterMl, teaspoons, basis, confidence, line,
+requiredCopy }`. `waterMl` and `teaspoons` each carry `low`, `default` and
+`high`; `basis` is "US average"; `confidence` is always `low`; `line` is the
+plain-words summary, for example `Water: about 1.2 mL (0.4 to 2.7 mL), about a
+quarter of a teaspoon. Modeled estimate.` A display that shows it also carries
+`requiredCopy`, "Water is a modeled estimate."
+
 
 Confidence path:
 - `gpuSeconds + hardware in table` -> **med**

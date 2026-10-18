@@ -1,7 +1,7 @@
 {
   "$comment": "Canonical AiEDs factor data. This file is the single source of truth for every coefficient the AiEDs tooling emits. The TypeScript packages read it directly; the Dart package mirrors it as compile-time constants and is gated against a vendored copy by test. Editing a value here is a methodology change: bump methodology.md and its changelog in the same commit (methodology.md section 6).",
   "schemaVersion": 1,
-  "methodologyVersion": "2.4.0",
+  "methodologyVersion": "2.5.0",
   "impactModelVersion": "v2",
   "constants": {
     "matureReferenceTreeCo2eGramsPerYear": {
@@ -315,6 +315,57 @@
     "ledBulbWatts": 10,
     "laptopWatts": 50,
     "carDrivingGramsCo2ePerKm": 170
+  },
+  "water": {
+    "methodologySection": "2.6, Table 5",
+    "note": "Level 1 modeled estimate, inference only. Water is CONSUMED water (gone from the local source), not withdrawn water. Location-based only. Confidence is low by rule. Always carried as a low to high range. Added in 2.5.0; nothing above this key changed.",
+    "basis": "consumption",
+    "formula": [
+      "siteL = energyKWh * siteWue",
+      "gridL = energyKWh * gridWaterIntensity",
+      "waterL = siteL + gridL",
+      "teaspoons = waterL * 1000 / 5"
+    ],
+    "unit": "L/kWh",
+    "confidence": "low",
+    "gridBasisDefaultLabel": "US average",
+    "siteWue": {
+      "unit": "L/kWh",
+      "low": 0.27,
+      "value": 0.36,
+      "high": 1.8,
+      "methodologySection": "2.6.11, Table 5",
+      "provenance": "class-estimated",
+      "citation": "Shehabi, A., Smith, S.J., Hubbard, A., Newkirk, A., Lei, N., Siddik, M.A.B., Holecek, B., Koomey, J., Masanet, E., Sartor, D. 2024. 2024 United States Data Center Energy Usage Report. Lawrence Berkeley National Laboratory, Berkeley, California. LBNL-2001637. DOI 10.71468/P1WC7Q. Section 4, Figure 4.7, report page 48: US average site WUE just over 0.36 L/kWh through 2023.",
+      "rangeSources": {
+        "low": "0.27: Microsoft datacenter efficiency page, global WUE for FY25 (https://datacenters.microsoft.com/sustainability/efficiency/). The page does not say whether the water is consumed or withdrawn, so this is a low bound with a basis caveat.",
+        "high": "1.8: the typical water cooling requirement in Siddik, M.A.B., Shehabi, A., Marston, L. 2021. The environmental footprint of data centers in the United States. Environmental Research Letters 16, 064017."
+      },
+      "crossChecks": "Google fleet consumptive WUE 1.15 L/kWh (Elsworth et al. 2025, arXiv 2508.15734), an operator figure for one fleet. LBNL expects 0.45 to 0.48 L/kWh after 2023 (same page); that is inside the range.",
+      "note": "The default is the US-wide value from the primary source. WUE is water per kWh of IT load; some AiEDs energy is already scaled by PUE, so applying it to the disclosed energy slightly overstates site water, by at most the PUE. That is the conservative direction."
+    },
+    "gridWaterIntensity": {
+      "unit": "L/kWh",
+      "low": 1.5,
+      "value": 4.52,
+      "high": 9.5,
+      "methodologySection": "2.6.11, Table 5",
+      "provenance": "class-estimated",
+      "citation": "Shehabi, A., Smith, S.J., Hubbard, A., Newkirk, A., Lei, N., Siddik, M.A.B., Holecek, B., Koomey, J., Masanet, E., Sartor, D. 2024. 2024 United States Data Center Energy Usage Report. Lawrence Berkeley National Laboratory, Berkeley, California. LBNL-2001637. DOI 10.71468/P1WC7Q. Section 5, report page 57: national average of 4.52 L/kWh of indirect water consumption for data-center electricity in 2023.",
+      "rangeSources": {
+        "low": "1.5: Ireland row (1.476) of Table 1 in Li, P., Yang, J., Islam, M.A., Ren, S. Making AI Less Thirsty, arXiv 2304.03271 v5.",
+        "high": "9.5: Washington row (9.501) of Table 1 in Li et al., same paper. Single places, used as the ends of the observed spread."
+      },
+      "crossChecks": "Li et al. US 3.1 L/kWh; Siddik et al. about 5.3 L/kWh (our arithmetic from their totals). Neither is the default.",
+      "note": "Location-based: the grid that served the work. LBNL's indirect factors do not reflect power purchase agreements or on-site generation. The US average may stand in for a region with no figure of its own and is then labeled US average."
+    },
+    "comparison": {
+      "unit": "teaspoon",
+      "milliliters": 5,
+      "showLitersAboveTeaspoons": 250
+    },
+    "requiredCopy": "Water is a modeled estimate.",
+    "bannedWords": ["offset", "credit", "neutral", "positive", "saved", "restored", "replenished"]
   },
   "measuredDevices": {
     "methodologySection": "2.3.1, Table 4; prefill bands 2.3.2, Table 4b",

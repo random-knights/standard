@@ -1,24 +1,25 @@
 # AiEDs Methodology
 
-> **CURRENT VERSION: 2.4.0. Versions 1.x are SUPERSEDED and MUST NOT be
+> **CURRENT VERSION: 2.5.0. Versions 1.x are SUPERSEDED and MUST NOT be
 > implemented.** 1.x specified a flat 0.30 gCO2e per 1k tokens for every model
-> and derived energy backward from carbon. Both are wrong. Implement 2.4.0 (see
+> and derived energy backward from carbon. Both are wrong. Implement 2.5.0 (see
 > the changelog below and `README.md`). Do not pick up 1.0.0 because it reads
-> like a stable base; it is not. 2.0.0, 2.1.0, 2.2.0 and 2.3.0 records remain
-> valid: 2.1.0 is clarifying, and 2.2.0, 2.3.0 and 2.4.0 are additive; none
+> like a stable base; it is not. 2.0.0, 2.1.0, 2.2.0, 2.3.0 and 2.4.0 records remain
+> valid: 2.1.0 is clarifying, and 2.2.0, 2.3.0, 2.4.0 and 2.5.0 are additive; none
 > changes an existing number.
 
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 2.4.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
+**Version:** 2.5.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
 **Status:** Ratified
-**Effective:** 2026-09-24
+**Effective:** 2026-10-18
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
 ## CHANGELOG
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| 2.5.0   | 2026-10-18 | **MINOR (additive). No existing number changes; 2.0.0 through 2.4.0 records remain valid.** WORKING LABEL: the owner assigns the final number at publish. WHAT CHANGED: new section 2.6, WATER, and Table 5. A disclosure MAY carry a modeled water figure: `waterL = energyKWh x (siteWUE + gridWaterIntensity)`, consumption basis, inference only, always a low to high range, confidence `low` by rule. Defaults 0.36 L/kWh on site plus 4.52 L/kWh at the power plant (4.88 L/kWh; range 1.77 to 11.3), from LBNL-2001637 (Shehabi et al. 2024), the US average, labeled "US average" wherever it stands in for a region. NEW COPY: the third required sentence, "Water is a modeled estimate.", beside the two existing ones, plus a banned-word list for water copy and conformance rules W1 to W11. NEW COMPARISON: the teaspoon (5 mL), an educational comparison. SCHEMA: new optional top-level `water` block; records without it stay valid. WHAT DID NOT CHANGE: every coefficient, both grid intensities, Tables 1 to 4b, the equivalency constants, the provenance and confidence ladders, and the response-surface path. OUT OF SCOPE: training water, embodied water, scarcity weighting, market-based water. |
 | 2.4.0   | 2026-09-24 | **MINOR (additive). No existing number changes; 2.0.0 through 2.3.0 records remain valid.** WHAT CHANGED: new section 2.5.1, THE MATURE REFERENCE TREE, which defines the reference object behind Tree-Time, publishes its literature range, names its primary citation, and states the bias in its choice. THE NUMBER: `matureReferenceTreeCo2eGramsPerYear` stays at 21 000. Every coefficient, both grid intensities, Tables 2, 4 and 4b and every other constant are byte-identical to 2.3.0. WHY IT WAS NEEDED: the MRT drives the standard's most public figure and was its least defensible entry. It carried no `citation` field at all, although `citation` is a convention used nine times elsewhere in `aieds-factors.json`; it published a bare scalar for a quantity that varies about 4x; its conservative bias was real but unwritten, so a deliberate choice read as an arbitrary one; and "Mature Reference Tree" was never defined, so it could not be reconciled with any primary source, including one that agrees with it. WHAT 2.5.1 SETTLES: the reference object is one mature tree in steady-state growth, NOT mortality-discounted and NOT averaged over juvenile years; the published range is 10 to 40 kg CO2/year with a central tendency near 25, published to show the pin's width, NOT to let an implementation choose within it; 21 is below that center on purpose, because a lower denominator yields more tree-minutes and overstating disclosed impact is the correct direction, the same bias section 2.1 states for TDP; the units are consistent because CO2 has a GWP of exactly 1. NON-COMPARABILITY: the EPA calculator's 0.060 metric tons CO2 per urban tree PLANTED per year is about 3x the MRT and is a different object (10-year horizon, 59 percent survival discount, 11/89 coniferous/deciduous weighting). The two MUST NOT be substituted, and Tree-Time MUST NOT be presented as a number of trees to plant, which would be the offset claim section 1.1 forbids. CITATION: McPherson, van Doorn and Peper (2016), PSW-GTR-253, USDA Forest Service, as surfaced by the EPA Greenhouse Gas Equivalencies Calculator. Commercial tree-planting and offset vendors publish figures in the same range and are explicitly ruled out as sources: a seller's estimate of what its product absorbs is not an independent measurement. WHAT DID NOT CHANGE: the provenance ladder (the MRT stays `class-estimated`; a citation does not promote a class representative), the confidence ladder, the response-surface path, the schema, every measured device table, and the other four equivalency constants. |
 | 2.3.0 erratum | 2026-09-22 | **ERRATUM. No rule change, no number change, no version bump; 2.3.0 records remain valid.** Section 6 item 4 said the schema (`aieds.schema.json`) is MIT-licensed. That was wrong: the schema is licensed Apache 2.0 under `LICENSE`, as the path list at the end of `LICENSE` and the `NOTICE` file state. Item 4 now says Apache 2.0, and names the coefficient tables with the methodology text as CC BY 4.0, which is what `LICENSE-DOCS` already said. |
 | 2.3.0   | 2026-09-19 | **MINOR (additive). No existing number changes; 2.0.0, 2.1.0 and 2.2.0 records remain valid.** WHAT CHANGED: new section 2.3.2 and Table 4b, MEASURED PREFILL COEFFICIENTS BY PROMPT-LENGTH BAND, publishing what 2.2.0 left UNRESOLVED. Owner decision on RK-16 (2026-09-18): publish prefill stratified by prompt length rather than rent an H100 hour or wait for a shape that fits the convex curve. THE SHAPE: three bands (short, under 256 prompt tokens; medium, 256 to under 2048; long, 2048 and over), boundaries inclusive on the lower end, chosen from the sample's own three prompt-length tiers. Each band publishes the RUN COUNT and the MEDIAN and INTERQUARTILE RANGE of Wh per million tokens observed in it, not a fitted line: no shape is assumed, so no shape can be mis-specified. THE NUMBER: no published figure moves. Table 2, Table 4's two decode rows, both grid intensities and every constant are byte-identical to 2.2.0; the two prefill rows that were on the "Table 4 unresolved" list are REMOVED from that list (both models now have band figures) and that list is empty as of this version. THE SCOPE FENCE IS UNCHANGED: a band figure describes only the named hardware, runtime, model and quantization; it MUST NOT be applied to hosted inference, which remains `class-estimated` with `low` confidence. WHAT DID NOT CHANGE: the provenance ladder, the confidence ladder, the response-surface path, the schema, decode's published two-term coefficients, the Mature Reference Tree, the two grid values. The reference library (`lib/`) gains a band-selection function reading these bands by prompt token count; it is additive and does not touch the response-surface disclosure path. EVIDENCE AND REPRODUCE: same raw samples as 2.2.0, no new measurement; the measurement harness now also emits `prefillBands` per session (see section 2.3.2), and `node harness/emit-factor-entry.mjs table` emits Table 4b's rows from the same committed bytes. |
@@ -75,12 +76,14 @@ derived from (never a substitute for) the level above:
 
 | Level | Class | Metrics | Nature |
 |-------|-------|---------|--------|
-| 1 | **Modeled scientific estimates** | `energyKWh`/`energyWh`, `gCO2e` | The disclosure's substance. Modeled via sections 2 to 3 (forward) or section 2.4 (carbon-first). |
+| 1 | **Modeled scientific estimates** | `energyKWh`/`energyWh`, `gCO2e`, `water` (2.6, optional) | The disclosure's substance. Modeled via sections 2 to 3 (forward) or section 2.4 (carbon-first). |
 | 2 | **Operational metrics** | tokens in/out, cost, latency | Facts of the run, passed through untransformed. |
 | 3 | **Human equivalencies** | Tree-Time, phone charges, LED-bulb hours, laptop minutes, driving meters | Educational comparisons ONLY (section 2.5). Never compliance figures, never offset/restoration claims. |
 
 Required copy on every rendered disclosure: *"Energy and carbon are modeled
 estimates."* and *"Tree-Time and equivalents are educational comparisons."*
+A rendered disclosure that shows water also carries *"Water is a modeled
+estimate."* (section 2.6.8).
 
 ---
 
@@ -425,6 +428,199 @@ range and MUST NOT be cited as the source: a seller's estimate of what its
 product absorbs is not an independent measurement, and section 5.1's
 provenance ladder is about the strength of a source, not the convenience of
 finding one.
+
+### 2.6 Water (2.5.0)
+
+#### 2.6.1 What this section is
+
+A disclosure MAY carry a modeled water figure. The figure is a Level 1 modeled
+estimate, next to energy and carbon. It covers inference only, like energy and
+carbon today. It is optional: a record without it makes no water claim, and
+every 2.0.0 to 2.4.0 record remains valid.
+
+The figure is the water that is consumed, not the water that is withdrawn.
+Consumed water is water that evaporates or leaves the local source and does not
+return to it. Consumption is the headline.
+
+#### 2.6.2 The formula
+
+```
+siteL = energyKWh x siteWUE
+gridL = energyKWh x gridWaterIntensity
+waterL = siteL + gridL
+```
+
+- `energyKWh` is the energy already disclosed by sections 2.1 to 2.4. Do not
+  compute it twice, and do not change it for water.
+- `siteWUE` is water consumed on site for cooling and humidity, in liters per
+  kWh. Default: 0.36 L/kWh (Table 5).
+- `gridWaterIntensity` is water consumed to make one kWh of grid electricity,
+  in liters per kWh, on a consumption basis. Default: 4.52 L/kWh (Table 5).
+- `waterL` is liters. A producer MAY also show milliliters.
+
+`siteL` and `gridL` MUST be kept apart in the record. The total MUST equal
+their sum. The default total is 4.88 L/kWh.
+
+Operators report WUE per kWh of IT load. For paths whose energy is already
+scaled by PUE (section 2.4, for example claude at 1.2), applying WUE to the
+disclosed energy slightly overstates site water, by at most the PUE. That is
+the conservative direction, and it is stated here so it is not mistaken for an
+error.
+
+#### 2.6.3 Range
+
+A disclosure with a water figure MUST carry a low and a high figure. Use the
+low and high values in Table 5: 1.77 L/kWh (0.27 + 1.5) and 11.3 L/kWh
+(1.8 + 9.5). A producer MUST NOT show the central figure without the range in
+the record. A rendered view MAY lead with the central figure if the range is
+shown beside it or one step away.
+
+#### 2.6.4 Confidence
+
+Water confidence is `low`. This is a rule, like the token proxy.
+
+A producer MUST NOT raise it above `low` on a plausible estimate. It MAY say
+`med` only when two things are true. The site water was metered at the facility
+that ran the work. The grid figure is for that facility's own region and
+period. `high` is not defined for water in this version.
+
+#### 2.6.5 Region
+
+A producer SHOULD use a regional grid figure when Table 5 has one for the region
+that served the work. Table 5 has none in this version. When there is none, the
+producer MUST use the default, which is a US average, and MUST record that
+(`gridBasis` is `default`). A rendered view MUST label that figure "US
+average". A producer MUST NOT apply a figure from one region to work served in
+another and call it regional.
+
+#### 2.6.6 Location-based only
+
+The grid term is location-based. It describes the grid that served the work. A
+contract to buy power, or a certificate, does not change the water that was
+physically consumed. This version defines no market-based water figure.
+
+#### 2.6.7 Water comparison (Level 3)
+
+A disclosure MAY show a water comparison. It is an educational comparison. It
+is not a claim of impact, credit or benefit.
+
+```
+teaspoons = waterL x 1000 / 5
+```
+
+A teaspoon is 5 mL. Above 250 teaspoons (1.25 L), a producer SHOULD show liters.
+
+#### 2.6.8 Required copy
+
+Every rendered disclosure that shows water MUST carry all three sentences:
+
+- "Energy and carbon are modeled estimates."
+- "Tree-Time and equivalents are educational comparisons."
+- "Water is a modeled estimate."
+
+The rendered view SHOULD also say what water covers. Suggested: "Water covers
+cooling at the data center and the power plants that supply it."
+
+#### 2.6.9 Words that MUST NOT appear
+
+A rendered view MUST NOT use any word in this list about water:
+
+```
+offset credit neutral positive saved restored replenished
+```
+
+This list is the only place in the water copy where the word "offset" may
+appear, because it is the rule that bans it. A comparison MUST NOT be shown as a
+number of anything to give back.
+
+#### 2.6.10 What this section does not cover
+
+- Training water. Inference only.
+- Water used to build chips and servers.
+- Water scarcity at a place. A liter in a wet region and a liter in a dry
+  region count the same here. A rendered view says so where the figure is shown
+  or one step away.
+- Withdrawal. Withdrawn water is not the headline.
+- Any claim of credit, impact or benefit.
+
+Failure modes to design against: a bare number with no range; "in your area"
+wording the US average cannot support; adding or netting water against carbon
+(both are views of one kWh); scope creep into training or chip making; reading
+a liter as a measure of scarcity; and setting a disclosure beside a company
+pledge, which covers a whole company and not one request.
+
+#### 2.6.11 Table 5 - Water coefficients
+
+| Term | Low | Default | High | Basis | Source |
+|------|-----|---------|------|-------|--------|
+| siteWUE (L/kWh) | 0.27 | 0.36 | 1.8 | consumption | default LBNL 2024; low Microsoft FY25; high Siddik et al. 2021 |
+| gridWaterIntensity (L/kWh) | 1.5 | 4.52 | 9.5 | consumption | default LBNL 2024; low and high Li et al. Table 1 |
+
+Defaults come from one primary source: Shehabi, A., Smith, S.J., Hubbard, A.,
+Newkirk, A., Lei, N., Siddik, M.A.B., Holecek, B., Koomey, J., Masanet, E.,
+Sartor, D. 2024. 2024 United States Data Center Energy Usage Report. Lawrence
+Berkeley National Laboratory, Berkeley, California. LBNL-2001637. Site: "just
+over 0.36 L/kWh" (section 4, Figure 4.7, report page 48). Grid: 4.52 L/kWh for
+data-center electricity (section 5, report page 57). The US average for 2023.
+
+Cross-checks, not defaults: Google fleet WUE 1.15 L/kWh (Elsworth et al. 2025);
+Li et al. 3.1 L/kWh; Siddik et al. about 5.3 L/kWh. The low and high ends of
+the range come from Microsoft's FY25 WUE (0.27), the typical water cooling
+requirement in Siddik, Shehabi and Marston (2021) (1.8), and the Ireland (1.476)
+and Washington (9.501) rows of Table 1 in Li, Yang, Islam and Ren, Making AI
+Less Thirsty (1.5 and 9.5). The ends are single sources and places, used as the
+ends of the observed spread.
+
+The LBNL report prints no open license. This methodology cites its facts and
+does not copy its tables or charts. Citing it does not imply that LBNL or the
+U.S. Department of Energy endorses AiEDs.
+
+The full coefficient data, with citation and provenance fields, is the `water`
+key of `spec/v2/aieds-factors.json`.
+
+#### 2.6.12 Document contract
+
+The optional block is named `water` and sits at the top level of the record.
+Fields: `waterL`, `siteL`, `gridL`, `rangeL` (`low`, `high`), `basis`,
+`siteWueLPerKWh`, `gridWaterLPerKWh`, `gridBasis`, `gridRegion`, `confidence`,
+`comparison` (`unit`, `value`) and `factorsVersion`. When the block is absent,
+the disclosure makes no water claim. When a value cannot be sourced, it is
+`null`. It is never zero and never a placeholder. If `energyKWh` is missing there
+is no block. `basis` is always `consumption`. `gridBasis` is `default` or
+`region`, and `region` requires a `gridRegion` string.
+
+#### 2.6.13 Conformance rules
+
+| Rule | Check |
+|------|-------|
+| W1 | `water` requires `energyKWh` in the same record |
+| W2 | `waterL` equals `siteL + gridL`, within rounding |
+| W3 | `confidence` is `low`, or `med` only with metered site water and a regional grid figure |
+| W4 | `rangeL` is present when `waterL` is present, and `low <= waterL <= high` |
+| W5 | `basis` equals `consumption` |
+| W6 | A rendered view with water carries all three required sentences |
+| W7 | No word from the banned-word list appears in water copy |
+| W8 | `gridBasis` `default` forbids a `gridRegion` claim |
+| W9 | No zero or placeholder in place of `null` |
+| W10 | A rendered view with `gridBasis` `default` labels the grid term "US average" |
+| W11 | A rendered water line shows the range or a way to reach it, and never a bare central figure |
+
+W1, W2, W4, W5, W8 and W9 are checked by `spec/examples/validate.mjs` and the
+schema. W3 and W6 to W11 are rules on producers and rendered views; the
+reference plugin tests W6, W7, W10 and W11 on its receipt.
+
+Test vectors, with the 2.5.0 defaults (site 0.36, grid 4.52, low 0.27 + 1.5,
+high 1.8 + 9.5). They are arithmetic, not measurements.
+
+| Vector | Input | Expected |
+|--------|-------|----------|
+| V1 | 0.00024 kWh, defaults | site 0.0000864 L, grid 0.0010848 L, total 0.0011712 L, 0.23424 teaspoons |
+| V2 | 1 kWh, defaults | site 0.36 L, grid 4.52 L, total 4.88 L, shown in liters (976 teaspoons is over 250) |
+| V3 | no energy | no `water` block |
+| V4 | 0.00024 kWh, grid factor unsourced | `gridL`, `waterL` and `rangeL` null |
+| V5 | 0.00024 kWh, range | low 0.0004248 L, high 0.002712 L, low <= total <= high |
+| V6 | 1 kWh, range | low 1.77 L, high 11.3 L |
+| V7 | work with no regional figure | grid term 4.52, `gridBasis` `default`, view labels it "US average" |
 
 ---
 

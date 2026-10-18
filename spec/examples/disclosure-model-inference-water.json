@@ -1,0 +1,43 @@
+{
+  "id": "aieds:rand0m-ai-v2:inference:2026-10-18:001",
+  "subject": {
+    "kind": "model",
+    "name": "rand0m-ai-v2",
+    "version": "2.0.1"
+  },
+  "scope": "inference",
+  "window": "PT1S",
+  "compute": {
+    "tokens": 1250
+  },
+  "energyKWh": 0.00024,
+  "gCO2e": 0.10464,
+  "gridIntensity": {
+    "gCO2ePerKWh": 436,
+    "region": "global_average"
+  },
+  "confidence": "low",
+  "provenance": "class-estimated",
+  "water": {
+    "waterL": 0.0011712,
+    "siteL": 0.0000864,
+    "gridL": 0.0010848,
+    "rangeL": {
+      "low": 0.0004248,
+      "high": 0.002712
+    },
+    "basis": "consumption",
+    "siteWueLPerKWh": 0.36,
+    "gridWaterLPerKWh": 4.52,
+    "gridBasis": "default",
+    "confidence": "low",
+    "comparison": {
+      "unit": "teaspoon",
+      "value": 0.23424
+    },
+    "factorsVersion": "2.5.0"
+  },
+  "methodologyVersion": "2.5.0",
+  "source": "aieds-mcp v1.0.0",
+  "generatedAt": "2026-10-18T12:00:00Z"
+}

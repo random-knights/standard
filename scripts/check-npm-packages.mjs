@@ -29,6 +29,8 @@ const EXPECTED = {
     "lib/dist/factors.js",
     "lib/dist/index.d.ts",
     "lib/dist/index.js",
+    "lib/dist/water.d.ts",
+    "lib/dist/water.js",
     "package.json",
     "spec/aieds.schema.json",
     "spec/v2/aieds-factors.json",
@@ -99,6 +101,9 @@ const d = disclosureFromResponse({ provider: "GoogleAI", model: "gemini-2.0-flas
 if (!(d.energyWh > 0) || d.provenance !== "vendor-published") throw new Error("bad disclosure");
 const r = schemaRecordFromDisclosure(d, { id: "x", subject: { kind: "model", name: "m" }, scope: "inference", window: "PT1S", source: "smoke" });
 if (r.energyKWh !== d.energyWh / 1000) throw new Error("bad record");
+const { waterFromEnergyWh, waterLine } = await import("@randomknights/aieds");
+const w = waterFromEnergyWh(0.24);
+if (!w || w.confidence !== "low" || w.basis !== "US average" || !/Modeled estimate\.$/.test(waterLine(w))) throw new Error("bad water estimate");
 console.log("aieds smoke ok", METHODOLOGY_VERSION);
 `,
   k13: `

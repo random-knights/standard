@@ -1,8 +1,8 @@
 # Random Knights AiEDs plugin
 
 After every Claude Code response, this plugin prints an AiEDs receipt: the
-modeled energy (Wh), carbon (gCO2e) and Tree-Time (minutes) of that response and
-of the session so far. The figures are computed on your machine from the
+modeled energy (Wh), carbon (gCO2e), Tree-Time (minutes) and water (mL) of that
+response and of the session so far. The figures are computed on your machine from the
 session's real token usage, with the AiEDs reference library, so they agree with
 the standard to the number.
 
@@ -50,10 +50,23 @@ hook is a small Node script with no dependencies.
 After each response, one line:
 
 ```text
-AiEDs receipt: 0.4412 Wh, 0.1893 gCO2e, 4.7 min tree-time (this response). Session: 12.3456 Wh, 5.2961 gCO2e, 2.1 hrs tree-time (37 model calls). Tokens this response: 52,310 in (48,200 cache read, 3,100 cache write), 1,204 out. Basis: AiEDs v2, claude-sonnet-4-5, class estimate, low confidence. Energy and carbon are modeled estimates. Tree-Time and equivalents are educational comparisons.
+AiEDs receipt: 0.4412 Wh, 0.1893 gCO2e, 4.7 min tree-time (this response). Water: about 1.2 mL (0.4 to 2.7 mL), about a quarter of a teaspoon. Modeled estimate. Session: 12.3456 Wh, 5.2961 gCO2e, 2.1 hrs tree-time (37 model calls). Tokens this response: 52,310 in (48,200 cache read, 3,100 cache write), 1,204 out. Basis: AiEDs v2, claude-sonnet-4-5, class estimate, low confidence. Energy and carbon are modeled estimates. Tree-Time and equivalents are educational comparisons. Water is a modeled estimate.
 ```
 
 The numbers above are an illustration of the format, not a measurement.
+
+### The water line
+
+The water line comes straight after the carbon figures. It is modeled from the
+same energy (AiEDs 2.6): consumed water, not withdrawn water, for cooling at the
+data center and for the power plants that supply it. It is always a range, from
+a low case to a high case, and its confidence is low. The grid part is a US
+average, whatever region served the work. It covers inference only, and it is
+not a measure of scarcity: a liter in a wet place and a dry place count the
+same here. The teaspoon is an educational comparison of 5 mL. Above 250
+teaspoons the line shows liters instead. The coefficients come from the
+Lawrence Berkeley National Laboratory 2024 United States Data Center Energy
+Usage Report (LBNL-2001637); the plugin cites it and does not copy it.
 
 Two commands show more, on demand:
 

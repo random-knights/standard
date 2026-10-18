@@ -24,8 +24,11 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  WATER_BANNED_WORDS,
   disclosureFromResponse,
   treeTimeLabel,
+  waterFromEnergyWh,
+  waterLine,
 } from "../vendor/lib/dist/index.js";
 import {
   REQUIRED_COPY,
@@ -37,6 +40,7 @@ import {
   formatExplanation,
   formatReceipt,
   formatSessionReceipt,
+  formatWater,
   isSafeSessionId,
   logLine,
   parseTranscript,
@@ -289,10 +293,11 @@ const ALL_TEXTS = () => {
   };
 };
 
-test("copy: every receipt carries both required sentences, verbatim", () => {
+test("copy: every receipt carries the three required sentences, verbatim", () => {
   assert.deepEqual(REQUIRED_COPY, [
     "Energy and carbon are modeled estimates.",
     "Tree-Time and equivalents are educational comparisons.",
+    "Water is a modeled estimate.",
   ]);
   for (const [name, text] of Object.entries(ALL_TEXTS())) {
     for (const sentence of REQUIRED_COPY) {
@@ -359,6 +364,59 @@ test("format: the one-line receipt carries figures, tokens and basis", () => {
   );
 });
 
+// -- water (methodology 2.6) ---------------------------------------------------
+
+test("water: the receipt line is the library's, from the same energy", () => {
+  const receipt = receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl")));
+  const { response, session } = receipt;
+  assert.deepEqual(response.water, waterFromEnergyWh(response.energyWh));
+  assert.equal(formatWater(response), waterLine(waterFromEnergyWh(response.energyWh)));
+  assert.equal(response.water.confidence, "low");
+  assert.equal(response.water.basis, "US average");
+  // Water is linear in energy, so the session is at least the response.
+  assert.ok(session.water.waterMl.default >= response.water.waterMl.default);
+});
+
+test("water: one line after the carbon figures, with a range and the modeled-estimate words", () => {
+  const receipt = receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl")));
+  const text = formatReceipt(receipt);
+  assert.match(
+    text,
+    /gCO2e, [^ ]+ (min|hrs) tree-time \(this response\)\. Water: about \d+(\.\d+)? mL \(\d+(\.\d+)? to \d+(\.\d+)? mL\), [a-z0-9. ]*teaspoons?\. Modeled estimate\. Session: /,
+  );
+  assert.ok(text.endsWith("Water is a modeled estimate."), "the third sentence closes the receipt");
+  const session = formatSessionReceipt(receipt.session);
+  const lines = session.split(/\r?\n/);
+  assert.match(lines[1], /^Water: about /, "the session receipt carries its own water line");
+});
+
+test("water: the example in the brief, 0.24 Wh", () => {
+  assert.equal(
+    waterLine(waterFromEnergyWh(0.24)),
+    "Water: about 1.2 mL (0.4 to 2.7 mL), about a quarter of a teaspoon. Modeled estimate.",
+  );
+});
+
+test("water: no banned word, no scarcity or credit claim, anywhere in the receipt text", () => {
+  for (const [name, text] of Object.entries(ALL_TEXTS())) {
+    for (const w of WATER_BANNED_WORDS) {
+      if (w === "offset") continue; // asserted over every shipped file above
+      assert.doesNotMatch(text, new RegExp(`\\b${w}\\b`, "i"), `${name} uses "${w}"`);
+    }
+  }
+  const water = Object.values(ALL_TEXTS())
+    .join(" ")
+    .match(/Water: about[^.]*\.[^.]*\./g);
+  assert.ok(water && water.length > 0);
+  for (const line of water) assert.doesNotMatch(line, /scarc|impact|your area/i, line);
+});
+
+test("water: no energy means no water claim, never a zero", () => {
+  const d = disclose([]);
+  assert.equal(formatWater({ water: null }), "");
+  assert.ok(d.water === null || d.water.waterMl.default === 0);
+});
+
 test("explain: formulas and coefficient sources come from the library table", () => {
   const text = formatExplanation();
   assert.match(text, /energyWh = inTok\/1000 \* whPer1kIn \+ outTok\/1000 \* whPer1kOut/);
@@ -368,6 +426,9 @@ test("explain: formulas and coefficient sources come from the library table", ()
   assert.match(text, /21000 gCO2e\/year/);
   assert.match(text, /claude: 0\.145 \/ 0\.58, PUE 1\.2, class-estimated/);
   assert.match(text, /arxiv\.org\/abs\/2508\.15734/);
+  assert.match(text, /waterL = siteL \+ gridL/);
+  assert.match(text, /site 0\.36 L\/kWh \(0\.27 to 1\.8\), grid 4\.52 L\/kWh \(1\.5 to 9\.5\), US average/);
+  assert.match(text, /LBNL-2001637/);
 });
 
 // -- the hook as Claude Code runs it -------------------------------------------

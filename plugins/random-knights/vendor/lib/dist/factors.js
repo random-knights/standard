@@ -65,6 +65,19 @@ function load() {
             throw new Error(`AiEDs factor table entry is incomplete: ${JSON.stringify(p?.matchPrefixes)}`);
         }
     }
+    // The water terms feed a disclosure line; a missing or non-finite one would
+    // print NaN or zero, and methodology 2.6.12 forbids both.
+    for (const t of [parsed.water?.siteWue, parsed.water?.gridWaterIntensity]) {
+        if (!t ||
+            !Number.isFinite(t.low) ||
+            !Number.isFinite(t.value) ||
+            !Number.isFinite(t.high) ||
+            !(t.low <= t.value && t.value <= t.high) ||
+            typeof t.citation !== "string" ||
+            t.citation.length === 0) {
+            throw new Error("AiEDs factor table water entry is incomplete.");
+        }
+    }
     return parsed;
 }
 export const FACTORS = load();
@@ -175,3 +188,18 @@ export function measuredPrefillBandFor(deviceId, promptTokens) {
     }
     return null;
 }
+// -- Water (methodology 2.6, Table 5) ---------------------------------------
+//
+// Read from the published table, never restated, like every other coefficient.
+/** Site water (cooling), L/kWh consumed. low / default / high. */
+export const SITE_WUE_L_PER_KWH = FACTORS.water.siteWue;
+/** Grid water (power plants), L/kWh consumed. low / default / high. */
+export const GRID_WATER_L_PER_KWH = FACTORS.water.gridWaterIntensity;
+/** Milliliters in one teaspoon (the Level 3 water comparison unit). */
+export const TEASPOON_ML = FACTORS.water.comparison.milliliters;
+/** Above this many teaspoons a view shows liters (methodology 2.6.7). */
+export const LITERS_ABOVE_TEASPOONS = FACTORS.water.comparison.showLitersAboveTeaspoons;
+/** The label a rendered view puts on the default grid term. */
+export const GRID_BASIS_DEFAULT_LABEL = FACTORS.water.gridBasisDefaultLabel;
+/** The third required sentence (methodology 2.6.8). */
+export const WATER_COPY = FACTORS.water.requiredCopy;

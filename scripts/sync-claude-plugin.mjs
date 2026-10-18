@@ -30,6 +30,7 @@ const pluginRoot = join(repoRoot, "plugins", "random-knights");
 export const FILES = [
   ["lib/dist/index.js", "vendor/lib/dist/index.js"],
   ["lib/dist/factors.js", "vendor/lib/dist/factors.js"],
+  ["lib/dist/water.js", "vendor/lib/dist/water.js"],
   ["spec/v2/aieds-factors.json", "vendor/spec/v2/aieds-factors.json"],
   ["LICENSE", "LICENSE"],
   ["LICENSE-DOCS", "LICENSE-DOCS"],

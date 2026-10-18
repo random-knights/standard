@@ -6,6 +6,7 @@ import {
   DEFAULT_POWER_W,
   METHODOLOGY_VERSION,
 } from "./factors.js";
+import { waterFromEnergyKWh, type WaterEstimate } from "./water.js";
 
 export interface SubjectInput {
   kind: "model" | "agent" | "app";
@@ -26,6 +27,12 @@ export interface EstimateInput {
   subject: SubjectInput;
   compute: ComputeInput;
   gridRegion?: string;
+  /**
+   * Measurement boundary. Water (methodology 2.6) covers inference only, so
+   * it is returned when this is omitted or "inference" and left out for
+   * "device", "usage" and "training".
+   */
+  scope?: "device" | "usage" | "inference" | "training";
 }
 
 export interface EstimateResult {
@@ -35,6 +42,8 @@ export interface EstimateResult {
   methodologyVersion: string;
   gridIntensity: { gCO2ePerKWh: number; region: string };
   notes: string[];
+  /** Modeled water consumed, a range with low confidence. Inference only. */
+  water?: WaterEstimate;
 }
 
 // Deterministic estimate from AiEDs v1 factor tables.
@@ -80,6 +89,10 @@ export function estimate(input: EstimateInput): EstimateResult {
   }
 
   const gCO2e = energyKWh * gCO2ePerKWh;
+  const water =
+    input.scope === undefined || input.scope === "inference"
+      ? waterFromEnergyKWh(energyKWh)
+      : null;
 
   return {
     energyKWh: Math.round(energyKWh * 1_000_000) / 1_000_000,
@@ -88,5 +101,6 @@ export function estimate(input: EstimateInput): EstimateResult {
     methodologyVersion: METHODOLOGY_VERSION,
     gridIntensity: { gCO2ePerKWh, region: effectiveRegion },
     notes,
+    ...(water === null ? {} : { water }),
   };
 }
