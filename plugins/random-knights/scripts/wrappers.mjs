@@ -28,7 +28,7 @@ function count(value) {
  * split never changes the figures. A model the library does not list gets the
  * frontier-class estimate and the receipt says so.
  */
-export function receiptTextFromUsage({
+export function callFromUsage({
   provider,
   model,
   inputTokens,
@@ -37,22 +37,23 @@ export function receiptTextFromUsage({
 }) {
   const input = count(inputTokens);
   const cached = Math.min(count(cachedTokens), input);
-  const d = disclose([
-    {
-      id: "wrapper-0",
-      model: typeof model === "string" ? model : "",
-      provider: typeof provider === "string" && provider.length > 0 ? provider : "Other",
-      turn: 1,
-      count: 1,
-      usage: {
-        input_tokens: input - cached,
-        cache_creation_input_tokens: 0,
-        cache_read_input_tokens: cached,
-        output_tokens: count(outputTokens),
-      },
+  return {
+    id: "wrapper-0",
+    model: typeof model === "string" ? model : "",
+    provider: typeof provider === "string" && provider.length > 0 ? provider : "Other",
+    turn: 1,
+    count: 1,
+    usage: {
+      input_tokens: input - cached,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: cached,
+      output_tokens: count(outputTokens),
     },
-  ]);
-  return formatResponseReceipt(d);
+  };
+}
+
+export function receiptTextFromUsage(usage) {
+  return formatResponseReceipt(disclose([callFromUsage(usage)]));
 }
 
 /**
@@ -101,6 +102,54 @@ export function usageFromOllama(json) {
   };
 }
 
+/**
+ * Reads the final counters out of a STREAMED response, whatever its framing:
+ *
+ *   Ollama /api/chat with stream:true   newline-delimited JSON; the last chunk
+ *                                       (done: true) carries prompt_eval_count,
+ *                                       eval_count and prompt_eval_cached_count
+ *   OpenAI-compatible server-sent       "data: {...}" lines; with
+ *   events                              stream_options.include_usage the last
+ *                                       chunk before [DONE] carries `usage`
+ *   a plain JSON body                   the non-streaming shapes above
+ *
+ * Only the counters and the model name are read; chunk text is ignored. The
+ * LAST chunk that carries counters wins, because a stream may repeat them.
+ * Returns undefined when no chunk has counters, so the caller says so instead
+ * of printing a zero.
+ */
+export function usageFromStream(text) {
+  const whole = String(text).trim();
+  if (whole.length === 0) return undefined;
+  try {
+    const one = JSON.parse(whole);
+    const direct = usageFromOllama(one) ?? usageFromChatCompletion(one);
+    if (direct !== undefined) return direct;
+  } catch {
+    // not one JSON document: fall through to line framing
+  }
+  let found;
+  let model = "";
+  for (const raw of whole.split(/\r?\n/)) {
+    let line = raw.trim();
+    if (line.length === 0 || line.startsWith(":")) continue;
+    if (line.startsWith("data:")) line = line.slice(5).trim();
+    if (line === "[DONE]") continue;
+    let chunk;
+    try {
+      chunk = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (chunk === null || typeof chunk !== "object") continue;
+    if (typeof chunk.model === "string" && chunk.model.length > 0) model = chunk.model;
+    const u = usageFromOllama(chunk) ?? usageFromChatCompletion(chunk);
+    if (u !== undefined) found = u;
+  }
+  if (found === undefined) return undefined;
+  return { ...found, model: found.model || model };
+}
+
 /** Normalizes OLLAMA_HOST style values ("127.0.0.1:11434", "http://host:port"). */
 export function ollamaBaseUrl(value) {
   const raw =
@@ -116,16 +165,19 @@ export function ollamaBaseUrl(value) {
 }
 
 /**
- * One non-streaming chat call to the user's own Ollama endpoint. Returns the
- * reply text and the receipt. `fetchImpl` is injectable for tests.
+ * One chat call to the user's own Ollama endpoint. Returns the reply text and
+ * the receipt. With `stream: true` the reply arrives as newline-delimited JSON
+ * chunks, `onText` is called with each piece of text as it arrives, and the
+ * counters come from the final (done: true) chunk. `fetchImpl` is injectable
+ * for tests.
  */
 export async function ollamaChat(
-  { host, model, prompt, numCtx },
+  { host, model, prompt, numCtx, stream = false, onText },
   fetchImpl = globalThis.fetch,
 ) {
   const body = {
     model,
-    stream: false,
+    stream: stream === true,
     messages: [{ role: "user", content: prompt }],
   };
   if (Number.isInteger(numCtx) && numCtx > 0) body.options = { num_ctx: numCtx };
@@ -135,20 +187,51 @@ export async function ollamaChat(
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Ollama answered HTTP ${res.status}`);
-  const json = await res.json();
-  const usage = usageFromOllama(json);
+
+  let text = "";
+  let usage;
+  if (stream === true) {
+    const decoder = new TextDecoder();
+    let pending = "";
+    let final;
+    const take = (line) => {
+      if (line.trim().length === 0) return;
+      let chunk;
+      try {
+        chunk = JSON.parse(line);
+      } catch {
+        return;
+      }
+      const piece = chunk?.message?.content;
+      if (typeof piece === "string" && piece.length > 0) {
+        text += piece;
+        if (typeof onText === "function") onText(piece);
+      }
+      if (chunk?.done === true) final = chunk;
+    };
+    for await (const part of res.body) {
+      pending += decoder.decode(part, { stream: true });
+      const lines = pending.split("\n");
+      pending = lines.pop() ?? "";
+      for (const line of lines) take(line);
+    }
+    pending += decoder.decode();
+    take(pending);
+    usage = final === undefined ? undefined : usageFromOllama(final);
+  } else {
+    const json = await res.json();
+    usage = usageFromOllama(json);
+    text = typeof json.message?.content === "string" ? json.message.content : "";
+  }
   if (usage === undefined) {
     throw new Error("the Ollama response carried no token counts, so no receipt can be built");
   }
-  const text = typeof json.message?.content === "string" ? json.message.content : "";
-  return {
-    text,
-    receipt: receiptTextFromUsage({
-      provider: "Ollama",
-      model: usage.model || model,
-      inputTokens: usage.inputTokens,
-      outputTokens: usage.outputTokens,
-      cachedTokens: usage.cachedTokens,
-    }),
+  const used = {
+    provider: "Ollama",
+    model: usage.model || model,
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    cachedTokens: usage.cachedTokens,
   };
+  return { text, receipt: receiptTextFromUsage(used), usage: used };
 }

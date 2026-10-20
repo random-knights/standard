@@ -1,25 +1,38 @@
 #!/usr/bin/env node
-// Entry point for the Random Knights AiEDs plugin.
+// The `aieds` command. The same file is the plugin's hook script and, staged
+// into the npm package @randomknights/aieds, its `aieds` bin.
 //
-//   aieds.mjs hook                      Stop hook: reads the hook input on stdin,
-//                                       prints {"systemMessage": "..."} or nothing.
-//   aieds.mjs receipt --session <id>    Session total, found under the Claude, Codex
-//                                       or Grok Build session directories.
-//   aieds.mjs receipt --transcript <p>  Session total for one session file.
-//   aieds.mjs explain                   Formulas and coefficient sources.
+//   aieds hook [claude|codex|grok|copilot]
+//                                   What a host's hook calls. Reads the hook input
+//                                   on stdin, prints the receipt where the host
+//                                   shows it, queues it for sync if connected.
+//   aieds connect | disconnect | status | flush
+//                                   The optional receipts sync (off until `connect`).
+//   aieds install claude|codex|copilot [--yes]
+//   aieds receipt [--session <id> | --transcript <file> | --last grok]
+//                 [--format rk-receipts] [--sync]
+//   aieds explain                   Formulas and coefficient sources.
 //
-// For tools with no hook mechanism (a wrapper, not a plugin install):
-//   aieds.mjs ollama --model <m> [--host <url>] [--num-ctx <n>] [--no-text] <prompt>
-//   aieds.mjs chat-completion [<file>|-] [--provider <label>]
-//   aieds.mjs usage --provider <label> --model <m> --input <n> --output <n> [--cached <n>]
+// For tools with no hook mechanism:
+//   aieds ollama --model <m> [--host <url>] [--num-ctx <n>] [--stream] [--no-text] <prompt>
+//   aieds chat-completion [<file>|-] [--provider <label>]
+//   aieds usage --provider <label> --model <m> --input <n> --output <n> [--cached <n>]
 //
-// The hook mode has one hard rule: it never blocks and never crashes Claude
-// Code. Every failure path, including a failure to load the modules below,
-// ends in exit code 0 with no output. There is no network access, no
-// telemetry, and no file is written unless the user sets AIEDS_RECEIPT_LOG to
-// a path.
+// The hook mode has one hard rule: it never blocks and never crashes the host.
+// Every failure path, including a failure to load the modules below, ends in
+// exit code 0 with no output.
+//
+// NETWORK AND FILES. Until the user runs `aieds connect`, this tool makes no
+// network call except the one the user asks for (`ollama` talks to the Ollama
+// server the user names) and writes no file unless the user sets
+// AIEDS_RECEIPT_LOG (the Copilot CLI reader also keeps a small file of read
+// marks, numbers only). After `connect`, and only then, each receipt's
+// allowlisted numbers go to the user's own account. See README, "Network and
+// privacy".
 
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync, readFileSync, realpathSync } from "node:fs";
+import { basename, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -92,9 +105,48 @@ async function readSettledTranscript(core, path, input) {
   return parsed;
 }
 
-async function runHook() {
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+/**
+ * The session id a host's own hook reports, recovered from the session file's
+ * path, so a receipt built from a hook and the same one built later from the
+ * file get the SAME rid (and sync counts them once).
+ */
+export function sessionIdFromPath(path) {
+  const name = basename(String(path));
+  if (name === "updates.jsonl") return basename(dirname(String(path)));
+  const m = name.match(UUID);
+  if (m) return m[0];
+  return name.replace(/\.[^.]+$/, "");
+}
+
+function hostOf(parsed) {
+  return ["claude", "codex", "grok"].includes(parsed.host) ? parsed.host : "other";
+}
+
+/** Lazy imports, so the hook path loads only what it needs. */
+async function loadSync() {
+  const [receipts, flow] = await Promise.all([import("./receipts.mjs"), import("./syncflow.mjs")]);
+  return { receipts, flow };
+}
+
+function appendLog(core, receiptsMod, entries, receipt, sessionId, env) {
+  const logPath = env.AIEDS_RECEIPT_LOG;
+  if (typeof logPath !== "string" || logPath.length === 0) return;
+  try {
+    const rk = String(env.AIEDS_RECEIPT_LOG_FORMAT ?? "").trim().toLowerCase() === "rk-receipts";
+    const text = rk
+      ? entries.map((e) => receiptsMod.receiptLogLine(e.receipt)).join("\n")
+      : core.logLine(sessionId, receipt);
+    if (text.length > 0) appendFileSync(core.expandHome(logPath), `${text}\n`);
+  } catch {
+    // The log is a convenience. A failure here must not surface.
+  }
+}
+
+async function runHook(hostArg, env = process.env) {
   const core = await import("./core.mjs");
-  if (!core.receiptsEnabled()) return;
+  if (!core.receiptsEnabled(env)) return;
   const raw = await readStdin();
   let input;
   try {
@@ -103,6 +155,12 @@ async function runHook() {
     return;
   }
   if (input === null || typeof input !== "object") return;
+
+  if (hostArg === "copilot") {
+    await runCopilotHook(core, input, env);
+    return;
+  }
+
   // Claude Code and Codex send transcript_path. Grok Build sends both spellings.
   const transcriptPath = input.transcript_path ?? input.transcriptPath;
   if (typeof transcriptPath !== "string") return;
@@ -128,16 +186,71 @@ async function runHook() {
     JSON.stringify({ systemMessage: core.formatReceipt(receipt) }) + "\n",
   );
 
-  const logPath = process.env.AIEDS_RECEIPT_LOG;
-  if (typeof logPath === "string" && logPath.length > 0) {
-    try {
-      appendFileSync(
-        core.expandHome(logPath),
-        core.logLine(input.session_id ?? input.sessionId, receipt) + "\n",
-      );
-    } catch {
-      // The log is a convenience. A failure here must not surface.
+  // After the receipt is out: the optional log and the optional sync. Both are
+  // best effort and bounded; neither can change what the host already showed.
+  const sessionId = input.session_id ?? input.sessionId ?? sessionIdFromPath(transcriptPath);
+  const wantsLog = typeof env.AIEDS_RECEIPT_LOG === "string" && env.AIEDS_RECEIPT_LOG.length > 0;
+  try {
+    const { receipts, flow } = await loadSync();
+    const active = flow.syncActive(env);
+    let entries = [];
+    if (wantsLog || active) {
+      entries = receipts.receiptsFromParsed(parsed, {
+        host: hostOf(parsed),
+        sessionId,
+        tsMs: Date.now(),
+      });
     }
+    if (wantsLog) appendLog(core, receipts, entries, receipt, sessionId, env);
+    if (active) await flow.queueAndFlush(entries, { env });
+  } catch {
+    // never into the host
+  }
+}
+
+/**
+ * Copilot CLI agentStop. The payload names the session's event file
+ * (transcriptPath). Only the usage records appended since the last turn are
+ * read, as numbers; see hosts/copilot.mjs for exactly what is and is not read.
+ */
+async function runCopilotHook(core, input, env) {
+  const copilot = await import("./hosts/copilot.mjs");
+  const sessionId = input.sessionId ?? input.session_id;
+  if (!copilot.isSafeCopilotSessionId(sessionId)) return;
+  const path = input.transcriptPath ?? input.transcript_path ?? copilot.copilotEventsPath(sessionId, env);
+  if (!copilot.isCopilotEventsPath(path)) return;
+
+  const { receipts, flow } = await loadSync();
+  const store = await import("./store.mjs");
+  const key = receipts.shortHash(sessionId);
+  const marks = store.loadMarks(env);
+  const read = copilot.readCopilotUsage(path, marks[key]?.pos ?? 0);
+  marks[key] = { pos: read.nextPos, seenAtMs: Date.now() };
+  try {
+    store.saveMarks(marks, env);
+  } catch {
+    // Without the read-position file the next turn may re-read; rids keep that safe.
+  }
+  if (read.calls.length === 0) return;
+
+  const first = read.calls[0].id;
+  const last = read.calls[read.calls.length - 1].id;
+  const tsMs = receipts.tsOfCalls(read.calls, Date.now());
+  const entries = receipts.receiptsFromCalls(read.calls, {
+    host: "copilot",
+    sessionId,
+    turnKey: `${first}..${last}`,
+    tsMs,
+  });
+
+  process.stdout.write(`${core.formatResponseReceipt(core.disclose(read.calls))}\n`);
+
+  const wantsLog = typeof env.AIEDS_RECEIPT_LOG === "string" && env.AIEDS_RECEIPT_LOG.length > 0;
+  try {
+    if (wantsLog) appendLog(core, receipts, entries, undefined, sessionId, env);
+    if (flow.syncActive(env)) await flow.queueAndFlush(entries, { env });
+  } catch {
+    // never into the host
   }
 }
 
@@ -146,21 +259,33 @@ function argValue(args, flag) {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
 }
 
-async function runReceipt(args) {
+async function runReceipt(args, env = process.env) {
   const core = await import("./core.mjs");
+  const hosts = await import("./hosts.mjs");
   let path = argValue(args, "--transcript");
+  const last = argValue(args, "--last");
+  if (path === undefined && last !== undefined) {
+    if (last !== "grok") {
+      console.log("--last supports grok today (the newest Grok Build session). For other tools use --session or --transcript.");
+      return;
+    }
+    path = hosts.findNewestGrokSession(env);
+    if (path === undefined) {
+      console.log("No Grok Build session was found under GROK_HOME or ~/.grok/sessions, so no receipt can be built.");
+      return;
+    }
+  }
   if (path === undefined) {
     const session = argValue(args, "--session");
     if (!core.isSafeSessionId(session)) {
       console.log(
         "No session id was provided, so no receipt can be built. " +
-          "Run /random-knights:aieds inside a Claude Code session, or pass --transcript <file>.",
+          "Run /random-knights:aieds inside a Claude Code session, or pass --transcript <file> or --last grok.",
       );
       return;
     }
     path = core.findTranscript(session);
     if (path === undefined) {
-      const hosts = await import("./hosts.mjs");
       path = hosts.findHostSession(session);
     }
     if (path === undefined) {
@@ -182,6 +307,31 @@ async function runReceipt(args) {
     console.log("The transcript has no model calls yet, so there is nothing to total.");
     return;
   }
+
+  const format = argValue(args, "--format");
+  const wantsSync = args.includes("--sync");
+  if (format === "rk-receipts" || wantsSync) {
+    const { receipts, flow } = await loadSync();
+    const entries = receipts.receiptsFromParsed(
+      parsed,
+      { host: hostOf(parsed), sessionId: sessionIdFromPath(path), tsMs: Date.now() },
+      { all: true },
+    );
+    if (format === "rk-receipts") {
+      for (const e of entries) console.log(receipts.receiptLogLine(e.receipt));
+    } else {
+      console.log(core.formatSessionReceipt(core.receiptFor(parsed).session));
+    }
+    if (wantsSync) {
+      if (!flow.syncActive(env)) {
+        console.error("Not connected, so nothing was queued. Run `aieds connect` first.");
+      } else {
+        const r = await flow.queueAndFlush(entries, { env, budgetMs: 15_000 });
+        console.error(`Queued ${r.queued} receipt(s) (${r.invalid} failed the local check). Sync: ${r.flush?.state ?? "n/a"}.`);
+      }
+    }
+    return;
+  }
   console.log(core.formatSessionReceipt(core.receiptFor(parsed).session));
 }
 
@@ -198,12 +348,24 @@ async function readAll(stream) {
   return Buffer.concat(chunks).toString("utf8");
 }
 
-async function runOllama(args) {
+/** Queues one wrapper response for sync when connected. Silent and bounded. */
+async function syncWrapperCall(host, call, env) {
+  try {
+    const { flow } = await loadSync();
+    if (!flow.syncActive(env)) return;
+    await flow.queueAndFlush(flow.wrapperEntries({ host, call }), { env, budgetMs: 4000 });
+  } catch {
+    // sync never breaks a command
+  }
+}
+
+async function runOllama(args, env = process.env) {
   const wrappers = await import("./wrappers.mjs");
-  const model = argValue(args, "--model") ?? process.env.OLLAMA_MODEL;
-  const host = argValue(args, "--host") ?? process.env.OLLAMA_HOST;
+  const model = argValue(args, "--model") ?? env.OLLAMA_MODEL;
+  const host = argValue(args, "--host") ?? env.OLLAMA_HOST;
   const numCtx = intArg(args, "--num-ctx");
   const noText = args.includes("--no-text");
+  const stream = args.includes("--stream");
   // The prompt is everything that is not a flag or a flag's value.
   const valued = new Set(["--model", "--host", "--num-ctx"]);
   const words = [];
@@ -220,7 +382,7 @@ async function runOllama(args) {
   }
   if (typeof model !== "string" || model.length === 0 || prompt.length === 0) {
     console.error(
-      "usage: aieds.mjs ollama --model <name> [--host <url>] [--num-ctx <n>] [--no-text] <prompt>",
+      "usage: aieds ollama --model <name> [--host <url>] [--num-ctx <n>] [--stream] [--no-text] <prompt>",
     );
     process.exitCode = 2;
     return;
@@ -231,16 +393,22 @@ async function runOllama(args) {
     return;
   }
   try {
-    const r = await wrappers.ollamaChat({ host, model, prompt, numCtx });
-    if (!noText) console.log(`${r.text}\n`);
+    const onText = stream && !noText ? (piece) => process.stdout.write(piece) : undefined;
+    const r = await wrappers.ollamaChat({ host, model, prompt, numCtx, stream, onText });
+    if (stream) {
+      if (!noText) process.stdout.write("\n\n");
+    } else if (!noText) {
+      console.log(`${r.text}\n`);
+    }
     console.log(r.receipt);
+    await syncWrapperCall("ollama", wrappers.callFromUsage(r.usage), env);
   } catch (e) {
     console.error(String(e && e.message ? e.message : e));
     process.exitCode = 1;
   }
 }
 
-async function runChatCompletion(args) {
+async function runChatCompletion(args, env = process.env) {
   const wrappers = await import("./wrappers.mjs");
   const provider = argValue(args, "--provider") ?? "OpenAI-compatible";
   const positional = args.filter(
@@ -255,26 +423,22 @@ async function runChatCompletion(args) {
     process.exitCode = 1;
     return;
   }
-  let json;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    console.error("The input is not JSON.");
-    process.exitCode = 1;
-    return;
-  }
-  const usage = wrappers.usageFromChatCompletion(json);
+  // A whole JSON response, or a streamed one (server-sent events or
+  // newline-delimited JSON): the last chunk that carries counters wins.
+  const usage = wrappers.usageFromStream(text);
   if (usage === undefined) {
     console.error(
-      "The response has no usage block with prompt and completion token counts, so no receipt can be built.",
+      "The response has no usage block with prompt and completion token counts, so no receipt can be built. " +
+        "For a streamed OpenAI-compatible response, ask for stream_options.include_usage.",
     );
     process.exitCode = 1;
     return;
   }
   console.log(wrappers.receiptTextFromUsage({ provider, ...usage }));
+  await syncWrapperCall("other", wrappers.callFromUsage({ provider, ...usage }), env);
 }
 
-async function runUsage(args) {
+async function runUsage(args, env = process.env) {
   const wrappers = await import("./wrappers.mjs");
   const provider = argValue(args, "--provider") ?? "Other";
   const model = argValue(args, "--model");
@@ -288,30 +452,56 @@ async function runUsage(args) {
     [input, output, cached].some((n) => Number.isNaN(n))
   ) {
     console.error(
-      "usage: aieds.mjs usage --provider <label> --model <id> --input <n> --output <n> [--cached <n>]",
+      "usage: aieds usage --provider <label> --model <id> --input <n> --output <n> [--cached <n>]",
     );
     process.exitCode = 2;
     return;
   }
-  console.log(
-    wrappers.receiptTextFromUsage({
-      provider,
-      model,
-      inputTokens: input,
-      outputTokens: output,
-      cachedTokens: cached,
-    }),
-  );
+  const usage = {
+    provider,
+    model,
+    inputTokens: input,
+    outputTokens: output,
+    cachedTokens: cached,
+  };
+  console.log(wrappers.receiptTextFromUsage(usage));
+  await syncWrapperCall("other", wrappers.callFromUsage(usage), env);
 }
 
-async function main() {
+const USAGE =
+  "usage: aieds hook [host] | connect | disconnect | status | flush | install <host> | " +
+  "receipt [--session <id> | --transcript <file> | --last grok] | explain | " +
+  "ollama | chat-completion | usage";
+
+/** The file the user ran (the bin, or the plugin script), symlinks resolved. */
+function entryPath() {
+  try {
+    return process.argv[1] ? realpathSync(process.argv[1]) : "";
+  } catch {
+    return process.argv[1] ?? "";
+  }
+}
+
+function commandIo(env) {
+  return {
+    stdout: process.stdout,
+    stderr: process.stderr,
+    stdin: process.stdin,
+    env,
+    isTTY: Boolean(process.stdin.isTTY && process.stdout.isTTY),
+    scriptPath: entryPath(),
+  };
+}
+
+export async function main() {
   const [mode, ...rest] = process.argv.slice(2);
+  const env = process.env;
   if (mode === "hook") {
     // Hook mode never fails loudly: any error ends as exit 0 with no output.
     process.on("uncaughtException", () => process.exit(0));
     process.on("unhandledRejection", () => process.exit(0));
     try {
-      await runHook();
+      await runHook(rest.find((a) => !a.startsWith("--")), env);
     } catch {
       // Swallow everything. A receipt is never worth breaking a session.
     }
@@ -321,19 +511,19 @@ async function main() {
     return;
   }
   if (mode === "receipt") {
-    await runReceipt(rest);
+    await runReceipt(rest, env);
     return;
   }
   if (mode === "ollama") {
-    await runOllama(rest);
+    await runOllama(rest, env);
     return;
   }
   if (mode === "chat-completion") {
-    await runChatCompletion(rest);
+    await runChatCompletion(rest, env);
     return;
   }
   if (mode === "usage") {
-    await runUsage(rest);
+    await runUsage(rest, env);
     return;
   }
   if (mode === "explain") {
@@ -341,13 +531,31 @@ async function main() {
     console.log(core.formatExplanation());
     return;
   }
-  console.log(
-    "usage: aieds.mjs hook | receipt [--session <id> | --transcript <file>] | explain | " +
-      "ollama | chat-completion | usage",
-  );
+  if (mode === "connect" || mode === "disconnect" || mode === "status" || mode === "flush") {
+    const c = await import("./connect.mjs");
+    const run = { connect: c.runConnect, disconnect: c.runDisconnect, status: c.runStatus, flush: c.runFlush }[mode];
+    process.exitCode = await run(rest, commandIo(env));
+    return;
+  }
+  if (mode === "install") {
+    const i = await import("./install.mjs");
+    process.exitCode = i.runInstall(rest, commandIo(env));
+    return;
+  }
+  if (mode === "--version" || mode === "-v" || mode === "version") {
+    const s = await import("./syncclient.mjs");
+    console.log(s.CLIENT_VERSION);
+    return;
+  }
+  console.log(USAGE);
+  if (mode !== undefined && mode !== "--help" && mode !== "-h" && mode !== "help") process.exitCode = 2;
 }
 
-main().catch((e) => {
-  console.error(String(e && e.message ? e.message : e));
-  process.exit(1);
-});
+// Run only when this file is the one executed (the plugin hook). The npm bin
+// imports main() and calls it, so importing this module never runs a command.
+if (entryPath() === realpathSync(fileURLToPath(import.meta.url))) {
+  main().catch((e) => {
+    console.error(String(e && e.message ? e.message : e));
+    process.exit(1);
+  });
+}

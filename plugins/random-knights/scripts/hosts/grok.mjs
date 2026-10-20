@@ -4,7 +4,7 @@
 // as a stable interface, so this reader returns zero calls for anything it does
 // not recognize and the caller then prints nothing. It never guesses.
 
-import { count, jsonLines } from "./util.mjs";
+import { count, jsonLines, timeMs } from "./util.mjs";
 
 /** The Grok Build version this reader was checked against. */
 export const TESTED_GROK_VERSION = "1.0.13";
@@ -88,6 +88,7 @@ export function parseGrokSession(text) {
           model,
           provider: providerLabel(model),
           turn: turnNumber,
+          tsMs: timeMs(entry.timestamp),
           count: Math.max(1, count(m.modelCalls)),
           usage: {
             input_tokens: input - cached - written,

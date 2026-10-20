@@ -5,7 +5,7 @@
 // zero calls for anything it does not recognize and the caller then prints
 // nothing. It never guesses.
 
-import { count, jsonLines } from "./util.mjs";
+import { count, jsonLines, timeMs } from "./util.mjs";
 
 /** The Codex CLI version this reader was checked against. */
 export const TESTED_CODEX_VERSION = "0.159.2";
@@ -129,6 +129,7 @@ export function parseCodexRollout(text) {
       provider,
       turn: Math.max(turn, 1),
       turnId,
+      tsMs: timeMs(entry.timestamp),
       count: 1,
       usage: {
         input_tokens: input - cached - written,

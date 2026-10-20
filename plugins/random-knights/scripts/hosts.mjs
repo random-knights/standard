@@ -130,3 +130,34 @@ export function findHostSession(sessionId, env = process.env) {
   }
   return best;
 }
+
+/**
+ * The newest Grok Build session file (updates.jsonl) under GROK_HOME, or under
+ * ~/.grok. Grok keeps `sessions/<encoded cwd>/<session id>/updates.jsonl`.
+ * "Newest" is the latest modification time. Returns undefined when there is
+ * none. Used by `aieds receipt --last grok`.
+ */
+export function findNewestGrokSession(env = process.env) {
+  const grokHome =
+    env.GROK_HOME && env.GROK_HOME.length > 0 ? env.GROK_HOME : join(homedir(), ".grok");
+  const root = join(grokHome, "sessions");
+  let best;
+  let bestMtime = -1;
+  for (const cwdDir of listDir(root)) {
+    if (!cwdDir.isDirectory()) continue;
+    for (const sessionDir of listDir(join(root, cwdDir.name))) {
+      if (!sessionDir.isDirectory()) continue;
+      const candidate = join(root, cwdDir.name, sessionDir.name, "updates.jsonl");
+      try {
+        const m = statSync(candidate).mtimeMs;
+        if (m > bestMtime) {
+          best = candidate;
+          bestMtime = m;
+        }
+      } catch {
+        // no updates.jsonl in this folder
+      }
+    }
+  }
+  return best;
+}
