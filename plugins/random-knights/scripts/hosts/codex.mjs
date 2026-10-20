@@ -1,6 +1,8 @@
 // Codex CLI rollout reader.
 //
-// Checked against Codex CLI 0.159.2. OpenAI documents the rollout as "not a
+// Checked against Codex CLI 0.159.2 and, on a real interactive session with the
+// receipt shown, 0.162.1 (0.163.0 also ran the hook; its rollout was not
+// captured). OpenAI documents the rollout as "not a
 // stable interface for hooks and may change over time", so this reader returns
 // zero calls for anything it does not recognize and the caller then prints
 // nothing. It never guesses.
@@ -8,7 +10,7 @@
 import { count, jsonLines, timeMs } from "./util.mjs";
 
 /** The Codex CLI version this reader was checked against. */
-export const TESTED_CODEX_VERSION = "0.159.2";
+export const TESTED_CODEX_VERSION = "0.162.1";
 
 const RECORD_TYPES = new Set([
   "session_meta",

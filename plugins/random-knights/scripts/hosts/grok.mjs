@@ -1,13 +1,14 @@
 // Grok Build session reader.
 //
-// Checked against Grok Build 1.0.13. Grok does not document its session file
+// Checked against Grok Build 1.0.13 and, for the on-demand receipt, a real
+// 1.0.50 session (grok-4.7). Grok does not document its session file
 // as a stable interface, so this reader returns zero calls for anything it does
 // not recognize and the caller then prints nothing. It never guesses.
 
 import { count, jsonLines, timeMs } from "./util.mjs";
 
 /** The Grok Build version this reader was checked against. */
-export const TESTED_GROK_VERSION = "1.0.13";
+export const TESTED_GROK_VERSION = "1.0.50";
 
 function providerLabel(model) {
   return /^grok/i.test(String(model)) ? "xAI" : "Other";

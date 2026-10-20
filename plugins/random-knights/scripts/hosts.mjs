@@ -18,6 +18,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 import { TESTED_CODEX_VERSION, looksLikeCodex, parseCodexRollout } from "./hosts/codex.mjs";
+import { TESTED_COPILOT_VERSION } from "./hosts/copilot.mjs";
 import { TESTED_GROK_VERSION, looksLikeGrok, parseGrokSession } from "./hosts/grok.mjs";
 import { jsonLines } from "./hosts/util.mjs";
 
@@ -27,6 +28,7 @@ export { parseCodexRollout, parseGrokSession };
 export const TESTED_HOSTS = Object.freeze({
   codex: TESTED_CODEX_VERSION,
   grok: TESTED_GROK_VERSION,
+  copilot: TESTED_COPILOT_VERSION,
 });
 
 /**

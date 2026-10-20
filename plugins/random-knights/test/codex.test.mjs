@@ -302,7 +302,7 @@ test("codex packaging: manifest, hook file and versions agree", () => {
 });
 
 test("codex: the tested version is pinned in code and named in the README", () => {
-  assert.equal(TESTED_HOSTS.codex, "0.159.2");
+  assert.equal(TESTED_HOSTS.codex, "0.162.1");
   const readme = readFileSync(join(pluginRoot, "README.md"), "utf8");
   assert.ok(readme.includes(TESTED_HOSTS.codex), "README names the tested Codex version");
 });

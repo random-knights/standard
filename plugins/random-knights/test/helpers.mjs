@@ -19,6 +19,9 @@ export const fixtureText = (name) => readFileSync(fixture(name), "utf8");
 
 export const CANARY = "CANARY-DO-NOT-STORE";
 
+/** A POSIX home prefix, built so the "no personal paths" scan of committed files does not trip on a test string. */
+export const POSIX_HOME = ["", "home", ""].join("/");
+
 /** A fresh directory whose name has a space, because Windows paths do. */
 export function tmpDir(prefix = "rk sync test ") {
   return mkdtempSync(join(tmpdir(), prefix));

@@ -271,7 +271,7 @@ test("grok receipt: --session finds updates.jsonl under GROK_HOME, ids are valid
 });
 
 test("grok: the tested version is pinned in code and named in the README", () => {
-  assert.equal(TESTED_HOSTS.grok, "1.0.13");
+  assert.equal(TESTED_HOSTS.grok, "1.0.50");
   const readme = readFileSync(join(pluginRoot, "README.md"), "utf8");
   assert.ok(readme.includes(TESTED_HOSTS.grok), "README names the tested Grok version");
 });

@@ -12,6 +12,8 @@
 
 The read API/SDK and `.well-known/aieds.json` are deferred to v1.1. Do not add network calls, auth, or external service dependencies to the v1 codebase. The MCP server must remain keyless.
 
+One reviewed exception: the `aieds` command and the Claude Code and Codex plugin (`plugins/random-knights/scripts`) have an OPT-IN receipts sync. With no `aieds connect` they make no network call and write no file (a test asserts it); after `connect` they send only the allowlist in `scripts/receipts.mjs`, which is a copy of the service's table. Any change to that allowlist, to what is read from a host's session file, or to the consent text in `scripts/connect.mjs` is a privacy change and needs the owner. The canary test (`test/canary.test.mjs`) must keep passing for every host.
+
 ## Dev setup
 
 ```bash
@@ -66,7 +68,7 @@ canonical files by `scripts/stage-npm-package.mjs`:
 
 | Package | Version source | Contents |
 |---------|----------------|----------|
-| `@randomknights/aieds` | `spec/methodology.md` | reference library, JSON Schema, coefficient tables |
+| `@randomknights/aieds` | `spec/methodology.md` | reference library, JSON Schema, coefficient tables, and the `aieds` command (staged from `plugins/random-knights/scripts`) |
 | `@randomknights/k13` | `K13.md` | K13 text and the `k13 check` CLI |
 | `@randomknights/earthplus` | `eplus/v1/methodology.md` | E+ conformance checker (library and `eplus-conformance` CLI) and the E+ methodology text |
 

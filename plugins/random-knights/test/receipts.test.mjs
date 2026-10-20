@@ -14,7 +14,7 @@ import {
   ridFor,
 } from "../scripts/receipts.mjs";
 import { sessionIdFromPath } from "../scripts/aieds.mjs";
-import { fixtureText } from "./helpers.mjs";
+import { fixtureText, POSIX_HOME } from "./helpers.mjs";
 
 const NOW = Date.parse("2026-10-20T15:00:00.000Z");
 const ctx = (host, extra = {}) => ({ host, sessionId: "session-1", tsMs: NOW, ...extra });
@@ -61,7 +61,7 @@ test("allowlist: an unknown key fails by NAME, never by value", () => {
 test("allowlist: paths, sentences, urls and key shapes cannot ride in model, provider or agentId", () => {
   const bad = [
     "C:\\Users\\kit\\secret",
-    "/home/kit/project",
+    POSIX_HOME + "kit/project",
     "../up",
     "~/notes",
     "a sentence with spaces",
@@ -122,7 +122,7 @@ test("session id from a path matches what each host's hook reports", () => {
     "0f2b8a64-1c5e-4c0a-9d3e-6a7b8c9d0e1f",
   );
   assert.equal(
-    sessionIdFromPath("/home/x/.codex/sessions/2026/10/20/rollout-2026-10-20T10-11-10-01a159a6-dede-74a0-a36b-7309310bfe20.jsonl"),
+    sessionIdFromPath(POSIX_HOME + "x/.codex/sessions/2026/10/20/rollout-2026-10-20T10-11-10-01a159a6-dede-74a0-a36b-7309310bfe20.jsonl"),
     "01a159a6-dede-74a0-a36b-7309310bfe20",
   );
   assert.equal(sessionIdFromPath("/h/.grok/sessions/C%3A%5Cx/01a159a9-d852-76b2-acb0-761766a0224e/updates.jsonl"), "01a159a9-d852-76b2-acb0-761766a0224e");

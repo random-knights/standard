@@ -1,5 +1,5 @@
 {
-  "description": "Prints an AiEDs receipt after each Claude Code response. Local only: no network, no telemetry.",
+  "description": "Prints an AiEDs receipt after each Claude Code response. No network unless you ran aieds connect.",
   "hooks": {
     "Stop": [
       {

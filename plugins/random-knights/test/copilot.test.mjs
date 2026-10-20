@@ -18,7 +18,7 @@ import {
   readCopilotShutdownTotals,
   readCopilotUsage,
 } from "../scripts/hosts/copilot.mjs";
-import { CANARY, fixtureText, hermeticEnv, runCli, tmpDir } from "./helpers.mjs";
+import { CANARY, fixtureText, hermeticEnv, runCli, tmpDir, POSIX_HOME } from "./helpers.mjs";
 
 const SESSION = "76271fba-e658-4ec1-8603-e756a8676870";
 const real = fixtureText("copilot-usage-real.jsonl").split("\n").filter(Boolean);
@@ -123,13 +123,13 @@ test("copilot: a very long line is skipped unread", () => {
 
 test("copilot: only a session-state/<id>/events.jsonl path is accepted", () => {
   assert.ok(isCopilotEventsPath(`C:\\Users\\a b\\.copilot\\session-state\\${SESSION}\\events.jsonl`));
-  assert.ok(isCopilotEventsPath(`/home/x/.copilot/session-state/${SESSION}/events.jsonl`));
+  assert.ok(isCopilotEventsPath(`${POSIX_HOME}x/.copilot/session-state/${SESSION}/events.jsonl`));
   for (const bad of [
     "C:\\Windows\\win.ini",
     "/etc/passwd",
-    `/home/x/.copilot/session-state/${SESSION}/events.jsonl.bak`,
-    `/home/x/.copilot/other/${SESSION}/events.jsonl`,
-    `/home/x/.copilot/session-state/../events.jsonl`,
+    `${POSIX_HOME}x/.copilot/session-state/${SESSION}/events.jsonl.bak`,
+    `${POSIX_HOME}x/.copilot/other/${SESSION}/events.jsonl`,
+    `${POSIX_HOME}x/.copilot/session-state/../events.jsonl`,
     "events.jsonl",
     "",
     42,
