@@ -1,7 +1,7 @@
 {
   "name": "@randomknights/aieds",
   "version": "2.5.0",
-  "description": "AiEDs (AI Energy Disclosure Standard) 2.5.0: the reference library that turns tokens and a model into an energy-first disclosure, the JSON Schema for one disclosure, and the published coefficient tables",
+  "description": "AiEDs (AI Energy Disclosure Standard) 2.5.0: the reference library that turns tokens and a model into an energy-first disclosure, the JSON Schema for one disclosure, the published coefficient tables, and the aieds command (receipts for Claude Code, Codex, Ollama, Grok Build and Copilot CLI)",
   "type": "module",
   "main": "./lib/dist/index.js",
   "types": "./lib/dist/index.d.ts",
@@ -19,6 +19,11 @@
     "lib/dist/*.d.ts",
     "spec/aieds.schema.json",
     "spec/v2/aieds-factors.json",
+    "bin/aieds.mjs",
+    "src/cli/*.mjs",
+    "src/cli/hosts/*.mjs",
+    "src/vendor/lib/dist/*.js",
+    "src/vendor/spec/v2/aieds-factors.json",
     "LICENSE",
     "LICENSE-DOCS",
     "NOTICE"
@@ -51,5 +56,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "bin": {
+    "aieds": "./bin/aieds.mjs"
   }
 }

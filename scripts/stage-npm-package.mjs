@@ -14,7 +14,7 @@
 //
 // Usage: node scripts/stage-npm-package.mjs <aieds|k13|earthplus>
 import { execSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,6 +28,16 @@ const LEGAL = ["LICENSE", "LICENSE-DOCS", "NOTICE"];
 function copy(from, to) {
   mkdirSync(dirname(to), { recursive: true });
   copyFileSync(from, to);
+}
+
+// Copies a directory tree (files only, no tests or fixtures: the caller names the
+// directory it wants).
+function copyTree(fromDir, toDir) {
+  for (const name of readdirSync(fromDir)) {
+    const from = join(fromDir, name);
+    if (statSync(from).isDirectory()) copyTree(from, join(toDir, name));
+    else copy(from, join(toDir, name));
+  }
 }
 
 function run(cmd, cwd) {
@@ -60,6 +70,17 @@ function stageAieds(pkgDir) {
     join(repoRoot, "spec", "v2", "aieds-factors.json"),
     join(pkgDir, "spec", "v2", "aieds-factors.json"),
   );
+
+  // The `aieds` command (bin/aieds.mjs, committed) runs the implementation that
+  // ships in the plugin, so there is exactly one. It is copied here, not
+  // re-committed: src/cli is the plugin's scripts/, and src/vendor is the
+  // plugin's vendored library copy, which the plugin's own CI proves byte-equal
+  // to the lib/ build. The CLI imports ../vendor/lib/dist from src/cli, the same
+  // relative layout it has inside the plugin.
+  const plugin = join(repoRoot, "plugins", "random-knights");
+  rmSync(join(pkgDir, "src"), { recursive: true, force: true });
+  copyTree(join(plugin, "scripts"), join(pkgDir, "src", "cli"));
+  copyTree(join(plugin, "vendor"), join(pkgDir, "src", "vendor"));
 }
 
 function stageK13(pkgDir) {

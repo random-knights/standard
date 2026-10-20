@@ -31,9 +31,28 @@ const EXPECTED = {
     "lib/dist/index.js",
     "lib/dist/water.d.ts",
     "lib/dist/water.js",
+    "bin/aieds.mjs",
     "package.json",
     "spec/aieds.schema.json",
     "spec/v2/aieds-factors.json",
+    "src/cli/aieds.mjs",
+    "src/cli/connect.mjs",
+    "src/cli/core.mjs",
+    "src/cli/hosts.mjs",
+    "src/cli/hosts/codex.mjs",
+    "src/cli/hosts/copilot.mjs",
+    "src/cli/hosts/grok.mjs",
+    "src/cli/hosts/util.mjs",
+    "src/cli/install.mjs",
+    "src/cli/receipts.mjs",
+    "src/cli/store.mjs",
+    "src/cli/syncclient.mjs",
+    "src/cli/syncflow.mjs",
+    "src/cli/wrappers.mjs",
+    "src/vendor/lib/dist/factors.js",
+    "src/vendor/lib/dist/index.js",
+    "src/vendor/lib/dist/water.js",
+    "src/vendor/spec/v2/aieds-factors.json",
   ],
   k13: [
     "K13.md",
@@ -180,6 +199,26 @@ for (const name of Object.keys(EXPECTED)) {
     process.stdout.write(execFileSync(process.execPath, ["smoke.mjs"], { cwd: app, encoding: "utf8" }));
   } catch (err) {
     fail(`${name}: smoke test against the installed tarball: ${err.stderr || err.message}`);
+  }
+  if (name === "aieds") {
+    // The installed `aieds` bin runs: version, a receipt from a usage line, a
+    // status that says nothing leaves the computer, and an install that only
+    // shows a diff. Everything goes to a throwaway config and Copilot home.
+    const home = mkdtempSync(join(tmpdir(), "npm-aieds-home-"));
+    const env = { ...process.env, AIEDS_CONFIG_DIR: join(home, "cfg"), COPILOT_HOME: join(home, "copilot") };
+    const bin = (args) =>
+      execSync(`npm exec --offline -- aieds ${args}`, { cwd: app, encoding: "utf8", env, stdio: ["ignore", "pipe", "inherit"] });
+    try {
+      if (!/^\d+\.\d+\.\d+/.test(bin("--version"))) fail("aieds: --version printed no version");
+      if (!/AiEDs receipt/.test(bin("usage --provider Test --model test-model --input 100 --output 20"))) {
+        fail("aieds: usage printed no receipt");
+      }
+      if (!/not connected/.test(bin("status"))) fail("aieds: status did not say it is not connected");
+      if (!/Nothing was written/.test(bin("install copilot"))) fail("aieds: install copilot did not stop at the diff");
+      console.log("aieds bin ok (version, usage, status, install diff)");
+    } catch (err) {
+      fail(`aieds: the installed bin failed: ${err.message}`);
+    }
   }
   if (name === "k13") {
     // The bin is linked and runs: exit 0 on a clean file.

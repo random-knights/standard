@@ -162,6 +162,12 @@ jobs:
       - name: Vendored library copy is current
         run: node scripts/sync-claude-plugin.mjs --check
 
+      # The per-tool table in the plugin and MCP READMEs is generated from
+      # data/install-providers.json. This fails if either README differs from
+      # it, or if a tool marked Verified has no tested version or no fixture.
+      - name: Install table matches data/install-providers.json
+        run: node scripts/gen-install-table.mjs --check
+
       - name: Plugin tests
         run: cd plugins/random-knights && npm test
 

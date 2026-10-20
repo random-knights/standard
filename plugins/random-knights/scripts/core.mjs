@@ -19,6 +19,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 import { parseSessionText } from "./hosts.mjs";
+import { timeMs } from "./hosts/util.mjs";
 
 import {
   AIEDS_VERSION,
@@ -38,6 +39,21 @@ import {
   waterFromEnergyWh,
   waterLine,
 } from "../vendor/lib/dist/index.js";
+
+/**
+ * One plain line for a small reply on a big session. Cache tokens count as
+ * input at the full input rate (methodology 2.4.1), so a one-word reply after a
+ * long session still reads large: the session's context is what is being paid
+ * for, not the reply.
+ */
+export const CONTEXT_NOTE =
+  "Most of this is the session's context, which is read again on every reply " +
+  "(cache tokens count as input at the full rate, methodology 2.4.1).";
+
+/** True when the input dwarfs the output, so CONTEXT_NOTE belongs on the receipt. */
+export function contextDominates(tokens) {
+  return tokens.input >= 1000 && tokens.input >= 10 * Math.max(tokens.output, 1);
+}
 
 export const REQUIRED_COPY = Object.freeze([
   MODELED_ESTIMATE_COPY,
@@ -141,6 +157,7 @@ export function parseTranscript(jsonlText) {
       call = {
         id,
         model: typeof message.model === "string" ? message.model : "",
+        tsMs: 0,
         turn,
         usage: {
           input_tokens: 0,
@@ -152,6 +169,7 @@ export function parseTranscript(jsonlText) {
       byId.set(id, call);
       order.push(id);
     }
+    call.tsMs = Math.max(call.tsMs, timeMs(entry.timestamp));
     if (call.model === "" && typeof message.model === "string") {
       call.model = message.model;
     }
@@ -364,6 +382,7 @@ export function formatReceipt(receipt) {
     `Tokens this response: ${formatCount(r.tokens.input)} in ` +
       `(${formatCount(r.tokens.cacheRead)} cache read, ${formatCount(r.tokens.cacheCreation)} cache write), ` +
       `${formatCount(r.tokens.output)} out.`,
+    contextDominates(r.tokens) ? CONTEXT_NOTE : "",
     `Basis: ${s.aiedsVersion}, ${basisLabel(s.provenance, s.models, s.modelsInTable)}.`,
     REQUIRED_COPY.join(" "),
   ]
@@ -386,6 +405,7 @@ export function formatResponseReceipt(d) {
     `AiEDs receipt: ${figures(d)} (this response).`,
     formatWater(d),
     `Tokens: ${formatCount(t.input)} in${cache}, ${formatCount(t.output)} out.`,
+    contextDominates(t) ? CONTEXT_NOTE : "",
     `Basis: ${d.aiedsVersion}, ${basisLabel(d.provenance, d.models, d.modelsInTable)}.`,
     REQUIRED_COPY.join(" "),
   ]

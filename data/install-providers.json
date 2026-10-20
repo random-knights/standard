@@ -1,0 +1,80 @@
+{
+  "schema": "install-providers/1",
+  "about": "The one source for which AI tools the aieds receipt supports, how to install each, and how far each has been verified. The README tables are generated from this file by scripts/gen-install-table.mjs, and CI fails if they drift. A tool marked verified needs a testedVersion and a fixture that exists.",
+  "statuses": {
+    "verified": "The whole path was run on a real session of that tool, and the receipt's token counts matched the tool's own reported usage.",
+    "numbers-verified": "The token counts were checked against the tool's own totals on a real session file. The installed hook has not yet been run inside a live session of the tool.",
+    "on-demand": "No automatic receipt after a reply. You ask for the receipt after the session, and the counts were checked on a real session."
+  },
+  "providers": [
+    {
+      "id": "claude",
+      "label": "Claude Code",
+      "status": "verified",
+      "testedVersion": "2.1.302",
+      "fixture": "plugins/random-knights/test/fixtures/session-tool-turns.jsonl",
+      "fixtureKind": "shape-only",
+      "receipt": "automatic, under each reply",
+      "install": [
+        "claude plugin marketplace add Random-Knights/Standard",
+        "claude plugin install random-knights@standard"
+      ],
+      "note": "Run on Claude Code 2.1.302 on Windows. The committed fixture carries the transcript's shape and counters with the text removed; a fixture of real numbers is still to be added."
+    },
+    {
+      "id": "codex",
+      "label": "Codex CLI",
+      "status": "verified",
+      "testedVersion": "0.162.1",
+      "fixture": "plugins/random-knights/test/fixtures/codex-real-0.162.1.jsonl",
+      "fixtureKind": "real-numbers",
+      "receipt": "automatic, shown as a hook line in the interactive UI",
+      "install": [
+        "codex plugin marketplace add Random-Knights/Standard",
+        "codex plugin add random-knights@standard"
+      ],
+      "note": "Then run /hooks once inside Codex and trust the Stop hook (again after each plugin update). `codex exec` runs the hook but prints nothing; synced receipts are still sent. Also ran on 0.163.0."
+    },
+    {
+      "id": "ollama",
+      "label": "Ollama",
+      "status": "verified",
+      "testedVersion": "0.40.4",
+      "fixture": "plugins/random-knights/test/fixtures/ollama-stream.ndjson",
+      "fixtureKind": "real-numbers",
+      "receipt": "printed by the command, for one chat call",
+      "install": [
+        "npx @randomknights/aieds ollama --model <name> \"<prompt>\""
+      ],
+      "note": "A wrapper, not a plugin: it makes the chat call itself and reads the counts from the reply. Add --stream for a streamed reply."
+    },
+    {
+      "id": "grok",
+      "label": "Grok Build",
+      "status": "on-demand",
+      "testedVersion": "1.0.50",
+      "fixture": "plugins/random-knights/test/fixtures/grok-real-1.0.50.jsonl",
+      "fixtureKind": "real-numbers",
+      "receipt": "on demand, after the session",
+      "install": [
+        "grok plugin marketplace add Random-Knights/Standard",
+        "grok plugin install random-knights@Standard --trust",
+        "npx @randomknights/aieds receipt --last grok"
+      ],
+      "note": "Grok 1.0.50 printed no automatic receipt in an interactive session, so the receipt is asked for. `npx @randomknights/aieds receipt --last grok` reads the newest session file; add --sync to send it."
+    },
+    {
+      "id": "copilot",
+      "label": "Copilot CLI",
+      "status": "numbers-verified",
+      "testedVersion": "1.0.100",
+      "fixture": "plugins/random-knights/test/fixtures/copilot-usage-real.jsonl",
+      "fixtureKind": "real-numbers",
+      "receipt": "automatic, printed by the agentStop hook",
+      "install": [
+        "npx @randomknights/aieds install copilot"
+      ],
+      "note": "Real counts: the hook reads only the session.usage_record lines of the session's own events file. The counts equal the session.shutdown totals of a real 1.0.100 session. The installed hook has not yet been run inside a live Copilot session."
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+{"model":"llama3.2:1b","message":{"role":"assistant","content":"x"},"done":false}
+{"model":"llama3.2:1b","message":{"role":"assistant","content":"x"},"done":false}
+{"model":"llama3.2:1b","message":{"role":"assistant","content":""},"done":true,"done_reason":"stop","total_duration":60980799700,"load_duration":60787275000,"prompt_eval_count":28,"prompt_eval_cached_count":0,"prompt_eval_duration":130395000,"eval_count":3,"eval_duration":51541000}
