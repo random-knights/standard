@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Generates the per-tool install table in the plugin README and the MCP README
+// Generates the per-tool install table in the root README, the plugin README and the MCP README
 // from data/install-providers.json, the one place that says which tools the
 // aieds receipt supports and how far each is verified.
 //
@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const DATA_FILE = join(repoRoot, "data", "install-providers.json");
 export const TARGETS = [
+  join(repoRoot, "README.md"),
   join(repoRoot, "plugins", "random-knights", "README.md"),
   join(repoRoot, "mcp", "README.md"),
 ];

@@ -25,7 +25,7 @@ test("providers: exactly the five v1 tools", () => {
   assert.deepEqual(data.providers.map((p) => p.id), ["claude", "codex", "ollama", "grok", "copilot"]);
 });
 
-test("providers: the plugin README and the MCP README match the data", () => {
+test("providers: the root, plugin and MCP READMEs match the data", () => {
   const block = renderBlock(data);
   for (const file of TARGETS) {
     const text = readFileSync(file, "utf8").replace(/\r\n/g, "\n");
@@ -91,6 +91,8 @@ test("water label: one name, AiEDs 2.5.0 with methodology section 2.6, in both R
   for (const file of TARGETS) {
     const text = readFileSync(file, "utf8");
     assert.doesNotMatch(text, /AiEDs 2\.6\b/, `${file} calls the water section a version`);
+    const norm = file.replace(/\\/g, "/");
+    if (!norm.endsWith("random-knights/README.md") && !norm.endsWith("mcp/README.md")) continue;
     assert.match(text, /methodology section 2\.6/);
   }
 });

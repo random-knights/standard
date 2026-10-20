@@ -103,7 +103,7 @@ function serverCheck(batch) {
  * syncReceipts while the test runs: "ok", "500", "429", "400", "revoked",
  * "blackhole" (never answers), "legacy" (rejects every receipt as model_version).
  */
-export async function startFakeServer() {
+export async function startFakeServer({ port = 0, onRequest } = {}) {
   const server = {
     mode: "ok",
     requests: [],
@@ -129,6 +129,7 @@ export async function startFakeServer() {
         body = { __unparsed: true };
       }
       server.requests.push({ path, headers: req.headers, raw });
+      if (onRequest) onRequest(path, body);
       server.bodies.push(raw);
       const send = (status, obj) => {
         res.writeHead(status, { "content-type": "application/json" });
@@ -197,7 +198,7 @@ export async function startFakeServer() {
       return send(404, { error: "not_found" });
     });
   });
-  await new Promise((r) => http.listen(0, "127.0.0.1", r));
+  await new Promise((r) => http.listen(port, "127.0.0.1", r));
   server.base = `http://127.0.0.1:${http.address().port}`;
   server.close = () =>
     new Promise((r) => {

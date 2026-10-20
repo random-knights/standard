@@ -22,7 +22,29 @@ npm install @randomknights/aieds
 ```
 
 Node 20 or newer. ES modules only. TypeScript types are included. No runtime
-dependencies, no network calls, no keys.
+dependencies. The library makes no network calls and needs no keys; the `aieds`
+command below can send receipts to your account only after you run
+`aieds connect`.
+
+## The `aieds` command
+
+The package installs an `aieds` command, the same code as the Claude Code and
+Codex plugin (`plugins/random-knights` in the repository), and it needs nothing
+but Node 20 or newer:
+
+```
+npx @randomknights/aieds ollama --model <name> "<prompt>"
+npx @randomknights/aieds install copilot
+npx @randomknights/aieds receipt --last grok
+npx @randomknights/aieds connect
+```
+
+It prints an AiEDs receipt for Ollama, Claude Code, Codex, Grok Build and the
+Copilot CLI. Until you run `aieds connect` it makes no network call (except the
+Ollama server you name) and writes no file. After `connect`, each response's
+allowlisted numbers go to your own account. The full command list, the exact
+list of what is sent, and how each tool was verified are in the
+[plugin README](https://github.com/random-knights/standard/blob/main/plugins/random-knights/README.md).
 
 ## Example
 

@@ -12,7 +12,7 @@
 
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 
 import { copilotHome } from "./hosts/copilot.mjs";
 
@@ -109,7 +109,8 @@ export function copilotCommands(scriptPath) {
   if (typeof scriptPath !== "string" || scriptPath.length === 0 || isEphemeralPath(scriptPath)) {
     return { powershell: NPX_COMMAND, bash: NPX_COMMAND };
   }
-  const abs = resolve(scriptPath);
+  // A Windows drive path stays as given on any platform (resolve() would graft it onto a POSIX cwd).
+  const abs = isAbsolute(scriptPath) || /^[A-Za-z]:[\\/]/.test(scriptPath) ? scriptPath : resolve(scriptPath);
   return {
     powershell: `node ${psQuote(abs)} ${HOOK_MARK}`,
     bash: `node ${shQuote(abs)} ${HOOK_MARK}`,
