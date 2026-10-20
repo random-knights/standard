@@ -314,7 +314,7 @@ async function runReceipt(args, env = process.env) {
     const { receipts, flow } = await loadSync();
     const entries = receipts.receiptsFromParsed(
       parsed,
-      { host: hostOf(parsed), sessionId: sessionIdFromPath(path), tsMs: Date.now() },
+      { host: hostOf(parsed), sessionId: sessionIdFromPath(path), tsMs: Date.now(), useRecordTime: true },
       { all: true },
     );
     if (format === "rk-receipts") {

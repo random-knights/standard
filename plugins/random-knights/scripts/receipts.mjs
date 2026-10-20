@@ -275,7 +275,9 @@ export function receiptsFromParsed(parsed, ctx, { all = false } = {}) {
         ...ctx,
         host,
         turnKey: turnKeyOf(host, t.calls),
-        tsMs: tsOfCalls(t.calls, ctx.tsMs),
+        // A live hook stamps the response with "now". Reading a file later
+        // (receipt --all) uses the time the host recorded for the response.
+        tsMs: ctx.useRecordTime === true ? tsOfCalls(t.calls, ctx.tsMs) : ctx.tsMs,
       }),
     );
   }
