@@ -43,6 +43,9 @@ test("providers: a Verified tool without a tested version or a fixture is refuse
   const missingFile = structuredClone(data);
   missingFile.providers[2].fixture = "plugins/random-knights/test/fixtures/does-not-exist.jsonl";
   assert.ok(problems(missingFile, repoRoot).some((p) => /does not exist/.test(p)));
+  const dash = structuredClone(data);
+  dash.providers[0].note = `a${String.fromCharCode(0x2014)}b`;
+  assert.ok(problems(dash, repoRoot).some((p) => /ASCII|dashes/.test(p)));
   const status = structuredClone(data);
   status.providers[3].status = "works-for-me";
   assert.ok(problems(status, repoRoot).some((p) => /status must be/.test(p)));

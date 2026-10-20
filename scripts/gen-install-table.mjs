@@ -62,14 +62,18 @@ export function problems(data, root = repoRoot) {
     if (!Object.hasOwn(FIXTURE_WORD, p.fixtureKind)) out.push(`${where}: fixtureKind must be real-numbers or shape-only`);
     for (const text of [p.label, p.receipt, p.note, ...(p.install ?? [])]) {
       if (typeof text === "string" && !/^[\x09\x0a\x20-\x7e]*$/.test(text)) out.push(`${where}: text must be ASCII`);
-      if (typeof text === "string" && /[–—]/.test(text)) out.push(`${where}: no dashes`);
+      if (typeof text === "string" && DASH.test(text)) out.push(`${where}: no dashes`);
     }
   }
   if (!Array.isArray(data?.providers) || data.providers.length === 0) out.push("no providers");
   return out;
 }
 
-const cell = (s) => String(s).replace(/\|/g, "\\|");
+// The en dash and the em dash, built from code points so this file stays ASCII.
+const DASH = new RegExp(`[${String.fromCharCode(0x2013, 0x2014)}]`);
+
+// A table cell: backslashes first, then the pipe, so an escaped pipe stays escaped.
+const cell = (s) => String(s).replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 
 /** The markdown table (no markers). */
 export function renderTable(data) {

@@ -203,6 +203,7 @@ export function installCopilot(args, io) {
   writeFileSync(file, next);
   out(`Written: ${file}`);
   out("Restart the Copilot CLI: it reads hooks at start.");
+  out("The hook runs `node` (or `npx`), so Node 20 or newer must be on the PATH the Copilot CLI starts with.");
   out("Each reply then gets one AiEDs receipt from the session's own usage records. Optional: aieds connect.");
   return 0;
 }
