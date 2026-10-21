@@ -21,6 +21,7 @@
     "spec/v2/aieds-factors.json",
     "bin/aieds.mjs",
     "src/cli/*.mjs",
+    "src/cli/consent-contribute.txt",
     "src/cli/hosts/*.mjs",
     "src/vendor/lib/dist/*.js",
     "src/vendor/spec/v2/aieds-factors.json",

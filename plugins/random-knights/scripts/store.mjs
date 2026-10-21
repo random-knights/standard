@@ -38,6 +38,10 @@ const QUEUE_FILE = "sync-queue.jsonl";
 const STATE_FILE = "sync-state.json";
 const LOCK_FILE = "sync.lock";
 const MARKS_FILE = "copilot-marks.json";
+const CONTRIBUTE_FILE = "contribute.json";
+const CONTRIBUTE_QUEUE_FILE = "contribute-queue.jsonl";
+const CONTRIBUTE_STATE_FILE = "contribute-state.json";
+const CONTRIBUTE_LOCK_FILE = "contribute.lock";
 const LOCK_STALE_MS = 60_000;
 
 /** The user config directory for this tool (not created here). */
@@ -67,15 +71,20 @@ export function paths(env = process.env) {
     state: join(dir, STATE_FILE),
     lock: join(dir, LOCK_FILE),
     marks: join(dir, MARKS_FILE),
+    // The community contribution files (contribute.mjs). Separate from sync.
+    contribute: join(dir, CONTRIBUTE_FILE),
+    contributeQueue: join(dir, CONTRIBUTE_QUEUE_FILE),
+    contributeState: join(dir, CONTRIBUTE_STATE_FILE),
+    contributeLock: join(dir, CONTRIBUTE_LOCK_FILE),
   };
 }
 
-function ensureDir(dir) {
+export function ensureDir(dir) {
   mkdirSync(dir, { recursive: true, mode: 0o700 });
 }
 
 /** Writes through a temp file and a rename, so a reader never sees half a file. */
-function writeAtomic(file, text, mode) {
+export function writeAtomic(file, text, mode) {
   ensureDir(join(file, ".."));
   const tmp = `${file}.${process.pid}.tmp`;
   writeFileSync(tmp, text, { mode });
@@ -87,7 +96,7 @@ function writeAtomic(file, text, mode) {
   renameSync(tmp, file);
 }
 
-function readJson(file) {
+export function readJson(file) {
   try {
     const parsed = JSON.parse(readFileSync(file, "utf8"));
     return parsed !== null && typeof parsed === "object" ? parsed : undefined;
@@ -263,8 +272,9 @@ export function removeFromQueue(rids, env = process.env) {
 // -- Lock (one flusher at a time) --------------------------------------------------
 
 /** Takes the flush lock, or returns undefined if another flusher holds it. */
-export function takeLock(env = process.env, nowMs = Date.now()) {
+export function takeLock(env = process.env, nowMs = Date.now(), lockFile = undefined) {
   const p = paths(env);
+  if (lockFile !== undefined) p.lock = lockFile;
   ensureDir(p.dir);
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {

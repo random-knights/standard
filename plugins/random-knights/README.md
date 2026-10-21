@@ -248,11 +248,31 @@ read the consent text and answer `y`. The exact text is in
 
 | Command | What it does |
 | ------- | ------------ |
-| `aieds contribute on` | Prints the consent text, asks `[y/N]`, then signs you in with a device code. |
-| `aieds contribute status` | Whether contributing is on, what was last sent (totals only), what waits. Never prints the token. |
-| `aieds contribute preview` | Prints the exact summary that would be sent, and sends nothing. Works when contributing is off. |
-| `aieds contribute off` | Stops sending now and deletes the token file and the queue. |
-| `aieds contribute delete` | Removes numbers not yet added into a monthly total. |
+| `aieds contribute on [--open] [--staging]` | Prints the consent text, asks `[y/N]` (anything but `y` or `yes` means no), then signs you in with a device code. `--open` also opens the link; `--staging` uses the test service. |
+| `aieds contribute status` | Whether contributing is on, what waits, what was last sent (totals only), and what the service says. Never prints the token. |
+| `aieds contribute preview [--pretty]` | Prints the exact JSON the next upload would send, and sends nothing. Also `--session <id>` or `--transcript <file>` to look at real numbers before you decide (works when contributing is off). |
+| `aieds contribute submit` | Sends the closed days now. |
+| `aieds contribute delete [--forget]` | Removes numbers not yet added into a monthly total. `--forget` also deletes the record that you agreed, which turns contributing off. |
+| `aieds contribute off [--delete]` | Stops sending now, tells the service, deletes the token file and the queue. |
+
+Order matters when you want both: `off` removes the token that `delete` needs,
+so run `delete` first, or use `off --delete`, which does that.
+
+While contributing is on, each response's numbers are added to a local queue
+(`contribute-queue.jsonl` in the same folder as the token file: the UTC day,
+the names and the counts above, no time of day and no session id, at most 5,000
+entries, oldest dropped first). Once a day, after the day closes, the hook sends
+the closed days (at most seven days old) in one request, with a budget of about
+two and a half seconds and no retries, so it never holds up your tool. If the
+service is paused or not available yet, the numbers stay queued, and
+`aieds contribute submit` tries again, with at most two retries. The service is
+production by default; `AIEDS_COMMUNITY_URL` or `--staging` pick another one
+when you turn contributing on, and the token is only ever sent back to that
+same service. `AIEDS_CONTRIBUTE=off` blocks every call for that run.
+
+If you turn contributing off while offline, sending stops at once, the queue is
+deleted, and the token stays in `contribute.json` only so that the next
+`aieds contribute off` can tell the service ("withdraw pending").
 
 Numbers already added into a monthly total cannot be taken out, because the
 total no longer holds anything that points to you. For up to 8 days the service
@@ -295,6 +315,7 @@ response.
 | `aieds receipt ... --sync` | Queues those per-response receipts for your account (needs `connect`). |
 | `aieds explain` | The formulas and the source of every coefficient. |
 | `aieds connect \| disconnect \| status \| flush` | The optional account link (above). |
+| `aieds contribute on \| off \| status \| preview \| submit \| delete` | The optional community totals (above). Off by default. |
 
 ## Turn receipts off
 
