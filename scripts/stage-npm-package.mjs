@@ -81,6 +81,10 @@ function stageAieds(pkgDir) {
   rmSync(join(pkgDir, "src"), { recursive: true, force: true });
   copyTree(join(plugin, "scripts"), join(pkgDir, "src", "cli"));
   copyTree(join(plugin, "vendor"), join(pkgDir, "src", "vendor"));
+  // The approved community-contribution consent text. `aieds contribute on`
+  // prints it byte for byte and checks its sha-256, so it must ship beside the
+  // code (contributeflow.mjs looks in ../ for the plugin and in ./ here).
+  copy(join(plugin, "consent-contribute.txt"), join(pkgDir, "src", "cli", "consent-contribute.txt"));
 }
 
 function stageK13(pkgDir) {

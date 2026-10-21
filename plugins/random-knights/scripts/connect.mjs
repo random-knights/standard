@@ -63,18 +63,20 @@ export function defaultLabel(env = process.env) {
   return cleanLabel(`${hostname()} (${platform()})`) || `${platform()} device`;
 }
 
-function ask(question, io) {
+export function ask(question, io) {
   return new Promise((resolve) => {
     const rl = createInterface({ input: io.stdin, output: io.stderr });
     rl.question(question, (answer) => {
-      rl.close();
+      // Resolve BEFORE closing: close() fires the "close" handler below
+      // synchronously, which resolves "" and would otherwise win.
       resolve(answer);
+      rl.close();
     });
     rl.on("close", () => resolve(""));
   });
 }
 
-function openUrl(url) {
+export function openUrl(url) {
   if (!/^https?:\/\//i.test(url)) return false;
   try {
     const [cmd, args] =

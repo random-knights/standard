@@ -77,7 +77,7 @@ export function looksLikeSecretOrPath(s) {
   return false;
 }
 
-function checkValue(rule, value) {
+export function checkValue(rule, value) {
   switch (rule.kind) {
     case "pattern":
       return (

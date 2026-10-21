@@ -53,7 +53,7 @@ export function functionUrl(endpoint, name) {
   return `${endpoint.replace(/\/+$/, "")}/${name}`;
 }
 
-/** POST JSON. Returns { status, body }; status 0 means no answer. Never throws, never echoes the token. */
+/** POST JSON (an object, or an already-serialized string so a preview can be byte-equal). Returns { status, body }; status 0 means no answer. Never throws, never echoes the token. */
 export async function postJson(url, body, { token, fetchImpl = globalThis.fetch, timeoutMs = 10_000 } = {}) {
   const headers = { "content-type": "application/json", accept: "application/json" };
   if (typeof token === "string") headers.authorization = `Bearer ${token}`;
@@ -61,7 +61,7 @@ export async function postJson(url, body, { token, fetchImpl = globalThis.fetch,
     const res = await fetchImpl(url, {
       method: "POST",
       headers,
-      body: JSON.stringify(body),
+      body: typeof body === "string" ? body : JSON.stringify(body),
       signal: AbortSignal.timeout(Math.max(100, timeoutMs)),
     });
     let json = {};

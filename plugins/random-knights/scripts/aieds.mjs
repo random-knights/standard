@@ -8,6 +8,8 @@
 //                                   shows it, queues it for sync if connected.
 //   aieds connect | disconnect | status | flush
 //                                   The optional receipts sync (off until `connect`).
+//   aieds contribute on|off|status|preview|submit|delete
+//                                   The optional community totals (off until `contribute on`).
 //   aieds install claude|codex|copilot [--yes]
 //   aieds receipt [--session <id> | --transcript <file> | --last grok]
 //                 [--format rk-receipts] [--sync]
@@ -27,8 +29,9 @@
 // server the user names) and writes no file unless the user sets
 // AIEDS_RECEIPT_LOG (the Copilot CLI reader also keeps a small file of read
 // marks, numbers only). After `connect`, and only then, each receipt's
-// allowlisted numbers go to the user's own account. See README, "Network and
-// privacy".
+// allowlisted numbers go to the user's own account. After `aieds contribute on`,
+// and only then, one small summary per day goes to the community totals. Each
+// has its own consent and token file. See README, "Network and privacy".
 
 import { appendFileSync, readFileSync, realpathSync } from "node:fs";
 import { basename, dirname } from "node:path";
@@ -124,6 +127,31 @@ function hostOf(parsed) {
   return ["claude", "codex", "grok"].includes(parsed.host) ? parsed.host : "other";
 }
 
+/**
+ * Community contribution (off unless `aieds contribute on` stored a token). Queues
+ * the allowlisted numbers of these responses on this computer, then makes the
+ * daily send if one is due. Silent, bounded, never throws into the host.
+ */
+async function contributeQueueAndSend(entries, env) {
+  try {
+    const c = await import("./contributeflow.mjs");
+    if (!c.contributeActive(env) || entries.length === 0) return;
+    c.queueEntries(entries, { env });
+    await c.maybeSubmitDaily({ env });
+  } catch {
+    // contributing never breaks a host
+  }
+}
+
+async function contributeIsOn(env) {
+  try {
+    const c = await import("./contributeflow.mjs");
+    return c.contributeActive(env);
+  } catch {
+    return false;
+  }
+}
+
 /** Lazy imports, so the hook path loads only what it needs. */
 async function loadSync() {
   const [receipts, flow] = await Promise.all([import("./receipts.mjs"), import("./syncflow.mjs")]);
@@ -193,8 +221,9 @@ async function runHook(hostArg, env = process.env) {
   try {
     const { receipts, flow } = await loadSync();
     const active = flow.syncActive(env);
+    const contributing = await contributeIsOn(env);
     let entries = [];
-    if (wantsLog || active) {
+    if (wantsLog || active || contributing) {
       entries = receipts.receiptsFromParsed(parsed, {
         host: hostOf(parsed),
         sessionId,
@@ -203,6 +232,7 @@ async function runHook(hostArg, env = process.env) {
     }
     if (wantsLog) appendLog(core, receipts, entries, receipt, sessionId, env);
     if (active) await flow.queueAndFlush(entries, { env });
+    if (contributing) await contributeQueueAndSend(entries, env);
   } catch {
     // never into the host
   }
@@ -249,6 +279,7 @@ async function runCopilotHook(core, input, env) {
   try {
     if (wantsLog) appendLog(core, receipts, entries, undefined, sessionId, env);
     if (flow.syncActive(env)) await flow.queueAndFlush(entries, { env });
+    await contributeQueueAndSend(entries, env);
   } catch {
     // never into the host
   }
@@ -352,8 +383,9 @@ async function readAll(stream) {
 async function syncWrapperCall(host, call, env) {
   try {
     const { flow } = await loadSync();
-    if (!flow.syncActive(env)) return;
-    await flow.queueAndFlush(flow.wrapperEntries({ host, call }), { env, budgetMs: 4000 });
+    const entries = flow.wrapperEntries({ host, call });
+    if (flow.syncActive(env)) await flow.queueAndFlush(entries, { env, budgetMs: 4000 });
+    await contributeQueueAndSend(entries, env);
   } catch {
     // sync never breaks a command
   }
@@ -471,7 +503,7 @@ async function runUsage(args, env = process.env) {
 const USAGE =
   "usage: aieds hook [host] | connect | disconnect | status | flush | install <host> | " +
   "receipt [--session <id> | --transcript <file> | --last grok] | explain | " +
-  "ollama | chat-completion | usage";
+  "ollama | chat-completion | usage | contribute on|off|status|preview|submit|delete";
 
 /** The file the user ran (the bin, or the plugin script), symlinks resolved. */
 function entryPath() {
@@ -535,6 +567,11 @@ export async function main() {
     const c = await import("./connect.mjs");
     const run = { connect: c.runConnect, disconnect: c.runDisconnect, status: c.runStatus, flush: c.runFlush }[mode];
     process.exitCode = await run(rest, commandIo(env));
+    return;
+  }
+  if (mode === "contribute") {
+    const c = await import("./contribute.mjs");
+    process.exitCode = await c.runContribute(rest, commandIo(env));
     return;
   }
   if (mode === "install") {
