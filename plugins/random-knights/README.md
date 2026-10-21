@@ -53,6 +53,34 @@ standard, in `plugins/random-knights`. The figures use AiEDs 2.5.0, a working
 label until the owner assigns the final number at publish; the water part is
 methodology section 2.6.
 
+## What is new
+
+Plugin 0.5.0 (the npm package `@randomknights/aieds` carries the same code as
+its `aieds` command, versioned with the methodology):
+
+- **Community totals, opt-in.** `aieds contribute on | off | status | preview |
+  submit | delete` (see [Contribute to the community totals](#contribute-to-the-community-totals)).
+  Off by default. Nothing is sent, and no file is written, until you run
+  `aieds contribute on` and agree to the consent text. What it sends is one
+  summary per day, provider, model, tool and token source; no prompt, reply,
+  file name, project or session id. The community service is not live in
+  production yet: when the service answers that it is unavailable, the command
+  prints "Community totals are not available yet." Keep contributing off until
+  the service is announced.
+- **Modeled water estimate.** The receipt gains a water line, always a range
+  with low confidence, from the same energy figure (AiEDs 2.5.0, a working
+  label until the owner assigns the final number at publish; methodology
+  section 2.6). See [The water line](#the-water-line).
+- **Copilot CLI reader.** `aieds install copilot` adds an `agentStop` hook that
+  reads only the usage records of the session's own events file. The hook has
+  not yet been run inside a live Copilot session (see the table above).
+- **Ollama and usage wrappers.** `aieds ollama`, `aieds chat-completion` and
+  `aieds usage` turn a chat response, a saved stream or raw counts into the
+  same receipt (see [Ollama and Hugging Face](#ollama-and-hugging-face)).
+
+Installed copies of this plugin update only when its version changes, so
+0.5.0 is the first version that carries `aieds contribute`.
+
 ## Install
 
 In a Claude Code session:
