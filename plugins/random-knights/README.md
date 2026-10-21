@@ -147,7 +147,12 @@ proxy for energy, not a measurement of it.
 
 ## Network and privacy
 
-Until you run `aieds connect`:
+Nothing leaves your machine unless you run `aieds connect` (your own reports)
+or `aieds contribute on` (community totals). Each has its own consent, its own
+token file, and is off by default. With neither, the plugin makes no network
+call. Set `AIEDS_SYNC=off` or `AIEDS_CONTRIBUTE=off` to block either.
+
+Until you run `aieds connect` or `aieds contribute on`:
 
 - Nothing leaves your computer. The plugin and the `aieds` command make no
   network request, with one exception you ask for: `aieds ollama` talks to the
@@ -232,6 +237,48 @@ wrong (a 4xx) is dropped and counted, because sending it again cannot help.
 Every response has its own id, so a replay, a retry, or two devices reporting
 the same turn is counted once. The older local log below is a running session
 total and is not what is sent.
+
+## Contribute to the community totals
+
+This is optional and off by default. It is separate from `aieds connect`: its
+own consent, its own token file (`contribute.json`), its own commands. It needs
+the same free sign-in. Nothing is sent until you run `aieds contribute on`,
+read the consent text and answer `y`. The exact text is in
+[`consent-contribute.txt`](consent-contribute.txt).
+
+| Command | What it does |
+| ------- | ------------ |
+| `aieds contribute on` | Prints the consent text, asks `[y/N]`, then signs you in with a device code. |
+| `aieds contribute status` | Whether contributing is on, what was last sent (totals only), what waits. Never prints the token. |
+| `aieds contribute preview` | Prints the exact summary that would be sent, and sends nothing. Works when contributing is off. |
+| `aieds contribute off` | Stops sending now and deletes the token file and the queue. |
+| `aieds contribute delete` | Removes numbers not yet added into a monthly total. |
+
+Numbers already added into a monthly total cannot be taken out, because the
+total no longer holds anything that points to you. For up to 8 days the service
+can match your summary to your account, only to stop double counting and to let
+you delete it. A total is shown only when at least 50 people are in it, and
+counts are rounded.
+
+Once a day, after the day closes, one summary per day, provider, model, tool
+and token source is sent. Exactly these fields, and nothing else:
+
+| Field | What it is |
+| ----- | ---------- |
+| `schema` | the constant `rk-community/1` |
+| `day` | the UTC date, no time of day |
+| `provider`, `model` | the vendor slug and the model id |
+| `host` | the tool, a fixed list such as `claude-code` |
+| `tokenSource` | `reported` (the tool gave the counts) or `estimated` |
+| `responses` | how many responses that day |
+| `tokensIn`, `tokensOut` | sums for the day |
+| `cacheReadTokens`, `cacheWriteTokens` | sums for the day, optional |
+| `aiedsModelVersion`, `aiedsVersion` | which model version made the numbers |
+| `energyWh`, `carbonG`, `waterL`, `treeTimeMin` | our modeled estimates from the tokens; the service recomputes them from the token counts and does not store yours |
+
+There is no field for a prompt, a reply, a file or folder name, a project, a
+session id, an API key, a computer name, a location, or the time of any
+response.
 
 ## The aieds command
 

@@ -1,0 +1,30 @@
+Share your AI use numbers with the community totals?
+
+This is separate from connecting your account. It is OFF unless you say yes.
+
+What we send, one small summary per day:
+  - the day (no time of day), the model name, the tool name (for example
+    claude-code), and whether the token counts were reported or estimated
+  - how many tokens went in and out and how many responses there were
+We work out the energy, carbon and water ourselves from those token counts.
+
+What we never send:
+  your prompts, replies, file or folder names, project names, API keys,
+  your computer's name, your location, or the exact time of any response.
+
+Who can see it:
+  Nobody sees your numbers alone. For up to 8 days we hold them and can match
+  them to your account, only to stop double counting and to let you delete
+  them. Then they are added into monthly totals. A total is shown only when
+  at least 50 people are in it, and counts are rounded. The totals are public
+  on the CE report and in the rand0m.ai app.
+
+How to stop and delete:
+  aieds contribute off      stop sending now
+  aieds contribute delete   remove numbers not yet added into a total
+Numbers already added into a monthly total cannot be taken out, because the
+total no longer holds anything that points to you.
+
+You must be 13 or older. You can say no and keep using everything else.
+
+Turn on contributing? [y/N]
