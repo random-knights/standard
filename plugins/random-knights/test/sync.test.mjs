@@ -162,7 +162,7 @@ test("hook: the response's receipt reaches the backend, allowlisted, and a repla
     assert.equal(req.headers.origin, undefined);
     const body = JSON.parse(req.raw);
     assert.equal(body.schema, "rk-receipts/1");
-    assert.deepEqual(body.client, { name: "aieds-cli", version: "0.4.0", host: "claude" });
+    assert.deepEqual(body.client, { name: "aieds-cli", version: "0.5.0", host: "claude" });
     assert.equal(body.receipts.length, 1, "one receipt for the latest response, not the session total");
     for (const r of body.receipts) {
       for (const k of Object.keys(r)) assert.ok(RECEIPT_FIELD_NAMES.includes(k), k);
