@@ -68,6 +68,7 @@ const EXPECTED = {
     "src/index.mjs",
     "vectors/filled-pass.html",
     "vectors/filled-pass.md",
+    "vectors/minimal-pass.md",
     "vectors/vectors.json",
   ],
   earthplus: [

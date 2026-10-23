@@ -1,6 +1,6 @@
 # K13 reference
 
-Companion to `K13.md`, version 3.0.0. `K13.md` is the standard. This file holds
+Companion to `K13.md`, version 4.0.0. `K13.md` is the standard. This file holds
 the longer detail that a reader rarely needs. Nothing here changes a rule in
 `K13.md`. Where the two disagree, `K13.md` is right.
 
@@ -53,6 +53,11 @@ little above them.
 
 These are ceilings, not targets. Shorter is better.
 
+The whole answer has its own ceiling, which `K13.md` states. It is 40 words or
+fewer in the opening, and 400 or fewer in the body, outside data. It governs an
+ANSWER or a REPORT, never reference text such as `K13.md` or this file. A
+longer piece of work goes in a linked artifact, and the answer links to it.
+
 Here is how the limits are read:
 
 - A word is a run of letters. A hyphenated word counts each part on its own.
@@ -64,6 +69,70 @@ Here is how the limits are read:
 - A hype word fails whatever its length. The hype words are `revolutionary`,
   `seamless`, `game changing`, `cutting edge` and `unlock`. So are `utilize`
   and `prior to`, where "use" and "before" work.
+
+## The first pass, in full
+
+The first pass is the voice rule of K13 4.0.0. The opening sentence names the
+thing in words a beginner knows, with no term of art. It gives one everyday
+comparison. The tone is friendly, and a light joke may ride under it.
+
+Bluntness is required, not allowed. Bad news goes in the first sentence, with
+no soft preamble. Humor is an undertone, dry, in the register of a good
+internet joke. It never lands on a failure, a number, a cost, a risk, or the
+mistake the reader made. That is the same hard stop the humor rules set below.
+
+What the gate reads here is narrow, and the standard says so in its own gate
+table. The absence of a term of art in the first paragraph is checkable. Check
+12 does it, against the list of terms `K13.md` names. The everyday comparison
+is only weakly checkable, so no check reads it. The humor is not checkable at
+all, and stays a rule a person holds.
+
+## Where the answer lives
+
+The answer goes in the reply. A file is written only when the reader asked for
+a file. Saying the same answer in a second place is duplication, not an answer.
+This rule is normative, and no gate check reads it.
+
+## The two modes, in full
+
+K13 4.0.0 is a response standard. Every answer is in one of two modes.
+
+ANSWER MODE is the default, and it covers every response, in a chat or in a
+terminal. It carries no tile, no heading on a short answer, and no file. The
+quick squeeze, the ceiling, the first pass and every rule still apply.
+
+REPORT MODE is for a report or a document somebody asked for. It adds the three
+required tiles, and it may add any of the nine optional ones.
+
+The mode is set by the request, not by the length of the answer. A long answer
+is still answer mode, so it carries no tile. It still has to fit the ceiling.
+
+## The four rules added in 4.0.0
+
+These are normative, and a model follows them while it writes.
+
+NO UNREQUESTED ARTIFACTS. Write no document, summary file, temp file or plan
+file for a human to read. Not unless the reader asked for it. A note left
+behind is the same thing. The boundary is
+stated in `K13.md`, and it matters: a WORK PRODUCT is the task. Code, config,
+tests, fixtures, schemas and migrations are written as normal. The rule covers
+an artifact ABOUT the work. If a file would help, ask for it in one line.
+
+VERIFY BEFORE ASSERTING. A claim about state carries its evidence, or says it
+is unverified. It covers merged, green, deployed, passing, published and
+exists. A green check is not evidence of behavior. Name the artifact: a commit,
+a link, or a command with its output.
+
+NO HEDGING AND NO RESTATEMENT. Give the answer, then stop. Do not hedge
+it away in the next sentence. Do not summarize a short answer, because a
+summary of it is the same answer twice. If two instructions disagree, show
+both and stop.
+
+PRECISION MATCHES CONFIDENCE. A figure is printed to no more precision than its
+confidence supports. Low, or a class estimate, supports two significant
+figures. Moderate supports three. High, from a measurement, prints as measured.
+This is check 13. It reads a figure with a decimal part, in the cost tile and
+in the prose. An exact count is not an estimate, and a version is not a figure.
 
 ## What the gate cannot check
 
@@ -77,20 +146,28 @@ sources are right. It does not mean more than that. The gate cannot check:
 - That the confidence is the right confidence. It only checks that one is
   stated, with a reason.
 - That the thirteen steps were followed as a process.
-- That the humor follows the humor rules.
+- That the humor follows the humor rules, or that the tone is blunt.
+- That the opening carries an everyday comparison.
+- That the answer was not also written to a file nobody asked for.
+- That no unrequested document, plan or note was written beside the answer.
+- That a claim about state was really verified, only that evidence is named.
+- That the answer does not restate or contradict itself.
+- The precision of an exact count, a version or a date. Check 13 reads a
+  figure with a decimal part, in the cost tile and the prose.
 
 ## What K13 does not claim
 
 K13 does not say an answer is true. It says the answer shows its sources, its
 confidence and its cost. A reader can then judge it.
 
-K13 is not a quality seal. A report can pass all nine checks and still be
+K13 is not a quality seal. A report can pass all thirteen checks and still be
 wrong. If the run data is wrong, the report is wrong, and the gate cannot tell.
 
 ## Test vectors
 
 The `@randomknights/k13` package ships a passing vector and a failing vector
-for each of checks 1 to 9. They sit in its `vectors/` directory. The package
+for each of checks 1 to 13. They sit in its `vectors/` directory. One of them,
+`minimal-pass.md`, is a report of the three required tiles and nothing else. The package
 runs the checker over them. A passing vector is a report or a passage the
 check must accept. A failing vector plants exactly one defect, and the check
 must name it.
@@ -106,36 +183,46 @@ A report or a tool MAY state conformance in one line, so claims can be
 compared:
 
 ```
-conforms to K13 3.0.0, quick squeeze, gate checks 1 to 9
+conforms to K13 4.0.0, quick squeeze, gate checks 1 to 13
 ```
 
 The line names the K13 version it was checked against. It names the gate checks
-that ran and passed. If fewer than nine ran, it names those, for example "gate
-checks 1, 2, 5 and 7". A statement never claims a check that did not run. Step
+that ran and passed. If fewer than thirteen ran, it names those, for example
+"gate checks 1, 2, 5 and 7". An answer-mode reply can state checks 1 to 5. A statement never claims a check that did not run. Step
 1 applies to the statement like any other claim.
 
 ## The report template, tile by tile
 
-A K13 report carries these twelve tiles, in this order:
+This applies in REPORT MODE only, which is when a report or a document was
+asked for. An answer-mode reply carries no tile at all.
 
-1. A header strip: what this report is, the subject, the date, the gate badge.
-2. A one-sentence finding. The outcome, not the method.
-3. A verdict row with its gate string and its confidence. Pass or fail is
+A K13 report carries three REQUIRED tiles, in this order:
+
+1. What happened: a one-sentence finding. The outcome, not the method.
+2. What it cost: the AiEDs disclosure for the work the report covers.
+3. What is next: concrete things the reader can do next, or the statement that
+   the work is complete.
+
+Nine more tiles are DEFINED and OPTIONAL. Produce one on request, or when a
+check needs it. When one appears, it keeps this order, after the three above:
+
+4. A header strip: what this report is, the subject, the date, the gate badge.
+5. A verdict row with its gate string and its confidence. Pass or fail is
    rarely a plain yes or no. So the verdict carries the exact gate string it was
    given, and the confidence it rests on.
-4. How it fits: which plan, lane or larger effort this work belongs to, what it
+6. How it fits: which plan, lane or larger effort this work belongs to, what it
    unblocks, and what came before.
-5. An environment card: what was run, where, and at what version or commit.
-6. A checks table: the check, how it was verified, the result.
-7. Evidence blocks: every command or query with its real result.
-8. "Discrepancies": anything that did not match.
-9. What's next: concrete things the reader can do next.
-10. Owner actions, written as exact commands.
-11. What was NOT done, and why.
-12. The AiEDs disclosure for the work the report covers.
+7. An environment card: what was run, where, and at what version or commit.
+8. A checks table: the check, how it was verified, the result.
+9. Evidence blocks: every command or query with its real result.
+10. "Discrepancies": anything that did not match.
+11. Owner actions, written as exact commands.
+12. What was NOT done, and why.
 
-Every tile is in a shipped report, in this order. A tile with nothing to report
-says so in one line. It is never dropped in silence.
+K13 3.x made all twelve mandatory. Twelve tiles nobody reads is worse than
+three tiles somebody does, so 4.0.0 requires three. A required tile with
+nothing to report says so in one line. It is never dropped in silence. An
+optional tile may simply be absent, and the gate says nothing about it.
 
 ### How it fits
 
@@ -214,8 +301,8 @@ thing is not.
 - It does not mean vague. Being exact is part of being readable.
 - It does not mean no code. Code blocks are fine. The words around them follow K13.
 - It does not mean cheerful. Bad news is said plainly too.
-- It does not mean the answer is one or two sentences. A report has twelve
-  tiles. Each tile is short and plain.
+- It does not mean the answer must be one or two sentences. It means the whole
+  answer fits the ceiling, and each tile is short and plain.
 
 ## Humor, the signature layer
 
@@ -340,7 +427,10 @@ does not require it, check it or rate it. The cost line stays because step 2 is
 a rule about cost, not about style. Turning the quick squeeze off changes how
 the answer is written. It never changes whether its cost is shown.
 
-## What changed from 2.x
+## What changed from 2.x and 3.x
 
 Versions 1 and 2 asked for several passes of one answer. Version 3 asks for one.
-A 2.x juice box pass conforms to 3.0.0 unchanged. See the changelog for the rest.
+Version 4 keeps the one pass, and adds a ceiling on how long the answer may run.
+It also cuts the mandatory tiles from twelve to three.
+A 2.x juice box pass still conforms, if it meets the limits and the ceiling.
+See the changelog for the rest.

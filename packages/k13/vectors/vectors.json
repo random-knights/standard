@@ -223,14 +223,14 @@
     "id": "gate-7-fail-dropped-tile",
     "gate": 7,
     "expect": "fail",
-    "expectMessage": "missing tile \"### Discrepancies\"",
-    "note": "A tile is dropped (markdown).",
+    "expectMessage": "missing required tile \"### What's next\"",
+    "note": "A REQUIRED tile is dropped (markdown). An optional one may be absent.",
     "report": {
       "file": "filled-pass.md",
       "format": "md",
       "replace": [
         [
-          "### Discrepancies",
+          "### What's next",
           "### Something else"
         ]
       ]
@@ -383,5 +383,139 @@
     "expect": "pass",
     "note": "The passage of \"One fact, one pass\" in K13.md, read at run time.",
     "passageFrom": "K13.md#one-fact-one-pass"
+  },
+  {
+    "id": "gate-7-pass-minimal",
+    "gate": 7,
+    "expect": "pass",
+    "note": "The three required tiles and nothing else. K13 3.0.0 would have failed this nine times.",
+    "report": {
+      "file": "minimal-pass.md",
+      "format": "md"
+    }
+  },
+  {
+    "id": "gate-7-pass-optional-dropped",
+    "gate": 7,
+    "expect": "pass",
+    "note": "An optional tile is absent, which 4.0.0 allows.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "### Discrepancies",
+          "### Something else"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-10-pass",
+    "gate": 10,
+    "expect": "pass",
+    "note": "The opening tile is one short sentence.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md"
+    }
+  },
+  {
+    "id": "gate-10-fail-long-opening",
+    "gate": 10,
+    "expect": "fail",
+    "expectMessage": "the ceiling is 40",
+    "note": "The opening tile runs past the 40-word ceiling.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "Six copies of the rules are old.",
+          "Six copies of the rules are old. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy."
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-11-pass",
+    "gate": 11,
+    "expect": "pass",
+    "note": "The prose of the whole report is inside the 400-word ceiling.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md"
+    }
+  },
+  {
+    "id": "gate-11-fail-long-body",
+    "gate": 11,
+    "expect": "fail",
+    "expectMessage": "the ceiling is 400",
+    "note": "A tile grows until the body runs past the 400-word ceiling.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "The earlier check found one old copy. This one found six.",
+          "The earlier check found one old copy. This one found six. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy. We read a copy."
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-12-pass",
+    "gate": 12,
+    "expect": "pass",
+    "note": "The first paragraph names the thing in plain words.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md"
+    }
+  },
+  {
+    "id": "gate-12-fail-term-of-art",
+    "gate": 12,
+    "expect": "fail",
+    "expectMessage": "term of art \"ruleset\"",
+    "note": "The first paragraph opens on a term of art.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "Six copies of the rules are old.",
+          "The ruleset is six copies behind."
+        ]
+      ]
+    }
+  },
+  {
+    "id": "gate-13-pass",
+    "gate": 13,
+    "expect": "pass",
+    "note": "A low-confidence cost tile that prints no figure it cannot support.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md"
+    }
+  },
+  {
+    "id": "gate-13-fail-too-precise",
+    "gate": 13,
+    "expect": "fail",
+    "expectMessage": "the figure \"366.5105\" shows 7 significant figures",
+    "note": "A low-confidence class estimate printed to seven figures: the live defect this check exists for.",
+    "report": {
+      "file": "filled-pass.md",
+      "format": "md",
+      "replace": [
+        [
+          "| gCO2e | not reported |",
+          "| gCO2e | 366.5105 |"
+        ]
+      ]
+    }
   }
 ]

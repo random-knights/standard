@@ -8,6 +8,12 @@
 // The tests that pinned six levels, the level identifiers, the levels registry
 // and the glyph text alternatives were removed with them: the rules they held
 // are no longer in the standard.
+//
+// K13 4.0.0 cut the twelve mandatory tiles to three required ones, added the
+// whole-answer ceiling (checks 10 and 11) and the first-pass voice rule
+// (check 12). The tile list still has twelve entries, so this file pins the
+// COUNT, the ORDER and which three are REQUIRED, and it pins a minimal report
+// of three tiles passing where 3.0.0 would have failed it nine times.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -18,8 +24,16 @@ import { fileURLToPath } from "node:url";
 import {
   K13_VERSION,
   LIMITS,
+  PRECISION,
+  REQUIRED_TILES,
+  TERMS_OF_ART,
   TILES,
+  checkBody,
   checkConfidence,
+  checkFirstPass,
+  checkOpening,
+  checkPrecision,
+  dottedNumbers,
   checkDashes,
   checkFigures,
   checkFile,
@@ -32,6 +46,7 @@ import {
   loadVectors,
   runVector,
   sentencesOf,
+  statedConfidence,
 } from "../src/index.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -48,19 +63,134 @@ const EN_DASH = String.fromCharCode(0x2013);
 test("the version, limits and tiles come from K13.md", () => {
   const k13 = readFileSync(join(repoRoot, "K13.md"), "utf8");
   assert.ok(k13.includes(`**Version:** ${K13_VERSION}`));
-  assert.equal(K13_VERSION, "3.0.0");
-  assert.deepEqual(LIMITS, { longestWord: 12, longestSentence: 20, averageSentence: 14 });
+  assert.equal(K13_VERSION, "4.0.0");
+  assert.deepEqual(LIMITS, {
+    longestWord: 12,
+    longestSentence: 20,
+    averageSentence: 14,
+    openingWords: 40,
+    bodyWords: 400,
+  });
   assert.equal(TILES.length, 12);
+});
+
+test("three tiles are required, in the order K13.md gives them", () => {
+  assert.deepEqual(
+    REQUIRED_TILES.map((t) => t.tile),
+    ["finding", "aieds-disclosure", "whats-next"],
+  );
+  // The other nine stay DEFINED, and stay in the canonical order after them.
+  assert.deepEqual(
+    TILES.filter((t) => !t.required).map((t) => t.tile),
+    [
+      "header-strip",
+      "verdict-row",
+      "how-it-fits",
+      "environment-card",
+      "checks-table",
+      "evidence-blocks",
+      "discrepancies",
+      "owner-actions",
+      "what-was-not-done",
+    ],
+  );
+});
+
+test("the terms of art of check 12 come from K13.md", () => {
+  const k13 = readFileSync(join(repoRoot, "K13.md"), "utf8");
+  assert.ok(TERMS_OF_ART.length >= 5);
+  for (const term of TERMS_OF_ART) assert.ok(k13.includes(`\`${term}\``), term);
+  assert.ok(TERMS_OF_ART.includes("ruleset"));
+});
+
+test("a report of only the three required tiles passes every check", () => {
+  // The point of 4.0.0, as a document: nine tiles are gone and nothing is red.
+  const r = checkFile(join(here, "..", "vectors/minimal-pass.md"));
+  assert.deepEqual(r.findings, []);
+});
+
+test("the ceiling and the first pass are checked on an answer, not on the standard", () => {
+  // K13.md and K13-REFERENCE.md are reference text. 4.0.0 exempts them by
+  // name, and the code does it by only measuring a parsed report.
+  for (const f of ["K13.md", "K13-REFERENCE.md", "CHANGELOG-K13.md"]) {
+    const r = checkFile(join(repoRoot, f));
+    assert.deepEqual(r.findings, [], f);
+    assert.deepEqual(r.ran, ["dash"], f);
+  }
+  assert.equal(checkOpening("Six copies of the rules are old.").length, 0);
+  const long = Array(45).fill("word").join(" ") + ".";
+  assert.match(checkOpening(long)[0].message, /the ceiling is 40/);
+  assert.match(checkBody(Array(401).fill("word").join(" ") + ".")[0].message, /the ceiling is 400/);
+  assert.deepEqual(checkFirstPass("The rules are old."), []);
+  assert.match(checkFirstPass("The ruleset is old.")[0].message, /term of art "ruleset"/);
+  // A term of art inside a longer word is not a term of art.
+  assert.deepEqual(checkFirstPass("The rulesets were canonicalized."), []);
+  // Only the FIRST paragraph is held to it.
+  const NL2 = String.fromCharCode(10, 10);
+  assert.deepEqual(checkFirstPass(`The rules are old.${NL2}The ruleset says so.`), []);
+});
+
+test("precision: a figure may not out-run its stated confidence", () => {
+  assert.deepEqual(PRECISION, { low: 2, moderate: 3 });
+  // The live defect: a class estimate printed to seven figures.
+  const bad = checkPrecision("| gCO2e | 366.5105 |", "low");
+  assert.match(bad[0].message, /7 significant figures/);
+  assert.deepEqual(checkPrecision("| gCO2e | 370 |", "low"), []);
+  assert.deepEqual(checkPrecision("| gCO2e | 0.37 |", "low"), []);
+  assert.deepEqual(checkPrecision("| gCO2e | 0.371 |", "moderate"), []);
+  assert.equal(checkPrecision("| gCO2e | 0.3712 |", "moderate").length, 1);
+  // A version is not a figure, and neither is a high-confidence measurement.
+  assert.deepEqual(checkPrecision("methodology 2.1.0", "low"), []);
+  assert.deepEqual(checkPrecision("| gCO2e | 366.5105 |", "high"), []);
+  // A class estimate reads as low, whatever level it claims.
+  assert.equal(statedConfidence("provenance class-estimated, confidence high", ""), "low");
+  assert.equal(statedConfidence("| confidence | moderate |", ""), "moderate");
+  assert.equal(statedConfidence("", "nothing stated"), null);
+  // The figure scan is a character walk, not a backtracking pattern. CodeQL
+  // flagged the first spelling of it as polynomial on a long run of zeros
+  // (2026-10-23), and this checker reads files it did not write.
+  const zeros = `${"0".repeat(200000)}.${"0".repeat(200000)}`;
+  const t0 = Date.now();
+  checkPrecision(zeros, "low");
+  assert.ok(Date.now() - t0 < 2000, "the precision check took too long");
+  assert.deepEqual(
+    dottedNumbers("a 1.2.3 b 4.5 c 6").map((d) => d.figure),
+    ["1.2.3", "4.5", "6"],
+  );
+});
+
+test("K13.md defines the two modes and the rules an answer-mode reply follows", () => {
+  const body = readFileSync(join(repoRoot, "K13.md"), "utf8");
+  // 4.0.0 made K13 a response standard. A model reads this file as its rule,
+  // so each rule has to be in it, not behind a link to the reference.
+  for (const phrase of [
+    "answer | every response, by default",
+    "## No unrequested artifacts",
+    "## Verify before asserting",
+    "## No contradiction, no restatement",
+    "## Precision matches confidence",
+    "## Where the answer lives",
+    "Bluntness is required",
+    "The report template, in report mode",
+  ]) {
+    assert.ok(body.includes(phrase), `K13.md no longer says "${phrase}"`);
+  }
+  // Work products are not artifacts about the work. Saying so stops an agent
+  // reading the rule as "write no files" and refusing the task itself.
+  assert.match(body, /WORK PRODUCTS are the task/);
+  // The Earth+ hook is on request only (owner, 2026-10-23): K13 names no
+  // planetary figure at all.
+  assert.doesNotMatch(body, /Earth\+|planetary/i);
 });
 
 test("K13.md no longer defines response levels, identifiers or a levels file", () => {
   const body = readFileSync(join(repoRoot, "K13.md"), "utf8");
-  // The words survive only in the one line that says what changed in 3.0.0.
+  // The words survive only in the one line that says what changed in 4.0.0.
   const rest = body
     .split(String.fromCharCode(10))
-    .filter((l) => !l.startsWith("Changed in 3.0.0:"))
+    .filter((l) => !l.startsWith("Changed in 4.0.0:"))
     .join(String.fromCharCode(10));
-  assert.ok(rest.length < body.length, "the one-line 'Changed in 3.0.0' note is gone");
+  assert.ok(rest.length < body.length, "the one-line 'Changed in 4.0.0' note is gone");
   assert.doesNotMatch(rest, /response level/i);
   assert.doesNotMatch(rest, /k13-levels/);
   assert.doesNotMatch(rest, /soda pop|energy drink|black coffee|loose leaf|yerba mate/);
@@ -96,7 +226,21 @@ test("the reference templates and a filled document pass; K13.md passes the dash
     assert.deepEqual(r.findings, [], format);
     assert.deepEqual(
       r.ran,
-      ["dash", "structure", "evidence", "whats-next", "figures", "confidence", "plain-words", "sentences", "cost-line"],
+      [
+        "dash",
+        "structure",
+        "evidence",
+        "whats-next",
+        "figures",
+        "confidence",
+        "plain-words",
+        "sentences",
+        "cost-line",
+        "ceiling-headline",
+        "ceiling-body",
+        "first-pass",
+        "precision",
+      ],
     );
   }
 });
@@ -166,10 +310,15 @@ test("sentences: the word limit and the average", () => {
   assert.equal(sentencesOf("One. Two words here.\n\n- A list item.\n- Another one.").length, 4);
 });
 
-test("structure: a tile missing from the markdown report fails", () => {
-  const r = checkText(filledMd.replace("### Discrepancies", "### Something else"), "md");
+test("structure: a REQUIRED tile missing from the markdown report fails", () => {
+  const r = checkText(filledMd.replace("### What's next", "### Something else"), "md");
   assert.equal(r.ok, false);
-  assert.ok(r.findings.some((f) => f.check === "structure" && /Discrepancies/.test(f.message)));
+  assert.ok(r.findings.some((f) => f.check === "structure" && /What's next/.test(f.message)));
+});
+
+test("structure: an OPTIONAL tile missing is not a finding in 4.0.0", () => {
+  const r = checkText(filledMd.replace("### Discrepancies", "### Something else"), "md");
+  assert.deepEqual(r.findings.filter((f) => f.check === "structure"), []);
 });
 
 test("structure: html tiles out of order fail", () => {
@@ -248,9 +397,9 @@ test("evidence: a hostile file cannot make the check slow", () => {
   assert.ok(Date.now() - t0 < 2000, "the evidence check took too long");
 });
 
-test("vectors: every gate 1 to 9 has a passing and a failing vector, and each behaves", () => {
+test("vectors: every gate 1 to 13 has a passing and a failing vector, and each behaves", () => {
   const vectors = loadVectors();
-  for (let gate = 1; gate <= 9; gate += 1) {
+  for (let gate = 1; gate <= 13; gate += 1) {
     for (const expect of ["pass", "fail"]) {
       assert.ok(
         vectors.some((v) => v.gate === gate && v.expect === expect),
@@ -285,7 +434,7 @@ test("vectors: a failing passage vector is named by its own check", () => {
 test("the worked example 'One fact, one pass' passes checks 1 to 5", () => {
   const { passage, runFigures } = exampleQuickSqueeze();
   assert.ok(passage.length > 100, "the passage was not read out of K13.md");
-  assert.ok(runFigures.includes("6") && runFigures.includes("3.0.0"));
+  assert.ok(runFigures.includes("6") && runFigures.includes("4.0.0"));
   assert.deepEqual(checkPassage(passage, runFigures), []);
   // And the example, mutated the way a drifting report drifts, goes red.
   assert.ok(checkPassage(`${passage} It took 3.2 seconds.`, runFigures).some((f) => f.check === "figures"));
