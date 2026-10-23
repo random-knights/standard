@@ -43,21 +43,29 @@ const htmlTemplate = readFileSync(
  * The twelve tiles, in the order K13.md "The report template" defines them.
  * `key` is the phrase that must appear in the K13 list item, `tile` is the
  * data-tile id in the HTML template, `md` is the heading in the markdown one.
+ *
+ * K13 4.0.0 requires the first three and makes the other nine optional, and it
+ * put the required three first. The reference templates still render all
+ * twelve, which 4.0.0 allows, so this gate still demands all twelve HERE: a
+ * template that shows every tile is the example, not the requirement.
  */
 const TILES = [
-  { key: "header strip", tile: "header-strip", md: "### Report" },
   { key: "finding", tile: "finding", md: "### Finding" },
+  { key: "aieds disclosure", tile: "aieds-disclosure", md: "### AiEDs disclosure" },
+  { key: "what's next", tile: "whats-next", md: "### What's next" },
+  { key: "header strip", tile: "header-strip", md: "### Report" },
   { key: "verdict row", tile: "verdict-row", md: "### Verdict" },
   { key: "how it fits", tile: "how-it-fits", md: "### How it fits" },
   { key: "environment card", tile: "environment-card", md: "### Environment" },
   { key: "checks table", tile: "checks-table", md: "### Checks" },
   { key: "evidence blocks", tile: "evidence-blocks", md: "### Evidence" },
   { key: "discrepancies", tile: "discrepancies", md: "### Discrepancies" },
-  { key: "what's next", tile: "whats-next", md: "### What's next" },
   { key: "owner actions", tile: "owner-actions", md: "### Owner actions" },
   { key: "what was not done", tile: "what-was-not-done", md: "### What was not done" },
-  { key: "aieds disclosure", tile: "aieds-disclosure", md: "### AiEDs disclosure" },
 ];
+
+/** The three K13.md marks REQUIRED, in order. */
+const REQUIRED = ["finding", "aieds-disclosure", "whats-next"];
 
 const MD_PASS = "## quick squeeze";
 const HTML_PASS = '<div id="quick-squeeze"';
@@ -90,6 +98,12 @@ function htmlPane() {
 
 test("K13.md still defines the twelve-tile list this gate reads", () => {
   const items = reportTemplateList();
+  // The three required tiles come first, and only they say REQUIRED.
+  assert.deepEqual(
+    items.map((item, i) => (item.includes("required") ? TILES[i].tile : null)).filter(Boolean),
+    REQUIRED,
+    'K13.md "The report template" no longer marks exactly the three required tiles first',
+  );
   assert.equal(
     items.length,
     TILES.length,
@@ -158,7 +172,7 @@ test("every evidence block carries a rendered result", () => {
 test("the What's next tile asks for a role and an effort, never a model", () => {
   const pane = htmlPane();
   const from = pane.indexOf('data-tile="whats-next"');
-  const to = pane.indexOf('data-tile="owner-actions"');
+  const to = pane.indexOf('data-tile="header-strip"');
   assert.ok(from >= 0 && to > from, "the pass has no What's next tile");
   const tile = pane.slice(from, to);
   for (const slot of ["role", "effort"]) {
@@ -200,7 +214,7 @@ test("both templates are one pass and keep no response level", () => {
       1,
       `${file} must carry exactly one quick squeeze pass`,
     );
-    assert.match(text, /v3\.0\.0/, `${file} does not name K13 3.0.0`);
+    assert.match(text, /v4\.0\.0/, `${file} does not name K13 4.0.0`);
   }
 });
 

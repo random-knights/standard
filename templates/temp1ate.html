@@ -1,6 +1,6 @@
 <title>K13 Report: [Lab Name]</title>
 <!-- ============================================================
-     K13 REPORT TEMPLATE, v3.0.0
+     K13 REPORT TEMPLATE, v4.0.0
      Copy this file. Replace every FILL marker.
      License: this template is Apache 2.0, a reference implementation you may
      fork without attribution friction. The REQUIREMENT it renders, the
@@ -21,8 +21,17 @@
          and 3 by adding them."
        - CONFIDENCE. Say it once, with what it rests on: "Confidence is high,
          because ...". It lives in the Verdict tile.
-       - STRUCTURE. All twelve tiles, in this order. A tile with nothing to
-         report says so in one line. It is never dropped.
+       - STRUCTURE. The first three tiles are REQUIRED, in this order:
+         finding, aieds-disclosure, whats-next. The other nine are OPTIONAL and
+         keep this order when they appear. This template fills all twelve,
+         which is allowed. A required tile with nothing to report says so in
+         one line.
+       - CEILING (K13.md "The whole answer"). The finding tile runs to 40 words
+         or fewer. The prose of the whole report runs to 400 words or fewer.
+         Anything longer goes in a linked artifact.
+       - FIRST PASS (K13.md "The first pass"). The first sentence names the
+         thing in words a beginner knows, with no term of art, and gives one
+         everyday comparison.
        - EVIDENCE BLOCKS. Every command or query appears with its real rendered
          result. A command with no result, or a result with no command, fails
          the gate. Never fabricate a result. If one is too large, show a stated
@@ -341,6 +350,47 @@ pre.ev-result { background: var(--pass-s); border-color: color-mix(in srgb, var(
   ===================================================== -->
   <div id="quick-squeeze" class="pass">
     <div class="tile-grid">
+      <section class="tile t-finding" data-tile="finding">
+        <h3 class="tile-label">Finding</h3>
+        <div class="tile-body">
+        <p class="finding-stmt">FILL: One plain sentence. What happened, not how.</p>
+        </div>
+      </section>
+      <section class="tile t-aieds-disclosure" data-tile="aieds-disclosure">
+        <h3 class="tile-label">AiEDs disclosure</h3>
+        <div class="tile-body">
+        <p class="aieds-lead">AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. FILL: one sentence on model usage and data access.</p>
+        <div class="aieds-grid">
+          <div class="aieds-item"><span class="key">energyKWh</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">gCO2e</span><span class="val">FILL</span></div>
+          <div class="aieds-item"><span class="key">compute.tokens</span><span class="val">FILL: in plus out</span></div>
+          <div class="aieds-item"><span class="key">confidence</span><span class="val">FILL: low / med / high</span></div>
+          <div class="aieds-item"><span class="key">provenance</span><span class="val">FILL: measured / vendor-published / class-estimated / synthetic / unknown</span></div>
+          <div class="aieds-item"><span class="key">subject.name</span><span class="val">FILL: lab-slug</span></div>
+          <div class="aieds-item"><span class="key">generatedAt</span><span class="val">FILL: YYYY-MM-DD</span></div>
+          <div class="aieds-item"><span class="key">scope</span><span class="val">FILL: device / usage / inference / training</span></div>
+        </div>
+        <p class="aieds-ppi">FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and how it was protected.</p>
+        </div>
+      </section>
+      <section class="tile t-whats-next" data-tile="whats-next">
+        <h3 class="tile-label">What's next</h3>
+        <div class="tile-body">
+        <p>FILL: what someone could do next, in plain words. Not the owner's job, anyone's.</p>
+        <div class="wn-slot"><span class="wn-key">role</span><span class="wn-val">FILL: the role for the next task, from your published role list</span></div>
+        <div class="wn-slot"><span class="wn-key">why that role</span><span class="wn-val">FILL: one line against that list's stated criteria, so a reader can disagree</span></div>
+        <div class="wn-slot"><span class="wn-key">effort</span><span class="wn-val">FILL: the effort or reasoning level</span></div>
+        <div class="ev-label">Command</div>
+        <pre class="ev-code">FILL: paste-ready, in your own dispatch shape, complete enough
+to run cold (K13 step 7: pull it from your command template
+library, do not write it from memory)</pre>
+        <p class="wn-none">No continuation? Delete the three slots and the command and write
+"No next step, this work is complete.", then say why. Never manufacture a
+continuation to fill this tile. Do NOT name a model here: K13 requires role and
+effort and is vendor-neutral. If you resolve role plus effort to a model from
+your own published mapping, cite the mapping beside it.</p>
+        </div>
+      </section>
       <section class="tile t-header-strip" data-tile="header-strip">
         <h3 class="tile-label">Report</h3>
         <div class="tile-body">
@@ -352,12 +402,6 @@ pre.ev-result { background: var(--pass-s); border-color: color-mix(in srgb, var(
           <span>Model: FILL</span>
           <span>Runs: FILL</span>
         </div>
-        </div>
-      </section>
-      <section class="tile t-finding" data-tile="finding">
-        <h3 class="tile-label">Finding</h3>
-        <div class="tile-body">
-        <p class="finding-stmt">FILL: One plain sentence. What happened, not how.</p>
         </div>
       </section>
       <section class="tile t-verdict-row" data-tile="verdict-row">
@@ -424,24 +468,6 @@ from the report at once</pre>
         <p>FILL: anything that did not match, said plainly. Write "nothing did not match" if nothing did.</p>
         </div>
       </section>
-      <section class="tile t-whats-next" data-tile="whats-next">
-        <h3 class="tile-label">What's next</h3>
-        <div class="tile-body">
-        <p>FILL: what someone could do next, in plain words. Not the owner's job, anyone's.</p>
-        <div class="wn-slot"><span class="wn-key">role</span><span class="wn-val">FILL: the role for the next task, from your published role list</span></div>
-        <div class="wn-slot"><span class="wn-key">why that role</span><span class="wn-val">FILL: one line against that list's stated criteria, so a reader can disagree</span></div>
-        <div class="wn-slot"><span class="wn-key">effort</span><span class="wn-val">FILL: the effort or reasoning level</span></div>
-        <div class="ev-label">Command</div>
-        <pre class="ev-code">FILL: paste-ready, in your own dispatch shape, complete enough
-to run cold (K13 step 7: pull it from your command template
-library, do not write it from memory)</pre>
-        <p class="wn-none">No continuation? Delete the three slots and the command and write
-"No next step, this work is complete.", then say why. Never manufacture a
-continuation to fill this tile. Do NOT name a model here: K13 requires role and
-effort and is vendor-neutral. If you resolve role plus effort to a model from
-your own published mapping, cite the mapping beside it.</p>
-        </div>
-      </section>
       <section class="tile t-owner-actions" data-tile="owner-actions">
         <h3 class="tile-label">Owner actions</h3>
         <div class="tile-body">
@@ -457,23 +483,6 @@ your own published mapping, cite the mapping beside it.</p>
         <h3 class="tile-label">What was not done</h3>
         <div class="tile-body">
         <p>FILL: what was left out, and why, in one plain sentence</p>
-        </div>
-      </section>
-      <section class="tile t-aieds-disclosure" data-tile="aieds-disclosure">
-        <h3 class="tile-label">AiEDs disclosure</h3>
-        <div class="tile-body">
-        <p class="aieds-lead">AiEDs, the AI Energy Disclosure Standard, methodology 2.1.0. FILL: one sentence on model usage and data access.</p>
-        <div class="aieds-grid">
-          <div class="aieds-item"><span class="key">energyKWh</span><span class="val">FILL</span></div>
-          <div class="aieds-item"><span class="key">gCO2e</span><span class="val">FILL</span></div>
-          <div class="aieds-item"><span class="key">compute.tokens</span><span class="val">FILL: in plus out</span></div>
-          <div class="aieds-item"><span class="key">confidence</span><span class="val">FILL: low / med / high</span></div>
-          <div class="aieds-item"><span class="key">provenance</span><span class="val">FILL: measured / vendor-published / class-estimated / synthetic / unknown</span></div>
-          <div class="aieds-item"><span class="key">subject.name</span><span class="val">FILL: lab-slug</span></div>
-          <div class="aieds-item"><span class="key">generatedAt</span><span class="val">FILL: YYYY-MM-DD</span></div>
-          <div class="aieds-item"><span class="key">scope</span><span class="val">FILL: device / usage / inference / training</span></div>
-        </div>
-        <p class="aieds-ppi">FILL: PPI statement. Example: "No member PPI accessed." Or say what was used and how it was protected.</p>
         </div>
       </section>
     </div>

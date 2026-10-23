@@ -1,9 +1,14 @@
 // Dogfood gate: K13.md and its companion files are held to the same limits.
 //
-// K13 3.0.0 sets numeric limits for the quick squeeze (longest word, longest
+// K13 4.0.0 sets numeric limits for the quick squeeze (longest word, longest
 // sentence, average sentence, no hype word, no dashes). The standard's own
 // text is prose a person reads, so it has to pass the same checks it asks of
-// everyone else. Left out, because they are data or history and not prose:
+// everyone else.
+//
+// NOT the whole-answer ceiling. K13 4.0.0 "What the ceiling governs" exempts
+// reference text by name, this file's three documents included, so the 40-word
+// opening and the 400-word body are not applied here. A rule book may be long.
+// The line guard below is what keeps this one short. Left out, because they are data or history and not prose:
 // fenced code, tables, headings, the metadata header, terms in backticks or
 // double quotes (the checker already skips those), and the 2.x changelog
 // entries, which are history and are not rewritten.
@@ -69,9 +74,16 @@ const DOCS = [
 ];
 const prose = Object.fromEntries(DOCS.map((d) => [d.file, proseOf(read(d.file), d.stop)]));
 
-test("K13.md stays small enough to read in five minutes", () => {
+// The line guard. It was 260 while K13 was a report standard with four rule
+// sections. K13 4.0.0 makes K13 a RESPONSE standard: two modes, eight rules and
+// thirteen gate checks, and the owner's rule of 2026-10-23 says a rule that
+// cannot be followed without opening a second file is written wrong. So the
+// detail that would once have moved to K13-REFERENCE.md now has to stay here,
+// and the guard moves with it, once, deliberately. It is still a guard: the
+// document may not grow past it without this line changing in a diff.
+test("K13.md stays small enough to read in one sitting", () => {
   const lines = read("K13.md").split(NL).length;
-  assert.ok(lines <= 260, `K13.md is ${lines} lines; the guard is 260. Move detail to K13-REFERENCE.md.`);
+  assert.ok(lines <= 345, `K13.md is ${lines} lines; the guard is 345. Cut prose, do not move a rule out.`);
 });
 
 test("every owner-approved exception is in K13.md word for word", () => {
@@ -82,7 +94,13 @@ test("every owner-approved exception is in K13.md word for word", () => {
 
 for (const d of DOCS) {
   test(`${d.file} prose meets the quick squeeze limits`, () => {
-    assert.deepEqual(LIMITS, { longestWord: 12, longestSentence: 20, averageSentence: 14 });
+    assert.deepEqual(LIMITS, {
+      longestWord: 12,
+      longestSentence: 20,
+      averageSentence: 14,
+      openingWords: 40,
+      bodyWords: 400,
+    });
     assert.deepEqual(checkSentences(prose[d.file]), [], "a sentence or the average is over the limit");
     assert.deepEqual(checkPlainWords(prose[d.file]), [], "a long word or a hype word");
     assert.deepEqual(checkDashes(prose[d.file]), [], "a dash");

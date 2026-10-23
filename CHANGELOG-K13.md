@@ -2,6 +2,71 @@
 
 What changed in each version of K13, in plain words. The standard is `K13.md`.
 
+## 4.0.0
+
+- Scope: K13 is a RESPONSE standard, not a report standard. It governs every
+  answer, in a chat or a terminal.
+- Modes: new. ANSWER MODE is the default and covers every response. It carries
+  no tiles, no headings on a short answer and no file. REPORT MODE applies only
+  when a report or a document was asked for, and it carries the required tiles.
+- Answer size: new. The opening is 40 words or fewer. Outside data, the body is
+  400 words or fewer. Anything longer goes in a linked artifact.
+- The ceiling governs an ANSWER or a REPORT. It does NOT govern reference text:
+  `K13.md`, `K13-REFERENCE.md`, this changelog, or any other spec page.
+- Tiles: twelve becomes THREE required, in this order: what happened, what it
+  cost, what is next. The other nine stay defined and are optional.
+- Voice: new, "The first pass". The first sentence names the thing in words a
+  beginner knows, with no term of art. It gives one everyday comparison. The
+  tone is friendly. The humor never lands on a failure, a number, a cost or a
+  risk.
+- Where the answer lives: new. The answer goes in the reply. A file is written
+  only when the reader asked for one.
+- No unrequested artifacts: new. No document, summary file, temp file, plan
+  file or note for human review, unless the reader asked for it. A work product
+  is the task and is not covered. Code, config, tests, fixtures, schemas and
+  migrations are written as normal.
+- Verify before asserting: new. A claim about state carries its evidence or
+  says it is unverified. A green check is not evidence of behavior.
+- New section, "No contradiction, no restatement". Do not hedge the answer
+  away, and do not summarize a short answer.
+- Precision matches confidence: new. Low, or a class estimate, supports two
+  significant figures. Moderate supports three.
+- Voice: bluntness is required, not allowed. Bad news goes in the first
+  sentence, with no soft preamble.
+- Gate: nine checks becomes thirteen. Check 7 now reads the three required
+  tiles. Checks 10, 11 and 12 read the opening ceiling, the body ceiling and
+  the term of art rule. Check 13 reads the precision of a figure against the
+  stated confidence.
+- Not gated, on purpose: the everyday comparison, the humor and the tone. Nor
+  is where the answer lives, whether an artifact was asked for, or whether the
+  answer restates itself. The gate table says so in the document itself.
+- No planetary figure is required anywhere in a K13 answer. That hook is on
+  request only (owner, 2026-10-23).
+
+### What breaks for a 3.0.0 conformance claim
+
+This is a MAJOR bump because a conformance claim changes meaning.
+
+- A line that reads "conforms to K13 3.0.0, quick squeeze, gate checks 1 to 9"
+  does not carry to 4.0.0. Thirteen checks exist now. That line names nine of
+  thirteen, so re-run the gate and state it as 1 to 13.
+- A product that applied K13 to reports only now applies it to every response.
+  That is the largest behavior change in this version.
+- A 3.0.0 report PASSES 4.0.0 only if it also fits the ceiling and opens
+  without a term of art. A long report that was green at 3.0.0 can go red.
+- A 3.0.0 report that filled all twelve tiles still conforms. Nothing has to be
+  deleted from it.
+- A tool that checked "the twelve tiles, in order" is now WRONG in two ways. It
+  demands nine optional tiles, and it reads the old order. The required three
+  come first: finding, AiEDs disclosure, what's next.
+- The tile ORDER changed with the cut. A stored template, stylesheet or parser
+  keyed to the 3.0.0 order needs updating. The reference templates in
+  `templates/` were updated here.
+- The checker is the same package at a new version. `@randomknights/k13` 4.0.0
+  reads thirteen checks out of `K13.md`. It can fail a report 3.0.0 passed.
+- A cost line that prints a class estimate to five or seven figures now fails
+  check 13. Round the figure to what its confidence supports.
+
 ## 3.0.0
 
 - Steps: still thirteen. Steps 9 to 12 now make and check one answer, the quick squeeze.

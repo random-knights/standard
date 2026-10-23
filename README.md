@@ -66,7 +66,7 @@ adopt either without asking. E+ 1.2.0 was ratified on 2026-09-22, its wording-on
 | Standard                                  | Version                   | License                                              | Canonical text                                                          | Read it                                                                                                        |
 | ----------------------------------------- | ------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | **AiEDs - AI Energy Disclosure Standard** | methodology 2.5.0         | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai)                                                               |
-| **K13 - Ai General Response Standard**            | 3.0.0                     | CC BY 4.0 prose, Apache 2.0 reference templates      | [K13.md](K13.md) with `templates/`                                      | [randomknights.xyz/k13](https://randomknights.xyz/k13/)                                                        |
+| **K13 - Ai General Response Standard**            | 4.0.0                     | CC BY 4.0 prose, Apache 2.0 reference templates      | [K13.md](K13.md) with `templates/`                                      | [randomknights.xyz/k13](https://randomknights.xyz/k13/)                                                        |
 | **E+ - Earth + Ai Impact Standard**       | 1.2.1, ratified           | CC BY 4.0 prose, Apache 2.0 conformance checker      | [eplus/v1/methodology.md](eplus/v1/methodology.md)                      | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md)               |
 
 <!-- E+ -->
@@ -97,13 +97,24 @@ Thirteen steps, run in order, every time. Every time does not mean every step
 takes real work: on short replies the steps collapse to a second each. That is
 the standard being met, not skipped.
 
-K13 3.0.0 asks for **one pass: the quick squeeze.** Plain words, one idea per
+K13 4.0.0 asks for **one pass: the quick squeeze.** Plain words, one idea per
 sentence, the outcome first, short, with every figure traced to its source and
 the confidence stated. The six response levels of 2.x are no longer part of the
 standard. A 2.x juice box pass is a quick squeeze and conforms unchanged.
 
 Steps 9 to 12 make and check that one pass: draft it, cut it to the limits,
 source every figure, state the confidence. Step 13 runs the gate.
+
+4.0.0 makes K13 a **response** standard with two modes. Answer mode is the
+default and covers every response: no tiles, no headings on a short answer, no
+file. Report mode applies when a report or a document was asked for, and it
+carries three required tiles: what happened, what it cost, what is next. The
+other nine tiles stay defined and are optional.
+
+4.0.0 also adds a ceiling on the whole answer (a 40-word opening, a 400-word
+body), a voice rule for the opening, and four rules: no unrequested artifacts,
+verify before asserting, no contradiction or restatement, and precision that
+matches the stated confidence.
 
 The limits are numbers a program can check:
 
@@ -112,11 +123,13 @@ The limits are numbers a program can check:
 | longest word     | 12 letters |
 | longest sentence | 20 words |
 | average sentence | 14 words |
+| the opening      | 40 words |
+| the body         | 400 words |
 
 ### Demo: one fact, one pass
 
 > Six of our copies of the rules are old. They say version 1.1.0. The new rules
-> are version 3.0.0. We looked in four places, so there may be an old copy we
+> are version 4.0.0. We looked in four places, so there may be an old copy we
 > did not find. Confidence is high that these six are old, because we read each
 > version number. Confidence is moderate that six is the whole count, because
 > we searched four places.
@@ -127,7 +140,7 @@ no sentence is long. The `@randomknights/k13` package checks all of that.
 [Get started](https://randomknights.xyz/k13/get-started/) covers adopting it
 in your own pipeline.
 
-The standard is [K13.md](K13.md), about 245 lines. Longer detail is in
+The standard is [K13.md](K13.md), about 260 lines. Longer detail is in
 [K13-REFERENCE.md](https://standard.rand0m.ai/k13/v1/K13-REFERENCE.md). What
 changed in each version is in
 [CHANGELOG-K13.md](https://standard.rand0m.ai/k13/v1/CHANGELOG-K13.md).
@@ -492,7 +505,7 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Reference library    | `lib/`                       | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested)                                       |
 | MCP server           | `mcp/`                       | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose                                                                                                           |
 | Claude Code plugin   | `plugins/random-knights/`    | Apache 2.0 | An AiEDs receipt after every Claude Code or Codex response, computed locally from token usage with the reference library; Grok Build session files, Ollama and Hugging Face responses are read too (see the plugin README for what is verified). Marketplace: `.claude-plugin/marketplace.json` |
-| K13                  | `K13.md`                     | CC BY 4.0  | K13 - Ai General Response Standard, 3.0.0. The canonical text.                                                                                                       |
+| K13                  | `K13.md`                     | CC BY 4.0  | K13 - Ai General Response Standard, 4.0.0. The canonical text.                                                                                                       |
 | K13 report templates | `templates/`                 | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement.                                                 |
 | E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth + Ai Impact Standard, 1.2.1, ratified 2026-09-22. The canonical text, including the public implementation changelog.                              |
 
@@ -538,7 +551,7 @@ used.
 > Random Knights, LLC (2026). AiEDs - AI Energy Disclosure Standard,
 > version 2.2.0. CC BY 4.0. https://standard.rand0m.ai
 
-> Random Knights, LLC (2026). K13 - Ai General Response Standard, version 3.0.0.
+> Random Knights, LLC (2026). K13 - Ai General Response Standard, version 4.0.0.
 > CC BY 4.0. https://github.com/random-knights/standard
 
 E+ 1.2.1 is ratified (1.2.0, 2026-09-22; 1.2.1 renames the standard and moves
