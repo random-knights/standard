@@ -70,7 +70,7 @@ test("default OFF (real processes): status, preview, a hook and an unknown comma
       env,
       input: JSON.stringify({ session_id: "00000000-0000-4000-8000-000000000001", transcript_path: fixture("session-tool-turns.jsonl"), hook_event_name: "Stop" }),
     });
-    assert.match(hook.stdout, /AiEDs receipt/);
+    assert.match(hook.stdout, /this response {3}/);
     const bad = await runCli(["contribute", "nope"], { env });
     assert.equal(bad.code, 2);
     assert.equal(server.requests.length, 0);
@@ -319,7 +319,7 @@ test("hook: with contributing ON it queues the day's numbers locally (no time of
     turnOnDirect(env, server.base);
     const input = JSON.stringify({ session_id: "00000000-0000-4000-8000-000000000001", transcript_path: fixture("session-tool-turns.jsonl"), hook_event_name: "Stop" });
     const h = await runCli(["hook"], { input, env });
-    assert.match(h.stdout, /AiEDs receipt/);
+    assert.match(h.stdout, /this response {3}/);
     assert.equal(server.requests.length, 0, "today is not sent until it closes");
     const q = readCQueue(env);
     assert.ok(q.length >= 1);
@@ -337,7 +337,7 @@ test("hook: with contributing ON it queues the day's numbers locally (no time of
     const env2 = hermeticEnv(dir2, { AIEDS_CONTRIBUTE: "off", AIEDS_COMMUNITY_URL: server.base, CI: "" });
     turnOnDirect(env2, server.base);
     const off = await runCli(["hook"], { input, env: env2 });
-    assert.match(off.stdout, /AiEDs receipt/);
+    assert.match(off.stdout, /this response {3}/);
     assert.ok(!existsSync(paths(env2).contributeQueue));
     assert.equal(server.requests.length, 0);
   } finally {

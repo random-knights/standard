@@ -1,8 +1,8 @@
 # Random Knights AiEDs plugin
 
-After every response, this plugin prints an AiEDs receipt: the modeled energy
-(Wh), carbon (gCO2e), Tree-Time (minutes) and water (mL) of that response and,
-for coding agents, of the session so far. The figures are computed on your
+After every response, this plugin prints an AiEDs receipt: the modeled energy,
+carbon, Tree-Time and water of that response and, for coding agents, of the
+session so far. The figures are computed on your
 machine from the session's real token usage, with the AiEDs reference library,
 so they agree with the standard to the number.
 
@@ -55,6 +55,16 @@ methodology section 2.6.
 
 ## What is new
 
+Plugin 0.6.0:
+
+- **A readable receipt.** The receipt is now up to four lines instead of one
+  paragraph: this response and the session on separate lines, units scaled to
+  read between 1 and 999, two significant figures while confidence is low, water
+  as a tilde figure, a tokens line only when the cache explains a large input,
+  and one basis line in place of three repeated sentences. The water range, the
+  full disclaimers and the unrounded figures moved to `aieds explain`. No factor
+  or computed value changed; this is presentation only.
+
 Plugin 0.5.0 (the npm package `@randomknights/aieds` carries the same code as
 its `aieds` command, versioned with the methodology):
 
@@ -79,7 +89,8 @@ its `aieds` command, versioned with the methodology):
   same receipt (see [Ollama and Hugging Face](#ollama-and-hugging-face)).
 
 Installed copies of this plugin update only when its version changes, so
-0.5.0 is the first version that carries `aieds contribute`.
+0.5.0 is the first version that carries `aieds contribute` and 0.6.0 is the
+first with the four-line receipt.
 
 ## Install
 
@@ -106,29 +117,42 @@ whether the plugin is listed; it changes nothing itself.
 
 ## What you will see
 
-After each response, one line:
+After each response, up to four lines:
 
 ```text
-AiEDs receipt: 0.4412 Wh, 0.1893 gCO2e, 4.7 min tree-time (this response). Water: about 1.2 mL (0.4 to 2.7 mL), about a quarter of a teaspoon. Modeled estimate. Session: 12.3456 Wh, 5.2961 gCO2e, 2.1 hrs tree-time (37 model calls). Tokens this response: 52,310 in (48,200 cache read, 3,100 cache write), 1,204 out. Most of this is the session's context, which is read again on every reply (cache tokens count as input at the full rate, methodology 2.4.1). Basis: AiEDs v2, claude-sonnet-4-5, class estimate, low confidence. Energy and carbon are modeled estimates. Tree-Time and equivalents are educational comparisons. Water is a modeled estimate.
+this response   1.1 Wh - 0.47 g CO2e - 6.3 min tree-time - ~5.1 mL water
+session (37)    12 Wh - 5.3 g CO2e - 2.1 h tree-time - ~58 mL water
+tokens          52.3k in (92% cache read) - 1.2k out
+estimate, low confidence - claude-sonnet-4-5 - AiEDs v2
 ```
 
 The numbers above are an illustration of the format, not a measurement.
 
-### Why a one-word reply can read large
-
-Most of a small reply's energy is the session's context. Every reply re-reads
-the whole conversation so far, and cache tokens (reads and writes) count as
-input at the full input rate (methodology 2.4.1). A one-word answer at the end
-of a long session therefore shows tens of thousands of input tokens and only a
-handful of output tokens. The receipt prints the plain line above whenever the
-input is at least ten times the output.
+- The two scopes are on two lines, never one number. The session line names its
+  number of model calls.
+- Units scale so the number reads between 1 and 999 where it can: Wh then kWh,
+  g CO2e then kg CO2e, minutes then hours (at 120 minutes), mL then L.
+- Figures carry two significant figures while confidence is low or the basis is
+  a class estimate (three otherwise), and never more than one decimal place at
+  1 or above. A low-confidence figure is not printed as if it were exact.
+- Water carries a tilde and no range.
+- The tokens line appears only when cache reads are 20 percent or more of the
+  input, because that is when it explains why a figure looks large. Cache tokens
+  count as input at the full input rate (methodology 2.4.1), so a one-word
+  reply at the end of a long session shows a large input and a small output.
+- The last line is the basis. It replaces the three sentences the receipt used
+  to repeat every time: energy and carbon are modeled estimates, Tree-Time and
+  equivalents are educational comparisons, and water is a modeled estimate. Those
+  sentences, the water range, the unrounded figures and the full token counts
+  are in `aieds explain`.
 
 ### The water line
 
-The water line comes straight after the carbon figures. It is modeled from the
+The receipt shows water as a tilde figure on each scope line (for example
+`~1.8 L water`); the range, in `aieds explain`, is described here. It is modeled from the
 same energy (AiEDs 2.5.0, methodology section 2.6): consumed water, not
 withdrawn water, for cooling at the data center and for the power plants that
-supply it. It is always a range, from a low case to a high case, and its
+supply it. It is always a range in `aieds explain`, from a low case to a high case, and its
 confidence is low. The grid part is a US average, whatever region served the
 work. It covers inference only, and it is not a measure of scarcity: a liter in
 a wet place and a dry place count the same here. The teaspoon is an educational
@@ -142,7 +166,7 @@ Two commands show more, on demand:
 | Command | What it prints |
 | ------- | -------------- |
 | `/random-knights:aieds` | The session total so far, with the token split. `/aieds` also works when no other command has that name. |
-| `/random-knights:aieds-explain` | The formulas, the constants and the source of every coefficient, read from the bundled library. |
+| `/random-knights:aieds-explain` | The formulas, the constants and the source of every coefficient, read from the bundled library, then this session's receipt unrounded: the water range, the full token counts and the three disclaimers. |
 
 ## What is measured
 
@@ -426,8 +450,8 @@ hook. Codex does not run a hook it has not been told to trust, and trust is
 tied to the hook's content hash, so an updated plugin asks again.
 
 In an interactive session the receipt shows as a hook line, for example
-`Hook | AiEDs receipt: 4.7937 Wh ... 28,142 in (2,816 cache read, 0 cache write),
-14 out, gpt-5.6-terra, vendor-published`. `codex exec` runs the same Stop hook
+`Hook | this response   4.8 Wh - 2.1 g CO2e ...` and, on the last line,
+`estimate, low confidence - gpt-5.6-terra - AiEDs v2`. `codex exec` runs the same Stop hook
 (`hook: Stop Completed`) but prints nothing; if you ran `aieds connect`, the
 receipt is still queued and sent. `codex exec` also needs a git repository or
 `--skip-git-repo-check` (a Codex rule, not ours).

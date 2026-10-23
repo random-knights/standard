@@ -1,7 +1,7 @@
 {
   "name": "@random-knights/claude-plugin",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Claude Code plugin that prints an AiEDs receipt after each response. Not published to npm: it is distributed through the standard marketplace.",
   "type": "module",
   "license": "Apache-2.0 AND CC-BY-4.0",

@@ -135,10 +135,10 @@ test("canary: Copilot CLI events file (usage lines only are read)", async () => 
         .join(""),
     );
     const r = await runCli(["hook", "copilot"], { env, input: JSON.stringify({ sessionId: sid, transcriptPath: file, stopReason: "end_turn", prompt: CANARY }) });
-    assert.match(r.stdout, /AiEDs receipt/);
+    assert.match(r.stdout, /this response {3}/);
     appendFileSync(file, `${text("user.message")}\n${real[2]}\n${text("assistant.message")}\n`);
     const r2 = await runCli(["hook", "copilot"], { env, input: JSON.stringify({ sessionId: sid, transcriptPath: file }) });
-    assert.match(r2.stdout, /AiEDs receipt/);
+    assert.match(r2.stdout, /this response {3}/);
     return [r, r2];
   });
 });
@@ -174,9 +174,9 @@ test("canary: Ollama wrapper, streaming and not, against a fake Ollama", async (
       // --no-text: the reply is the one thing this command prints by design,
       // so the stdout check applies to the receipt-only run.
       const plain = await runCli(["ollama", "--model", "llama3.2:1b", "--host", host, "--no-text", `${CANARY} prompt`], { env });
-      assert.match(plain.stdout, /Tokens: 28 in, 3 out\./);
+      assert.match(plain.stdout, /^this response {3}.* Wh - /m);
       const streamed = await runCli(["ollama", "--model", "llama3.2:1b", "--host", host, "--stream", "--no-text", `${CANARY} prompt`], { env });
-      assert.match(streamed.stdout, /Tokens: 28 in, 3 out\./);
+      assert.match(streamed.stdout, /^this response {3}.* Wh - /m);
       return [plain, streamed];
     });
     // With the text shown, the reply IS printed (that is the command's job), but still never queued or sent.

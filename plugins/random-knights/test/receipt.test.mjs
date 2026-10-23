@@ -39,8 +39,13 @@ import {
   formatEnergy,
   formatExplanation,
   formatReceipt,
+  formatResponseReceipt,
   formatSessionReceipt,
+  formatTokens,
+  formatTreeTime,
   formatWater,
+  formatWaterDetail,
+  sigFigsFor,
   isSafeSessionId,
   logLine,
   parseTranscript,
@@ -249,8 +254,7 @@ test("receipt: an unlisted model gets the class estimate and says so", () => {
   );
   assert.equal(session.provenance, "unknown");
   const text = formatSessionReceipt(session);
-  assert.match(text, /class estimate \(model not in the coefficient table\)/);
-  assert.match(text, /acme-llm-1/);
+  assert.match(text, /^estimate, low confidence - .*acme-llm-1 \(not in table\) - AiEDs v2$/m);
   const gem = disclosureFromResponse({
     provider: "Anthropic",
     model: "gemini-2.0-flash",
@@ -290,18 +294,27 @@ const ALL_TEXTS = () => {
     mixedReceipt: formatReceipt(mixed),
     session: formatSessionReceipt(receipt.session),
     explain: formatExplanation(),
+    explainWithReceipt: formatExplanation(receipt),
   };
 };
 
-test("copy: every receipt carries the three required sentences, verbatim", () => {
+test("copy: the three required sentences live in explain, verbatim, and a receipt ends in one basis line", () => {
   assert.deepEqual(REQUIRED_COPY, [
     "Energy and carbon are modeled estimates.",
     "Tree-Time and equivalents are educational comparisons.",
     "Water is a modeled estimate.",
   ]);
-  for (const [name, text] of Object.entries(ALL_TEXTS())) {
+  const texts = ALL_TEXTS();
+  for (const name of ["explain", "explainWithReceipt"]) {
     for (const sentence of REQUIRED_COPY) {
-      assert.ok(text.includes(sentence), `${name} lacks: ${sentence}`);
+      assert.ok(texts[name].includes(sentence), `${name} lacks: ${sentence}`);
+    }
+  }
+  for (const name of ["receipt", "mixedReceipt", "session"]) {
+    const last = texts[name].split("\n").at(-1);
+    assert.match(last, /^estimate, low confidence - .* - AiEDs v2$/, name);
+    for (const sentence of REQUIRED_COPY) {
+      assert.ok(!texts[name].includes(sentence), `${name} repeats the boilerplate: ${sentence}`);
     }
   }
 });
@@ -342,52 +355,177 @@ test("copy: no canary text from the transcript reaches any output", () => {
   }
 });
 
-test("format: energy and carbon use four decimals and promote at a full unit", () => {
-  assert.equal(formatEnergy(0.44117), "0.4412 Wh");
-  assert.equal(formatEnergy(999.99994), "999.9999 Wh");
-  assert.equal(formatEnergy(1500), "1.5000 kWh");
-  assert.equal(formatCarbon(0.18926), "0.1893 gCO2e");
-  assert.equal(formatCarbon(2500), "2.5000 kgCO2e");
+test("format: units auto-scale at the thresholds, at the boundary and after rounding", () => {
+  assert.equal(formatEnergy(0.44117), "0.44 Wh");
+  assert.equal(formatEnergy(999), "1.0 kWh", "999 Wh at two figures rounds up to 1.0 kWh");
+  assert.equal(formatEnergy(366.5), "370 Wh");
+  assert.equal(formatEnergy(1000), "1.0 kWh");
+  assert.equal(formatEnergy(15610.5), "16 kWh");
+  assert.equal(formatCarbon(0.18926), "0.19 g CO2e");
+  assert.equal(formatCarbon(157.23), "160 g CO2e");
+  assert.equal(formatCarbon(999.6), "1.0 kg CO2e");
+  assert.equal(formatCarbon(6696.9), "6.7 kg CO2e");
+  assert.equal(formatTreeTime(1.1), "1.1 min");
+  assert.equal(formatTreeTime(110), "110 min", "under 120 min stays in minutes");
+  assert.equal(formatTreeTime(119), "2.0 h", "119 rounds to 120 at two figures, which is hours");
+  assert.equal(formatTreeTime(120), "2.0 h");
+  assert.equal(formatTreeTime(65.6 * 60), "66 h");
+  assert.equal(formatTreeTime(0), "0 min");
 });
 
-test("format: the one-line receipt carries figures, tokens and basis", () => {
-  const text = formatReceipt(
-    receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl"))),
+test("format: two significant figures when low confidence, three otherwise, one decimal at most", () => {
+  assert.equal(sigFigsFor({ confidence: "low", provenance: "class-estimated" }), 2);
+  assert.equal(sigFigsFor({ confidence: "low", provenance: "vendor-published" }), 2);
+  assert.equal(sigFigsFor({ confidence: "high", provenance: "class-estimated" }), 2, "a class estimate is two figures at any confidence");
+  assert.equal(sigFigsFor({ confidence: "medium", provenance: "vendor-published" }), 3);
+  // The figures from the real receipt the owner captured.
+  assert.equal(formatEnergy(366.5105, 2), "370 Wh");
+  assert.equal(formatEnergy(366.5105, 3), "367 Wh");
+  assert.equal(formatEnergy(15610.5, 3), "15.6 kWh");
+  assert.equal(formatCarbon(6696.9, 3), "6.7 kg CO2e", "three figures, but never more than one decimal");
+  assert.equal(formatEnergy(1.2345, 3), "1.2 Wh");
+  assert.equal(formatEnergy(0.012345, 3), "0.0123 Wh", "below 1 the figures govern");
+  // A low-confidence receipt prints no third significant figure anywhere.
+  const parsed = parseTranscript(fixtureText("session-tool-turns.jsonl"));
+  const line = formatSessionReceipt(receiptFor(parsed).session).split("\n")[0];
+  const figures = [...line.matchAll(/(\d+\.?\d*) (?:Wh|kWh|g CO2e|kg CO2e|min|h|mL|L)\b/g)];
+  assert.ok(figures.length >= 4, line);
+  for (const m of figures) {
+    const digits = m[1].replace(".", "").replace(/^0+/, "").replace(/0+$/, "");
+    assert.ok(digits.length <= 2, `${m[0]} has more than two significant figures`);
+  }
+});
+
+test("format: tokens are compact", () => {
+  assert.equal(formatTokens(15), "15");
+  assert.equal(formatTokens(7322), "7.3k");
+  assert.equal(formatTokens(32211), "32.2k");
+  assert.equal(formatTokens(540000), "540k");
+  assert.equal(formatTokens(999600), "1.00M");
+  assert.equal(formatTokens(2077094), "2.08M");
+  assert.equal(formatTokens(584000000), "584M");
+});
+
+function callsOf(n, usage) {
+  return Array.from({ length: n }, (_, i) => ({
+    id: `m${i}`,
+    model: "claude-sonnet-5-5",
+    turn: 1,
+    usage: {
+      input_tokens: 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+      output_tokens: 0,
+      ...usage,
+    },
+  }));
+}
+
+test("format: the cache-heavy receipt from the owner, exactly, four lines, labels in a column", () => {
+  const response = callsOf(1, {
+    cache_read_input_tokens: 2044863,
+    cache_creation_input_tokens: 32211,
+    output_tokens: 7322,
+  });
+  const rest = callsOf(573, {
+    cache_read_input_tokens: 150000,
+    cache_creation_input_tokens: 2000,
+    output_tokens: 300,
+  });
+  const text = formatReceipt({ response: disclose(response), session: disclose([...response, ...rest]) });
+  assert.equal(
+    text,
+    [
+      "this response   370 Wh - 160 g CO2e - 66 h tree-time - ~1.8 L water",
+      "session (574)   16 kWh - 6.7 kg CO2e - 2800 h tree-time - ~76 L water",
+      "tokens          2.08M in (98% cache read) - 7.3k out",
+      "estimate, low confidence - claude-sonnet-5-5 - AiEDs v2",
+    ].join("\n"),
   );
-  assert.ok(!text.includes("\n"), "a hook message is one line");
-  assert.match(text, /^AiEDs receipt: \d+\.\d{4} Wh, \d+\.\d{4} gCO2e, [^ ]+ (min|hrs) tree-time \(this response\)\./);
-  assert.match(text, /Session: .* \(4 model calls\)\./);
-  assert.match(text, /Tokens this response: 27,457 in \(27,450 cache read, 0 cache write\), 390 out\./);
+});
+
+test("format: a tiny response with no cache has no tokens line, and the scopes are on separate lines", () => {
+  const one = callsOf(1, { input_tokens: 15, output_tokens: 6 });
+  const text = formatReceipt({ response: disclose(one), session: disclose(one) });
+  assert.equal(
+    text,
+    [
+      "this response   0.0068 Wh - 0.0029 g CO2e - 0.073 min tree-time - ~0.033 mL water",
+      "session (1)     0.0068 Wh - 0.0029 g CO2e - 0.073 min tree-time - ~0.033 mL water",
+      "estimate, low confidence - claude-sonnet-5-5 - AiEDs v2",
+    ].join("\n"),
+  );
+});
+
+test("format: the tokens line appears at 20 percent cache read and not below", () => {
+  const at = (read) =>
+    formatResponseReceipt(
+      disclose(callsOf(1, { input_tokens: 1000 - read, cache_read_input_tokens: read, output_tokens: 10 })),
+    );
+  assert.match(at(200), /^tokens {10}1\.0k in \(20% cache read\) - 10 out$/m);
+  assert.doesNotMatch(at(199), /^tokens /m);
+});
+
+test("format: a long session reads in hours and kilograms", () => {
+  const resp = callsOf(1, {
+    input_tokens: 20000,
+    cache_read_input_tokens: 350000,
+    cache_creation_input_tokens: 30000,
+    output_tokens: 5000,
+  });
+  const rest = callsOf(1999, {
+    input_tokens: 1000,
+    cache_read_input_tokens: 400000,
+    cache_creation_input_tokens: 8000,
+    output_tokens: 1500,
+  });
+  const text = formatReceipt({ response: disclose(resp), session: disclose([...resp, ...rest]) });
+  assert.equal(
+    text,
+    [
+      "this response   73 Wh - 31 g CO2e - 13 h tree-time - ~360 mL water",
+      "session (2000)  140 kWh - 62 kg CO2e - 26000 h tree-time - ~700 L water",
+      "tokens          400k in (88% cache read) - 5.0k out",
+      "estimate, low confidence - claude-sonnet-5-5 - AiEDs v2",
+    ].join("\n"),
+  );
+});
+
+test("format: the receipt carries the tilde water figure and no range", () => {
+  const text = formatReceipt(receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl"))));
+  assert.match(text, /^this response {3}.* Wh - .* g CO2e - .* tree-time - ~[\d.]+ (mL|L) water$/m);
+  assert.match(text, /^session \(4\) {5}/m);
+  assert.doesNotMatch(text, / to [\d.]+ (mL|L)|teaspoon/);
+  assert.match(text, /^tokens {10}27\.5k in \(100% cache read\) - 390 out$/m);
   assert.match(
     text,
-    /Basis: AiEDs v2, claude-opus-4-1-20250805, claude-sonnet-4-5-20250929, class estimate, low confidence\./,
+    /^estimate, low confidence - claude-opus-4-1-20250805, claude-sonnet-4-5-20250929 - AiEDs v2$/m,
   );
 });
 
 // -- water (methodology 2.6) ---------------------------------------------------
 
-test("water: the receipt line is the library's, from the same energy", () => {
+test("water: the receipt figure is the library's, from the same energy, and the detail line keeps the range", () => {
   const receipt = receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl")));
   const { response, session } = receipt;
   assert.deepEqual(response.water, waterFromEnergyWh(response.energyWh));
-  assert.equal(formatWater(response), waterLine(waterFromEnergyWh(response.energyWh)));
+  assert.equal(formatWaterDetail(response), waterLine(waterFromEnergyWh(response.energyWh)));
+  assert.match(formatWater(response), /^~[\d.]+ (mL|L)$/);
   assert.equal(response.water.confidence, "low");
   assert.equal(response.water.basis, "US average");
   // Water is linear in energy, so the session is at least the response.
   assert.ok(session.water.waterMl.default >= response.water.waterMl.default);
 });
 
-test("water: one line after the carbon figures, with a range and the modeled-estimate words", () => {
+test("water: the range, the teaspoons and the modeled-estimate words are in explain, not on the receipt", () => {
   const receipt = receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl")));
-  const text = formatReceipt(receipt);
+  assert.doesNotMatch(formatReceipt(receipt), /Modeled estimate|Water:/);
+  const explained = formatExplanation(receipt);
   assert.match(
-    text,
-    /gCO2e, [^ ]+ (min|hrs) tree-time \(this response\)\. Water: about \d+(\.\d+)? mL \(\d+(\.\d+)? to \d+(\.\d+)? mL\), [a-z0-9. ]*teaspoons?\. Modeled estimate\. Session: /,
+    explained,
+    /Water: about \d+(\.\d+)? mL \(\d+(\.\d+)? to \d+(\.\d+)? mL\), [a-z0-9. ]*teaspoons?\. Modeled estimate\./,
   );
-  assert.ok(text.endsWith("Water is a modeled estimate."), "the third sentence closes the receipt");
-  const session = formatSessionReceipt(receipt.session);
-  const lines = session.split(/\r?\n/);
-  assert.match(lines[1], /^Water: about /, "the session receipt carries its own water line");
+  assert.ok(explained.trimEnd().endsWith("Water is a modeled estimate."), "the third sentence closes explain");
 });
 
 test("water: the example in the brief, 0.24 Wh", () => {
@@ -429,6 +567,31 @@ test("explain: formulas and coefficient sources come from the library table", ()
   assert.match(text, /waterL = siteL \+ gridL/);
   assert.match(text, /site 0\.36 L\/kWh \(0\.27 to 1\.8\), grid 4\.52 L\/kWh \(1\.5 to 9\.5\), US average/);
   assert.match(text, /LBNL-2001637/);
+  assert.doesNotMatch(text, /This receipt, unrounded/, "no session, no receipt section");
+});
+
+test("explain: with a receipt it carries the unrounded figures, the water range and the full counts", () => {
+  const receipt = receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl")));
+  const text = formatExplanation(receipt);
+  const { response: r, session: s } = receipt;
+  assert.match(text, /This receipt, unrounded/);
+  assert.ok(text.includes(`energy ${r.energyWh} Wh, carbon ${r.carbonGrams} gCO2e, tree-time ${r.treeTimeMinutes} minutes`));
+  assert.ok(text.includes(`energy ${s.energyWh} Wh`));
+  const w = r.water.waterMl;
+  assert.ok(text.includes(`water ${w.default} mL (range ${w.low} to ${w.high} mL)`));
+  assert.match(text, /tokens 27,457 in \(7 plain, 0 cache write, 27,450 cache read\), 390 out; 2 model calls/);
+  assert.match(text, /basis AiEDs v2, methodology .*class estimate, low confidence/);
+});
+
+test("explain command: --transcript adds the unrounded receipt, an unknown session falls back to the formulas", async () => {
+  const withReceipt = await runNode([script, "explain", "--transcript", fixture("session-tool-turns.jsonl")]);
+  assert.equal(withReceipt.code, 0, withReceipt.stderr);
+  assert.match(withReceipt.stdout, /This receipt, unrounded/);
+  assert.match(withReceipt.stdout, /water [\d.]+ mL \(range [\d.]+ to [\d.]+ mL\)/);
+  const bare = await runNode([script, "explain", "--session", "no-such-session"]);
+  assert.equal(bare.code, 0, bare.stderr);
+  assert.doesNotMatch(bare.stdout, /This receipt, unrounded|No transcript was found/);
+  assert.match(bare.stdout, /Formulas \(methodology section 2\.4\)/);
 });
 
 // -- the hook as Claude Code runs it -------------------------------------------
@@ -459,9 +622,9 @@ test("hook: prints exactly the systemMessage the library-backed formatter builds
       inputTokenBreakdown: { plain: 7, cacheCreation: 0, cacheRead: 27450 },
       outputTokens: 390,
     });
-    assert.ok(out.systemMessage.includes(`${lib.energyWh.toFixed(4)} Wh`));
-    assert.ok(out.systemMessage.includes(`${lib.carbonGrams.toFixed(4)} gCO2e`));
-    assert.ok(out.systemMessage.includes(`${lib.treeTimeLabel} tree-time`));
+    assert.ok(out.systemMessage.includes(`${formatEnergy(lib.energyWh)} - `));
+    assert.ok(out.systemMessage.includes(`${formatCarbon(lib.carbonGrams)} - `));
+    assert.ok(out.systemMessage.includes(`${formatTreeTime(lib.treeTimeMinutes)} tree-time`));
     assert.doesNotMatch(r.stdout, CANARIES);
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -575,7 +738,7 @@ test("hook: an unwritable log path never changes the exit code or the receipt", 
       { env: { AIEDS_RECEIPT_LOG: join(dir, "no such dir", "x", "log.jsonl") } },
     );
     assert.equal(r.code, 0);
-    assert.match(JSON.parse(r.stdout).systemMessage, /^AiEDs receipt: /);
+    assert.match(JSON.parse(r.stdout).systemMessage, /^this response {3}/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -611,8 +774,10 @@ test("hook: waits for a lagging transcript to include the last message", async (
     });
     assert.equal(r.code, 0);
     const text = JSON.parse(r.stdout).systemMessage;
-    assert.match(text, /\(2 model calls\)/, "the late message is counted");
-    assert.match(text, /30 out/);
+    assert.match(text, /^session \(2\) {5}/m, "the late message is counted");
+    // Both calls (100 in + 10 out, 100 in + 20 out) are in the session energy.
+    const both = disclosureFromResponse({ provider: "Anthropic", model: "claude-sonnet-4-5", inputTokens: 200, outputTokens: 30 });
+    assert.ok(text.includes(`session (2)     ${formatEnergy(both.energyWh)} - `), text);
     assert.doesNotMatch(text, CANARIES);
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -627,7 +792,7 @@ test("hook: a last message that never lands is not waited on forever", async () 
   });
   assert.equal(r.code, 0);
   assert.ok(Date.now() - start < 6000, "bounded wait");
-  assert.match(JSON.parse(r.stdout).systemMessage, /\(3 model calls\)/);
+  assert.match(JSON.parse(r.stdout).systemMessage, /^session \(3\) {5}/m);
 });
 
 // -- on-demand commands --------------------------------------------------------
@@ -658,7 +823,7 @@ test("receipt command: a session id is validated and found under the config dir"
       env: { CLAUDE_CONFIG_DIR: cfg },
     });
     assert.equal(r.code, 0);
-    assert.match(r.stdout, /^AiEDs session receipt: /);
+    assert.match(r.stdout, /^session \(3\) {5}/);
 
     const missing = await runNode(
       [script, "receipt", "--session", "00000000-0000-4000-8000-0000000000ff"],
@@ -707,7 +872,7 @@ test("paths: a transcript path with spaces and, on Windows, backslashes works", 
     const native = process.platform === "win32" ? transcript.replaceAll("/", "\\") : transcript;
     const r = await runHook({ transcript_path: native });
     assert.equal(r.code, 0);
-    assert.match(JSON.parse(r.stdout).systemMessage, /^AiEDs receipt: /);
+    assert.match(JSON.parse(r.stdout).systemMessage, /^this response {3}/);
     if (process.platform === "win32") {
       assert.ok(native.includes("\\"));
     }

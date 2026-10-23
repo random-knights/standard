@@ -153,16 +153,16 @@ test("copilot hook: one receipt per turn, none when nothing is new, no text anyw
 
   const t1 = await runCli(["hook", "copilot"], { input: hookInput(file), env });
   assert.equal(t1.code, 0);
-  assert.match(t1.stdout, /AiEDs receipt: /);
-  assert.match(t1.stdout, /Tokens: 47,351 in \(33,310 cache read, 14,035 cache write\), 158 out\./, "both calls of the turn");
-  assert.match(t1.stdout, /Most of this is the session's context/);
+  assert.match(t1.stdout, /this response {3}/);
+  assert.match(t1.stdout, /^tokens {10}47\.4k in \(70% cache read\) - 158 out$/m, "both calls of the turn");
+  assert.doesNotMatch(t1.stdout, /Most of this is the session's context/, "the tokens line replaces the context note");
 
   const again = await runCli(["hook", "copilot"], { input: hookInput(file), env });
   assert.equal(again.stdout, "", "no new usage, no second receipt");
 
   appendFileSync(file, TURN2.map((l) => `${l}\n`).join(""));
   const t2 = await runCli(["hook", "copilot"], { input: hookInput(file), env });
-  assert.match(t2.stdout, /Tokens: 24,542 in \(22,822 cache read, 1,717 cache write\), 92 out\./);
+  assert.match(t2.stdout, /^tokens {10}24\.5k in \(93% cache read\) - 92 out$/m);
 
   for (const out of [t1.stdout, t1.stderr, t2.stdout, t2.stderr]) assert.ok(!out.includes("CANARY"));
   const marks = readFileSync(join(dir, "config", "copilot-marks.json"), "utf8");
@@ -189,5 +189,5 @@ test("copilot hook: without transcriptPath it finds the session's own file", asy
   const env = hermeticEnv(dir);
   writeEvents(dir, TURN1);
   const r = await runCli(["hook", "copilot"], { input: JSON.stringify({ sessionId: SESSION }), env });
-  assert.match(r.stdout, /AiEDs receipt/);
+  assert.match(r.stdout, /this response {3}/);
 });

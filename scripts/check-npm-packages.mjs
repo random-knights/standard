@@ -214,7 +214,7 @@ for (const name of Object.keys(EXPECTED)) {
       execSync(`npm exec --offline -- aieds ${args}`, { cwd: app, encoding: "utf8", env, stdio: ["ignore", "pipe", "inherit"] });
     try {
       if (!/^\d+\.\d+\.\d+/.test(bin("--version"))) fail("aieds: --version printed no version");
-      if (!/AiEDs receipt/.test(bin("usage --provider Test --model test-model --input 100 --output 20"))) {
+      if (!/^this response {3}/m.test(bin("usage --provider Test --model test-model --input 100 --output 20"))) {
         fail("aieds: usage printed no receipt");
       }
       if (!/not connected/.test(bin("status"))) fail("aieds: status did not say it is not connected");

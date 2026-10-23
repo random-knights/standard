@@ -20,7 +20,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { disclosureFromResponse } from "../vendor/lib/dist/index.js";
-import { REQUIRED_COPY, formatReceipt, parseSession, receiptFor } from "../scripts/core.mjs";
+import { formatReceipt, parseSession, receiptFor } from "../scripts/core.mjs";
 import {
   TESTED_HOSTS,
   findHostSession,
@@ -130,9 +130,8 @@ test("grok: receipt energy equals the library, and model calls are summed", () =
 
 test("grok: the basis says there is no published figure, not that the model is unlisted", () => {
   const text = formatReceipt(receiptFor(parseGrokSession(fixtureText("grok-updates.jsonl"))));
-  assert.match(text, /no published figure for this model, class estimate, low confidence/);
-  assert.doesNotMatch(text, /not in the coefficient table/);
-  for (const sentence of REQUIRED_COPY) assert.ok(text.includes(sentence));
+  assert.match(text, /^estimate, low confidence - .*\(no published figure\) - AiEDs v2$/m);
+  assert.doesNotMatch(text, /not in table/);
   assert.doesNotMatch(text, CANARIES);
 });
 
@@ -156,9 +155,9 @@ test("grok hook: camelCase and snake_case fields both work", async () => {
   const camel = await runHook(base);
   assert.equal(camel.code, 0);
   const text = JSON.parse(camel.stdout).systemMessage;
-  assert.match(text, /30,000 in \(20,000 cache read, 1,000 cache write\), 700 out/);
+  assert.match(text, /^tokens {10}30\.0k in \(67% cache read\) - 700 out$/m);
   assert.doesNotMatch(text, CANARIES);
-  for (const sentence of REQUIRED_COPY) assert.ok(text.includes(sentence));
+  assert.match(text, /^estimate, low confidence - .* - AiEDs v2$/m);
 
   const snake = await runHook({
     hook_event_name: "stop",
@@ -198,7 +197,7 @@ test("grok hook: waits for the turn_completed record of this prompt", async () =
       reason: "end_turn",
     });
     assert.equal(r.code, 0);
-    assert.match(JSON.parse(r.stdout).systemMessage, /30,000 in/);
+    assert.match(JSON.parse(r.stdout).systemMessage, /30\.0k in/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -243,8 +242,8 @@ test("grok: a session file in a shape this reader does not know prints nothing",
 test("grok receipt: --transcript prints the session total from the session file", async () => {
   const r = await run(["receipt", "--transcript", fixture("grok-updates.jsonl")]);
   assert.equal(r.code, 0);
-  assert.match(r.stdout, /over 7 model calls/);
-  assert.match(r.stdout, /43,366 in/);
+  assert.match(r.stdout, /^session \(7\) {5}/m);
+  assert.match(r.stdout, /43.4k in/);
   assert.match(r.stdout, /791 out/);
   assert.doesNotMatch(r.stdout, CANARIES);
 });
@@ -264,7 +263,7 @@ test("grok receipt: --session finds updates.jsonl under GROK_HOME, ids are valid
     const r = await run(["receipt", "--session", id], undefined, {
       env: { GROK_HOME: dir, CLAUDE_CONFIG_DIR: join(dir, "none") },
     });
-    assert.match(r.stdout, /over 7 model calls/);
+    assert.match(r.stdout, /^session \(7\) {5}/m);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
