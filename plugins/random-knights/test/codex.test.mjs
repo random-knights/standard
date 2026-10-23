@@ -22,7 +22,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { disclosureFromResponse } from "../vendor/lib/dist/index.js";
-import { REQUIRED_COPY, disclose, formatReceipt, parseSession, receiptFor } from "../scripts/core.mjs";
+import { disclose, formatReceipt, parseSession, receiptFor } from "../scripts/core.mjs";
 import {
   TESTED_HOSTS,
   findHostSession,
@@ -160,7 +160,7 @@ test("codex: the rollout's text never reaches the receipt", () => {
 
 // -- hook ----------------------------------------------------------------------
 
-test("codex hook: prints the receipt as systemMessage with the required sentences", async () => {
+test("codex hook: prints the receipt as systemMessage with the four-line shape", async () => {
   const r = await runHook({
     session_id: "00000000-0000-4000-8000-0000000000c1",
     turn_id: "turn-B",
@@ -175,9 +175,9 @@ test("codex hook: prints the receipt as systemMessage with the required sentence
   assert.equal(r.code, 0);
   const out = JSON.parse(r.stdout);
   assert.deepEqual(Object.keys(out), ["systemMessage"]);
-  for (const sentence of REQUIRED_COPY) assert.ok(out.systemMessage.includes(sentence));
+  assert.match(out.systemMessage, /^estimate, low confidence - .* - AiEDs v2$/m);
   assert.doesNotMatch(out.systemMessage, CANARIES);
-  assert.match(out.systemMessage, /15,733 in \(12,288 cache read, 0 cache write\), 5 out/);
+  assert.match(out.systemMessage, /^tokens {10}15\.7k in \(78% cache read\) - 5 out$/m);
   assert.match(out.systemMessage, /gpt-5\.6-sol/);
 });
 
@@ -214,8 +214,8 @@ test("codex hook: waits for the rollout to hold this turn's token_count", async 
     });
     assert.equal(r.code, 0);
     const text = JSON.parse(r.stdout).systemMessage;
-    assert.match(text, /\(3 model calls\)/, "the late call is counted");
-    assert.match(text, /15,733 in/);
+    assert.match(text, /^session \(3\) {5}/m, "the late call is counted");
+    assert.match(text, /15.7k in/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -272,8 +272,8 @@ test("codex receipt: --session finds a rollout by id under CODEX_HOME", async ()
     const r = await run(["receipt", "--session", id], undefined, {
       env: { CODEX_HOME: dir, CLAUDE_CONFIG_DIR: join(dir, "none"), GROK_HOME: join(dir, "none") },
     });
-    assert.match(r.stdout, /over 3 model calls/);
-    assert.match(r.stdout, /66,755 in/);
+    assert.match(r.stdout, /^session \(3\) {5}/m);
+    assert.match(r.stdout, /66.8k in/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

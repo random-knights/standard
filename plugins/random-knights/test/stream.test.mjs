@@ -64,7 +64,7 @@ test("ollamaChat stream:true reads the final chunk across arbitrary byte boundar
   assert.equal(r.text, "xx");
   assert.deepEqual(pieces, ["x", "x"]);
   assert.deepEqual([r.usage.inputTokens, r.usage.outputTokens], [28, 3]);
-  assert.match(r.receipt, /Tokens: 28 in, 3 out\./);
+  assert.match(r.receipt, /^this response {3}.* Wh - /m);
   assert.equal(callFromUsage(r.usage).usage.output_tokens, 3);
 });
 

@@ -40,21 +40,6 @@ import {
   waterLine,
 } from "../vendor/lib/dist/index.js";
 
-/**
- * One plain line for a small reply on a big session. Cache tokens count as
- * input at the full input rate (methodology 2.4.1), so a one-word reply after a
- * long session still reads large: the session's context is what is being paid
- * for, not the reply.
- */
-export const CONTEXT_NOTE =
-  "Most of this is the session's context, which is read again on every reply " +
-  "(cache tokens count as input at the full rate, methodology 2.4.1).";
-
-/** True when the input dwarfs the output, so CONTEXT_NOTE belongs on the receipt. */
-export function contextDominates(tokens) {
-  return tokens.input >= 1000 && tokens.input >= 10 * Math.max(tokens.output, 1);
-}
-
 export const REQUIRED_COPY = Object.freeze([
   MODELED_ESTIMATE_COPY,
   EDUCATIONAL_COMPARISON_COPY,
@@ -319,24 +304,128 @@ export function receiptFor(parsed) {
 
 // -- Formatting ----------------------------------------------------------------
 //
-// Decimals follow the shipped rand0m.ai disclosure card (AiedsFigures): energy
-// and carbon to four decimals, promoted to kWh and kg at a full unit, and
-// Tree-Time through the library's own label.
+// ONE formatter. The Claude Code hook, `aieds receipt`, the Ollama and
+// chat-completion wrappers, the Codex, Grok and Copilot hooks and the npm
+// `aieds` command (a staged copy of this directory) all print through
+// receiptLines() below, so rounding and unit scaling live in exactly one place.
+// This is presentation only: every figure is read from the disclosure the
+// library computed, and `aieds explain` prints the unrounded values.
+//
+// Rules (owner-approved format, 2026-10-23):
+//   - Units auto-scale so the number reads 1 to 999 where possible: Wh below
+//     1000 else kWh; g CO2e below 1000 else kg; minutes below 120 else hours;
+//     mL below 1000 else L.
+//   - Significant figures: two when confidence is low or the basis is a class
+//     estimate, three otherwise. A value of 1 or more never shows more than one
+//     decimal place. Below 1 the significant figures govern, so a small figure
+//     is not rounded away to 0.
+//   - Water carries a tilde and no range. The range is in `aieds explain`.
+//   - Two scopes, two lines. The tokens line appears only when cache reads are
+//     20 percent or more of the input.
 
-export function formatEnergy(wh) {
-  return wh >= 1000
-    ? `${(wh / 1000).toFixed(4)} kWh`
-    : `${wh.toFixed(4)} Wh`;
+/** Rounds to `sf` significant figures; a value of 1 or more keeps at most one decimal. */
+function roundFigure(x, sf) {
+  if (!Number.isFinite(x) || x <= 0) return { value: 0, decimals: 0 };
+  const placesFor = (v) => {
+    const places = sf - 1 - Math.floor(Math.log10(v));
+    return v >= 1 ? Math.min(places, 1) : places;
+  };
+  const round = (v, p) => {
+    const f = 10 ** Math.abs(p);
+    return p >= 0 ? Math.round(v * f) / f : Math.round(v / f) * f;
+  };
+  let places = placesFor(x);
+  let value = round(x, places);
+  // 9.96 rounds up to 10: derive the places again from the rounded value.
+  places = placesFor(value);
+  value = round(x, places);
+  return { value, decimals: Math.max(0, places) };
 }
 
-export function formatCarbon(grams) {
-  return grams >= 1000
-    ? `${(grams / 1000).toFixed(4)} kgCO2e`
-    : `${grams.toFixed(4)} gCO2e`;
+function figureText(x, sf) {
+  const r = roundFigure(x, sf);
+  return r.value.toFixed(r.decimals);
+}
+
+/**
+ * Formats a value in the right unit. `steps` is ascending
+ * [{ unit, perBase, limit }]; the value moves up a step once it reaches the
+ * limit of the step below. The check is repeated on the rounded figure, so
+ * 999.6 Wh at two figures reads as 1.0 kWh and never as 1000 Wh.
+ */
+function scaled(base, steps, sf) {
+  let i = 0;
+  while (i < steps.length - 1 && base >= steps[i].limit) i += 1;
+  let text = figureText(base / steps[i].perBase, sf);
+  if (i < steps.length - 1 && Number(text) * steps[i].perBase >= steps[i].limit) {
+    i += 1;
+    text = figureText(base / steps[i].perBase, sf);
+  }
+  return `${text} ${steps[i].unit}`;
+}
+
+const ENERGY_STEPS = [
+  { unit: "Wh", perBase: 1, limit: 1000 },
+  { unit: "kWh", perBase: 1000, limit: Infinity },
+];
+const CARBON_STEPS = [
+  { unit: "g CO2e", perBase: 1, limit: 1000 },
+  { unit: "kg CO2e", perBase: 1000, limit: Infinity },
+];
+const TREE_STEPS = [
+  { unit: "min", perBase: 1, limit: 120 },
+  { unit: "h", perBase: 60, limit: Infinity },
+];
+const WATER_STEPS = [
+  { unit: "mL", perBase: 1, limit: 1000 },
+  { unit: "L", perBase: 1000, limit: Infinity },
+];
+
+const DEFAULT_SF = 2;
+
+export function formatEnergy(wh, sf = DEFAULT_SF) {
+  return scaled(wh, ENERGY_STEPS, sf);
+}
+
+export function formatCarbon(grams, sf = DEFAULT_SF) {
+  return scaled(grams, CARBON_STEPS, sf);
+}
+
+export function formatTreeTime(minutes, sf = DEFAULT_SF) {
+  return scaled(minutes, TREE_STEPS, sf);
+}
+
+/** Two figures when confidence is low or the basis is a class estimate, else three. */
+export function sigFigsFor(d) {
+  const classEstimate = d.provenance === "class-estimated" || d.provenance === "unknown";
+  return d.confidence === "low" || classEstimate ? 2 : 3;
+}
+
+/** "~1.8 L", or "" when there is no usable water estimate (methodology 2.6.12). */
+export function formatWater(d, sf = DEFAULT_SF) {
+  return d.water ? `~${scaled(d.water.waterMl.default, WATER_STEPS, sf)}` : "";
+}
+
+/** Compact token count: 7.3k, 540k, 2.08M. */
+export function formatTokens(n) {
+  if (n < 1000) return String(n);
+  if (n < 1e6) {
+    const k = n / 1000;
+    const text = k < 100 ? k.toFixed(1) : String(Math.round(k));
+    // 999.6k rounds up to 1000k, which is 1.00M.
+    return Number(text) >= 1000 ? "1.00M" : `${text}k`;
+  }
+  const m = n / 1e6;
+  return `${m >= 100 ? Math.round(m) : m >= 10 ? m.toFixed(1) : m.toFixed(2)}M`;
 }
 
 function formatCount(n) {
   return n.toLocaleString("en-US");
+}
+
+/** The share of input that was a cache read, 0 to 1. */
+function cacheShare(tokens) {
+  return tokens.input > 0 ? tokens.cacheRead / tokens.input : 0;
 }
 
 function basisLabel(provenance, models, inTable = false) {
@@ -355,80 +444,125 @@ function basisLabel(provenance, models, inTable = false) {
 }
 
 /**
- * The water line for a disclosure: plain words, the range, "Modeled estimate."
- * Empty when there is no usable energy, so no water claim is made (2.6.12).
+ * The water line for a disclosure with its range and the full words, for
+ * `aieds explain`; the receipt itself shows only the tilde figure. Empty when
+ * there is no usable energy, so no water claim is made (2.6.12).
  */
-export function formatWater(d) {
+export function formatWaterDetail(d) {
   return d.water ? waterLine(d.water) : "";
 }
 
-function figures(d) {
-  return `${formatEnergy(d.energyWh)}, ${formatCarbon(d.carbonGrams)}, ${d.treeTimeLabel} tree-time`;
+const SEP = " - ";
+const LABEL_WIDTH = 16;
+const label = (text) => text.padEnd(LABEL_WIDTH);
+
+function scopeLine(name, d) {
+  const sf = sigFigsFor(d);
+  const parts = [
+    formatEnergy(d.energyWh, sf),
+    formatCarbon(d.carbonGrams, sf),
+    `${formatTreeTime(d.treeTimeMinutes, sf)} tree-time`,
+  ];
+  const water = formatWater(d, sf);
+  if (water.length > 0) parts.push(`${water} water`);
+  return label(name) + parts.join(SEP);
+}
+
+function tokensLine(t) {
+  if (cacheShare(t) < 0.2) return "";
+  const pct = Math.round(cacheShare(t) * 100);
+  return (
+    label("tokens") +
+    `${formatTokens(t.input)} in (${pct}% cache read)${SEP}${formatTokens(t.output)} out`
+  );
+}
+
+function footerLine(d) {
+  const models = [...new Set(d.models)];
+  // A model with no published figure says so on the receipt itself, because a
+  // wrapper receipt has no session to `explain`.
+  const note = !d.modelsInTable ? " (not in table)" : d.provenance === "unknown" ? " (no published figure)" : "";
+  const names = models.length === 0 ? "unknown model" : models.join(", ") + note;
+  return `estimate, ${d.confidence} confidence${SEP}${names}${SEP}${d.aiedsVersion}`;
 }
 
 /**
- * The receipt text a user sees after each response. One line, because Claude
- * Code prefixes every line of a hook message with the hook's name. Plain
- * ASCII, no exclamation marks. Cached tokens are counted as input
- * (methodology 2.4.1); the breakdown is published beside the total.
+ * The one printer. `scopes` is an ordered list of { name, d } (one disclosure
+ * each); `tokenScope` is the disclosure whose tokens line may appear; `footer`
+ * is the disclosure the last line describes. Returns four lines at most.
+ */
+function receiptLines(scopes, tokenScope, footer) {
+  return [
+    ...scopes.map((s) => scopeLine(s.name, s.d)),
+    tokensLine(tokenScope.tokens),
+    footerLine(footer),
+  ].filter((x) => x.length > 0);
+}
+
+const sessionName = (s) => `session (${s.calls})`;
+
+/**
+ * The receipt text a user sees after each response: this response and the
+ * session on two lines (never one number), the tokens line when the cache
+ * explains the size, and one line of basis. Cached tokens are counted as input
+ * (methodology 2.4.1); the breakdown is in `aieds explain`. Plain ASCII.
  */
 export function formatReceipt(receipt) {
   const { response: r, session: s } = receipt;
-  const callWord = (n) => (n === 1 ? "call" : "calls");
-  return [
-    `AiEDs receipt: ${figures(r)} (this response).`,
-    formatWater(r),
-    `Session: ${figures(s)} (${s.calls} model ${callWord(s.calls)}).`,
-    `Tokens this response: ${formatCount(r.tokens.input)} in ` +
-      `(${formatCount(r.tokens.cacheRead)} cache read, ${formatCount(r.tokens.cacheCreation)} cache write), ` +
-      `${formatCount(r.tokens.output)} out.`,
-    contextDominates(r.tokens) ? CONTEXT_NOTE : "",
-    `Basis: ${s.aiedsVersion}, ${basisLabel(s.provenance, s.models, s.modelsInTable)}.`,
-    REQUIRED_COPY.join(" "),
-  ]
-    .filter((x) => x.length > 0)
-    .join(" ");
+  return receiptLines(
+    [
+      { name: "this response", d: r },
+      { name: sessionName(s), d: s },
+    ],
+    r,
+    s,
+  ).join("\n");
 }
 
 /**
  * One-response receipt for the wrappers (Ollama, any OpenAI-compatible chat
- * completion). There is no session to total, so it is one line about one
- * response, with the same basis text and the same two required sentences.
+ * completion) and the Copilot hook. There is no session to total.
  */
 export function formatResponseReceipt(d) {
-  const t = d.tokens;
-  const cache =
-    t.cacheRead > 0 || t.cacheCreation > 0
-      ? ` (${formatCount(t.cacheRead)} cache read, ${formatCount(t.cacheCreation)} cache write)`
-      : "";
-  return [
-    `AiEDs receipt: ${figures(d)} (this response).`,
-    formatWater(d),
-    `Tokens: ${formatCount(t.input)} in${cache}, ${formatCount(t.output)} out.`,
-    contextDominates(t) ? CONTEXT_NOTE : "",
-    `Basis: ${d.aiedsVersion}, ${basisLabel(d.provenance, d.models, d.modelsInTable)}.`,
-    REQUIRED_COPY.join(" "),
-  ]
-    .filter((x) => x.length > 0)
-    .join(" ");
+  return receiptLines([{ name: "this response", d }], d, d).join("\n");
 }
 
+/** `aieds receipt`: the session so far, one scope. */
 export function formatSessionReceipt(session) {
-  const lines = [
-    `AiEDs session receipt: ${figures(session)} over ${session.calls} model ${session.calls === 1 ? "call" : "calls"}.`,
-    formatWater(session),
-    `Tokens: ${formatCount(session.tokens.input)} in ` +
-      `(${formatCount(session.tokens.plain)} plain, ${formatCount(session.tokens.cacheCreation)} cache write, ` +
-      `${formatCount(session.tokens.cacheRead)} cache read), ${formatCount(session.tokens.output)} out. ` +
-      `Cache tokens are counted as input at the full input rate (methodology 2.4.1).`,
-    `Basis: ${session.aiedsVersion}, methodology ${session.methodologyVersion}; ${basisLabel(session.provenance, session.models, session.modelsInTable)}.`,
-    REQUIRED_COPY.join(" "),
-  ].filter((x) => x.length > 0);
-  return lines.join("\n");
+  return receiptLines([{ name: sessionName(session), d: session }], session, session).join("\n");
 }
 
-/** Formulas, constants and coefficient sources, all read from the library. */
-export function formatExplanation() {
+/** One scope of `aieds explain`: the unrounded figures, the range, the full counts. */
+function unroundedBlock(name, d) {
+  const t = d.tokens;
+  const lines = [
+    `${name}:`,
+    `  energy ${d.energyWh} Wh, carbon ${d.carbonGrams} gCO2e, tree-time ${d.treeTimeMinutes} minutes`,
+  ];
+  if (d.water) {
+    const w = d.water.waterMl;
+    lines.push(`  water ${w.default} mL (range ${w.low} to ${w.high} mL)`);
+    lines.push(`  ${formatWaterDetail(d)}`);
+  }
+  lines.push(
+    `  tokens ${formatCount(t.input)} in (${formatCount(t.plain)} plain, ` +
+      `${formatCount(t.cacheCreation)} cache write, ${formatCount(t.cacheRead)} cache read), ` +
+      `${formatCount(t.output)} out; ${d.calls} model ${d.calls === 1 ? "call" : "calls"}`,
+  );
+  lines.push(
+    `  basis ${d.aiedsVersion}, methodology ${d.methodologyVersion}; ` +
+      basisLabel(d.provenance, d.models, d.modelsInTable),
+  );
+  return lines;
+}
+
+/**
+ * Formulas, constants and coefficient sources, all read from the library.
+ * Given a receipt ({ response, session }), also prints what the compact
+ * receipt rounds away: the unrounded figures, the water range and the full
+ * token counts.
+ */
+export function formatExplanation(receipt) {
   const lines = [];
   lines.push(
     `AiEDs ${FACTORS.impactModelVersion} receipt, methodology ${METHODOLOGY_VERSION}.`,
@@ -496,6 +630,13 @@ export function formatExplanation() {
     "Confidence is low: a token count is a proxy for energy, not a measurement of it. Water confidence is low by rule.",
   );
   lines.push("Full text: https://standard.rand0m.ai");
+  if (receipt) {
+    lines.push("");
+    lines.push("This receipt, unrounded (the receipt shows two figures while confidence is low):");
+    lines.push(...unroundedBlock("this response", receipt.response));
+    lines.push(...unroundedBlock(`session (${receipt.session.calls})`, receipt.session));
+  }
+  lines.push("");
   lines.push(REQUIRED_COPY.join(" "));
   return lines.join("\n");
 }

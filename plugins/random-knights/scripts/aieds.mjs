@@ -13,7 +13,9 @@
 //   aieds install claude|codex|copilot [--yes]
 //   aieds receipt [--session <id> | --transcript <file> | --last grok]
 //                 [--format rk-receipts] [--sync]
-//   aieds explain                   Formulas and coefficient sources.
+//   aieds explain [--session <id> | --transcript <file> | --last grok]
+//                                   Formulas and coefficient sources; with a session,
+//                                   also that receipt unrounded, with the water range.
 //
 // For tools with no hook mechanism:
 //   aieds ollama --model <m> [--host <url>] [--num-ctx <n>] [--stream] [--no-text] <prompt>
@@ -290,8 +292,11 @@ function argValue(args, flag) {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : undefined;
 }
 
-async function runReceipt(args, env = process.env) {
-  const core = await import("./core.mjs");
+/**
+ * Finds and parses the transcript the flags name. Prints the reason and returns
+ * undefined when there is none, so `receipt` and `explain` answer the same way.
+ */
+async function resolveTranscript(args, core) {
   const hosts = await import("./hosts.mjs");
   let path = argValue(args, "--transcript");
   const last = argValue(args, "--last");
@@ -338,6 +343,14 @@ async function runReceipt(args, env = process.env) {
     console.log("The transcript has no model calls yet, so there is nothing to total.");
     return;
   }
+  return { parsed, path };
+}
+
+async function runReceipt(args, env = process.env) {
+  const core = await import("./core.mjs");
+  const found = await resolveTranscript(args, core);
+  if (found === undefined) return;
+  const { parsed, path } = found;
 
   const format = argValue(args, "--format");
   const wantsSync = args.includes("--sync");
@@ -502,7 +515,7 @@ async function runUsage(args, env = process.env) {
 
 const USAGE =
   "usage: aieds hook [host] | connect | disconnect | status | flush | install <host> | " +
-  "receipt [--session <id> | --transcript <file> | --last grok] | explain | " +
+  "receipt [--session <id> | --transcript <file> | --last grok] | explain [--session <id>] | " +
   "ollama | chat-completion | usage | contribute on|off|status|preview|submit|delete";
 
 /** The file the user ran (the bin, or the plugin script), symlinks resolved. */
@@ -560,7 +573,25 @@ export async function main() {
   }
   if (mode === "explain") {
     const core = await import("./core.mjs");
-    console.log(core.formatExplanation());
+    // With a session (or --transcript / --last grok) the explanation also
+    // carries the unrounded figures of that receipt. Without one, or when the
+    // session cannot be found yet, it is the formulas alone.
+    const named =
+      argValue(rest, "--session") !== undefined ||
+      argValue(rest, "--transcript") !== undefined ||
+      argValue(rest, "--last") !== undefined;
+    let receipt;
+    if (named) {
+      const quiet = console.log;
+      console.log = () => {};
+      try {
+        const found = await resolveTranscript(rest, core);
+        if (found !== undefined) receipt = core.receiptFor(found.parsed);
+      } finally {
+        console.log = quiet;
+      }
+    }
+    console.log(core.formatExplanation(receipt));
     return;
   }
   if (mode === "connect" || mode === "disconnect" || mode === "status" || mode === "flush") {

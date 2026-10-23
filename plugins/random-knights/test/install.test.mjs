@@ -181,7 +181,7 @@ test("install copilot: the hook it writes runs and prints a receipt for a real u
     child.stdin.end(JSON.stringify({ sessionId: sid }));
   });
   assert.equal(out.code, 0);
-  assert.match(out.stdout, /Tokens: 22,825 in \(10,488 cache read, 12,334 cache write\), 56 out\./);
+  assert.match(out.stdout, /^tokens {10}22\.8k in \(46% cache read\) - 56 out$/m);
 });
 
 // -- claude and codex -----------------------------------------------------------------------------

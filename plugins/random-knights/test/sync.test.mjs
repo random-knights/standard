@@ -120,7 +120,7 @@ test("no sync.json: the hook, usage, flush and status make no network call at al
   const { dir, server, env } = await setup();
   try {
     const hook = await runCli(["hook"], { input: claudeHookInput(), env });
-    assert.match(hook.stdout, /AiEDs receipt/);
+    assert.match(hook.stdout, /this response {3}/);
     await runCli(["usage", "--provider", "T", "--model", "m", "--input", "100", "--output", "10"], { env });
     await runCli(["flush"], { env });
     await runCli(["status"], { env });
@@ -162,7 +162,7 @@ test("hook: the response's receipt reaches the backend, allowlisted, and a repla
     assert.equal(req.headers.origin, undefined);
     const body = JSON.parse(req.raw);
     assert.equal(body.schema, "rk-receipts/1");
-    assert.deepEqual(body.client, { name: "aieds-cli", version: "0.5.0", host: "claude" });
+    assert.deepEqual(body.client, { name: "aieds-cli", version: "0.6.0", host: "claude" });
     assert.equal(body.receipts.length, 1, "one receipt for the latest response, not the session total");
     for (const r of body.receipts) {
       for (const k of Object.keys(r)) assert.ok(RECEIPT_FIELD_NAMES.includes(k), k);
@@ -393,7 +393,7 @@ test("usage and chat-completion queue under host other, ollama under host ollama
   try {
     await connectDirect(env, server);
     const u = await runCli(["usage", "--provider", "Example", "--model", "example-model", "--input", "1200", "--output", "80", "--cached", "400"], { env });
-    assert.match(u.stdout, /AiEDs receipt/);
+    assert.match(u.stdout, /this response {3}/);
     const body = JSON.parse(server.requests.at(-1).raw);
     assert.equal(body.client.host, "other");
     assert.equal(body.receipts[0].tokensIn, 1200);
@@ -404,7 +404,7 @@ test("usage and chat-completion queue under host other, ollama under host ollama
 
     const file = fixture("ollama-stream.ndjson");
     const c = await runCli(["chat-completion", file, "--provider", "Ollama"], { env });
-    assert.match(c.stdout, /Tokens: 28 in, 3 out\./);
+    assert.match(c.stdout, /^this response {3}.* Wh - /m);
     assert.equal(JSON.parse(server.requests.at(-1).raw).receipts[0].tokensIn, 28);
   } finally {
     await server.close();
