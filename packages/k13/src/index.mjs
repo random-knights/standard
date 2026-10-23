@@ -617,6 +617,37 @@ export function checkFirstPass(text) {
 }
 
 /**
+ * Every run of digits and dots in a text, with where it starts: "366.5105",
+ * "2.1.0", "6". Cut by a character scan, not a regular expression. A pattern
+ * such as /\d+(?:\.\d+)+/ backtracks on a long run of digits, and this
+ * checker reads files it did not write, so nothing here may do that. Every
+ * character is consumed once.
+ */
+export function dottedNumbers(text) {
+  const digit = (c) => c !== undefined && c >= "0" && c <= "9";
+  const out = [];
+  let i = 0;
+  while (i < text.length) {
+    if (!digit(text[i])) {
+      i += 1;
+      continue;
+    }
+    const at = i;
+    while (i < text.length) {
+      if (digit(text[i])) {
+        i += 1;
+      } else if (text[i] === "." && digit(text[i + 1])) {
+        i += 1;
+      } else {
+        break;
+      }
+    }
+    out.push({ figure: text.slice(at, i), at });
+  }
+  return out;
+}
+
+/**
  * The significant figures of a decimal figure AS WRITTEN. Leading zeros do not
  * count; a trailing zero in the fraction does, because it was printed.
  */
@@ -640,11 +671,12 @@ export function checkPrecision(text, level) {
   if (cap === null) return [];
   const out = [];
   const seen = new Set();
-  for (const m of text.matchAll(/\d+(?:\.\d+)+/g)) {
-    const figure = m[0];
-    if (figure.split(".").length > 2) continue; // a version, not a figure
-    const before = text[m.index - 1] ?? " ";
-    const after = text[m.index + figure.length] ?? " ";
+  for (const { figure, at } of dottedNumbers(text)) {
+    // One dot only: two or more is a version, and a date has none at all.
+    if (figure.indexOf(".") !== figure.lastIndexOf(".")) continue;
+    if (!figure.includes(".")) continue;
+    const before = text[at - 1] ?? " ";
+    const after = text[at + figure.length] ?? " ";
     if (before === "-" || after === "-") continue; // part of a date
     const digits = significantFigures(figure);
     if (digits > cap && !seen.has(figure)) {

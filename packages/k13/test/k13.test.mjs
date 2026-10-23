@@ -33,6 +33,7 @@ import {
   checkFirstPass,
   checkOpening,
   checkPrecision,
+  dottedNumbers,
   checkDashes,
   checkFigures,
   checkFile,
@@ -145,6 +146,17 @@ test("precision: a figure may not out-run its stated confidence", () => {
   assert.equal(statedConfidence("provenance class-estimated, confidence high", ""), "low");
   assert.equal(statedConfidence("| confidence | moderate |", ""), "moderate");
   assert.equal(statedConfidence("", "nothing stated"), null);
+  // The figure scan is a character walk, not a backtracking pattern. CodeQL
+  // flagged the first spelling of it as polynomial on a long run of zeros
+  // (2026-10-23), and this checker reads files it did not write.
+  const zeros = `${"0".repeat(200000)}.${"0".repeat(200000)}`;
+  const t0 = Date.now();
+  checkPrecision(zeros, "low");
+  assert.ok(Date.now() - t0 < 2000, "the precision check took too long");
+  assert.deepEqual(
+    dottedNumbers("a 1.2.3 b 4.5 c 6").map((d) => d.figure),
+    ["1.2.3", "4.5", "6"],
+  );
 });
 
 test("K13.md defines the two modes and the rules an answer-mode reply follows", () => {
