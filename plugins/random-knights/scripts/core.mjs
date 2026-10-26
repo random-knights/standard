@@ -23,6 +23,7 @@ import { timeMs } from "./hosts/util.mjs";
 
 import {
   AIEDS_VERSION,
+  CAR_DRIVING_GRAMS_CO2E_PER_KM,
   EDUCATIONAL_COMPARISON_COPY,
   FACTORS,
   MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR,
@@ -31,6 +32,7 @@ import {
   MODEL_ENERGY_PROFILES,
   MODELED_ESTIMATE_COPY,
   MODELED_GRID_INTENSITY_GRAMS_PER_KWH,
+  PHONE_CHARGE_WH,
   UNKNOWN_MODEL_PROFILE,
   WATER_MODELED_ESTIMATE_COPY,
   disclosureFromResponse,
@@ -239,13 +241,18 @@ export function disclose(calls) {
   let energyWh = 0;
   let carbonGrams = 0;
   let treeTimeMinutes = 0;
+  // The short receipt's count (proposed, see methodology 2.7): the same
+  // library call with the cache-read tokens left out, so they count as free.
+  const counted = { energyWh: 0, carbonGrams: 0, treeTimeMinutes: 0 };
   const provenances = [];
   const models = [];
   let allInTable = true;
+  // Models with no published figure: not in the table, or in it as "unknown".
+  const noFigure = [];
 
   for (const g of groups.values()) {
     const u = sumUsage(g.calls);
-    const d = disclosureFromResponse({
+    const request = {
       provider: g.provider,
       model: g.model || undefined,
       inputTokenBreakdown: {
@@ -254,15 +261,23 @@ export function disclose(calls) {
         cacheRead: u.cacheRead,
       },
       outputTokens: u.output,
-    });
+    };
+    const d = disclosureFromResponse(request);
     energyWh += d.energyWh;
     carbonGrams += d.carbonGrams;
     treeTimeMinutes += d.treeTimeMinutes;
+    const free = disclosureFromResponse({
+      ...request,
+      inputTokenBreakdown: { ...request.inputTokenBreakdown, cacheRead: 0 },
+    });
+    counted.energyWh += free.energyWh;
+    counted.carbonGrams += free.carbonGrams;
+    counted.treeTimeMinutes += free.treeTimeMinutes;
     provenances.push(d.provenance);
     models.push(g.model || "unknown");
-    if (energyProfileForModel(g.model || undefined).matchPrefixes.length === 0) {
-      allInTable = false;
-    }
+    const inTable = energyProfileForModel(g.model || undefined).matchPrefixes.length > 0;
+    if (!inTable) allInTable = false;
+    if (!inTable || d.provenance === "unknown") noFigure.push(g.model || "unknown model");
   }
 
   const t = sumUsage(calls);
@@ -289,7 +304,25 @@ export function disclose(calls) {
     // True when every model has its own row in the coefficient table, even a
     // row whose provenance is "unknown" (Grok has one).
     modelsInTable: calls.length > 0 && allInTable,
+    noFigure: [...new Set(noFigure)],
     confidence: "low",
+    // What the short receipt prints. The fields above are the ratified 2.4.1
+    // count and stay what the log, sync and `aieds explain` report.
+    counted: countedFigures(counted),
+  };
+}
+
+/**
+ * Adds water to a set of short-receipt figures. Water is linear in energy
+ * (methodology 2.6), so it is taken from the summed energy.
+ */
+function countedFigures({ energyWh, carbonGrams, treeTimeMinutes }) {
+  const water = waterFromEnergyWh(energyWh);
+  return {
+    energyWh,
+    carbonGrams,
+    treeTimeMinutes,
+    waterMl: water ? water.waterMl.default : 0,
   };
 }
 
@@ -311,121 +344,126 @@ export function receiptFor(parsed) {
 // This is presentation only: every figure is read from the disclosure the
 // library computed, and `aieds explain` prints the unrounded values.
 //
-// Rules (owner-approved format, 2026-10-23):
-//   - Units auto-scale so the number reads 1 to 999 where possible: Wh below
-//     1000 else kWh; g CO2e below 1000 else kg; minutes below 120 else hours;
-//     mL below 1000 else L.
-//   - Significant figures: two when confidence is low or the basis is a class
-//     estimate, three otherwise. A value of 1 or more never shows more than one
-//     decimal place. Below 1 the significant figures govern, so a small figure
-//     is not rounded away to 0.
-//   - Water carries a tilde and no range. The range is in `aieds explain`.
-//   - Two scopes, two lines. The tokens line appears only when cache reads are
-//     20 percent or more of the input.
+// The short receipt (owner requirements 2026-10-26, PROPOSED in methodology
+// section 2.7, not yet ratified):
+//   - Three scopes, one line each: this response, this session, your account.
+//     Each line has energy, carbon, water and tree-time. A wrapper or Copilot
+//     receipt has no session, so it has the response line only.
+//   - Cache-read tokens count as free. Plain input, cache writes and output
+//     are charged at the profile coefficients with PUE, as before. That is a
+//     floor, an understatement; `aieds explain` prints both counts.
+//   - One significant figure with a "~", because the confidence is low and a
+//     second figure would claim a precision the estimate does not have.
+//   - Units step up so the number stays small: Wh, kWh, MWh; g, kg, t CO2e;
+//     mL, L (from 100 mL, so 230 mL reads ~0.2 L); min, h, days, years.
+//     Thousands separators past 999.
+//   - One line of comparisons from the account total (phone charges and km of
+//     driving, the standard's own constants), and one line of plain basis.
 
-/** Rounds to `sf` significant figures; a value of 1 or more keeps at most one decimal. */
-function roundFigure(x, sf) {
-  if (!Number.isFinite(x) || x <= 0) return { value: 0, decimals: 0 };
-  const placesFor = (v) => {
-    const places = sf - 1 - Math.floor(Math.log10(v));
-    return v >= 1 ? Math.min(places, 1) : places;
-  };
-  const round = (v, p) => {
-    const f = 10 ** Math.abs(p);
-    return p >= 0 ? Math.round(v * f) / f : Math.round(v / f) * f;
-  };
-  let places = placesFor(x);
-  let value = round(x, places);
-  // 9.96 rounds up to 10: derive the places again from the rounded value.
-  places = placesFor(value);
-  value = round(x, places);
-  return { value, decimals: Math.max(0, places) };
+/** "3,000" from 3000. Integers only. */
+function withSeparators(n) {
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function figureText(x, sf) {
-  const r = roundFigure(x, sf);
-  return r.value.toFixed(r.decimals);
+/** Rounds to one significant figure. Zero, negative or not a number gives 0. */
+export function oneFigure(x) {
+  if (!Number.isFinite(x) || x <= 0) return 0;
+  const p = 10 ** Math.floor(Math.log10(x));
+  // toFixed first: 0.95 / 0.1 is 9.4999... in binary and must round as 9.5.
+  return Math.round(Number((x / p).toFixed(9))) * p;
+}
+
+/** The text of a one-figure number: "50", "0.2", "3,000". */
+export function oneFigureText(x) {
+  const r = oneFigure(x);
+  if (r === 0) return "0";
+  const e = Math.floor(Math.log10(r) + 1e-9);
+  return e >= 0 ? withSeparators(r) : r.toFixed(-e);
 }
 
 /**
- * Formats a value in the right unit. `steps` is ascending
- * [{ unit, perBase, limit }]; the value moves up a step once it reaches the
- * limit of the step below. The check is repeated on the rounded figure, so
- * 999.6 Wh at two figures reads as 1.0 kWh and never as 1000 Wh.
+ * Formats a value in the right unit at one figure. `steps` is ascending
+ * [{ unit, perBase, limit, one? }]; the value moves up a step once it reaches
+ * the limit of the step below. The check is repeated on the rounded figure, so
+ * 960 Wh reads "~1 kWh", never "~1,000 Wh". `one` is the singular unit word.
  */
-function scaled(base, steps, sf) {
+function approx(base, steps) {
+  if (!Number.isFinite(base) || base <= 0) return `0 ${steps[0].unit}`;
   let i = 0;
   while (i < steps.length - 1 && base >= steps[i].limit) i += 1;
-  let text = figureText(base / steps[i].perBase, sf);
-  if (i < steps.length - 1 && Number(text) * steps[i].perBase >= steps[i].limit) {
+  while (i < steps.length - 1 && oneFigure(base / steps[i].perBase) * steps[i].perBase >= steps[i].limit) {
     i += 1;
-    text = figureText(base / steps[i].perBase, sf);
   }
-  return `${text} ${steps[i].unit}`;
+  const text = oneFigureText(base / steps[i].perBase);
+  const unit = text === "1" && steps[i].one ? steps[i].one : steps[i].unit;
+  return `~${text} ${unit}`;
 }
 
 const ENERGY_STEPS = [
   { unit: "Wh", perBase: 1, limit: 1000 },
-  { unit: "kWh", perBase: 1000, limit: Infinity },
+  { unit: "kWh", perBase: 1e3, limit: 1e6 },
+  { unit: "MWh", perBase: 1e6, limit: Infinity },
 ];
 const CARBON_STEPS = [
   { unit: "g CO2e", perBase: 1, limit: 1000 },
-  { unit: "kg CO2e", perBase: 1000, limit: Infinity },
-];
-const TREE_STEPS = [
-  { unit: "min", perBase: 1, limit: 120 },
-  { unit: "h", perBase: 60, limit: Infinity },
+  { unit: "kg CO2e", perBase: 1e3, limit: 1e6 },
+  { unit: "t CO2e", perBase: 1e6, limit: Infinity },
 ];
 const WATER_STEPS = [
-  { unit: "mL", perBase: 1, limit: 1000 },
-  { unit: "L", perBase: 1000, limit: Infinity },
+  { unit: "mL", perBase: 1, limit: 100 },
+  { unit: "L", perBase: 1e3, limit: Infinity },
+];
+const MIN_PER_DAY = 60 * 24;
+const TREE_STEPS = [
+  { unit: "min", perBase: 1, limit: 60 },
+  { unit: "h", perBase: 60, limit: 48 * 60 },
+  { unit: "days", one: "day", perBase: MIN_PER_DAY, limit: 365 * MIN_PER_DAY },
+  { unit: "years", one: "year", perBase: 365 * MIN_PER_DAY, limit: Infinity },
+];
+const KM_STEPS = [
+  { unit: "m", perBase: 1, limit: 1000 },
+  { unit: "km", perBase: 1000, limit: Infinity },
 ];
 
-const DEFAULT_SF = 2;
-
-export function formatEnergy(wh, sf = DEFAULT_SF) {
-  return scaled(wh, ENERGY_STEPS, sf);
+export function formatEnergy(wh) {
+  return approx(wh, ENERGY_STEPS);
 }
 
-export function formatCarbon(grams, sf = DEFAULT_SF) {
-  return scaled(grams, CARBON_STEPS, sf);
+export function formatCarbon(grams) {
+  return approx(grams, CARBON_STEPS);
 }
 
-export function formatTreeTime(minutes, sf = DEFAULT_SF) {
-  return scaled(minutes, TREE_STEPS, sf);
+export function formatWater(ml) {
+  return approx(ml, WATER_STEPS);
 }
 
-/** Two figures when confidence is low or the basis is a class estimate, else three. */
-export function sigFigsFor(d) {
-  const classEstimate = d.provenance === "class-estimated" || d.provenance === "unknown";
-  return d.confidence === "low" || classEstimate ? 2 : 3;
+export function formatTreeTime(minutes) {
+  return approx(minutes, TREE_STEPS);
 }
 
-/** "~1.8 L", or "" when there is no usable water estimate (methodology 2.6.12). */
-export function formatWater(d, sf = DEFAULT_SF) {
-  return d.water ? `~${scaled(d.water.waterMl.default, WATER_STEPS, sf)}` : "";
+/**
+ * Driving distance from grams of CO2e, at the standard's car constant:
+ * "about 10 km", "about 300 m", or "less than 1 m".
+ */
+export function formatDriving(grams) {
+  const meters = (grams / CAR_DRIVING_GRAMS_CO2E_PER_KM) * 1000;
+  if (!(meters >= 0.5)) return "less than 1 m";
+  return `about ${approx(meters, KM_STEPS).slice(1)}`;
 }
 
-/** Compact token count: 7.3k, 540k, 2.08M. */
-export function formatTokens(n) {
-  if (n < 1000) return String(n);
-  if (n < 1e6) {
-    const k = n / 1000;
-    const text = k < 100 ? k.toFixed(1) : String(Math.round(k));
-    // 999.6k rounds up to 1000k, which is 1.00M.
-    return Number(text) >= 1000 ? "1.00M" : `${text}k`;
-  }
-  const m = n / 1e6;
-  return `${m >= 100 ? Math.round(m) : m >= 10 ? m.toFixed(1) : m.toFixed(2)}M`;
+/**
+ * Phone charges from Wh, at the standard's phone constant: "about 400 phone
+ * charges", "about 1 phone charge", or "less than one phone charge".
+ */
+export function formatPhoneCharges(wh) {
+  const n = wh / PHONE_CHARGE_WH;
+  if (!(n >= 0.95)) return "less than one phone charge";
+  const text = oneFigureText(n);
+  return `about ${text} phone ${text === "1" ? "charge" : "charges"}`;
 }
 
 function formatCount(n) {
   return n.toLocaleString("en-US");
-}
-
-/** The share of input that was a cache read, 0 to 1. */
-function cacheShare(tokens) {
-  return tokens.input > 0 ? tokens.cacheRead / tokens.input : 0;
 }
 
 function basisLabel(provenance, models, inTable = false) {
@@ -452,71 +490,70 @@ export function formatWaterDetail(d) {
   return d.water ? waterLine(d.water) : "";
 }
 
-const SEP = " - ";
-const LABEL_WIDTH = 16;
-const label = (text) => text.padEnd(LABEL_WIDTH);
+const SEP = ", ";
+const MIN_LABEL_WIDTH = 16;
 
-function scopeLine(name, d) {
-  const sf = sigFigsFor(d);
-  const parts = [
-    formatEnergy(d.energyWh, sf),
-    formatCarbon(d.carbonGrams, sf),
-    `${formatTreeTime(d.treeTimeMinutes, sf)} tree-time`,
-  ];
-  const water = formatWater(d, sf);
-  if (water.length > 0) parts.push(`${water} water`);
-  return label(name) + parts.join(SEP);
+/** The account line's name: "your account" only once an account is linked. */
+export function accountName(linked) {
+  return linked ? "your account" : "your account on this computer";
 }
 
-function tokensLine(t) {
-  if (cacheShare(t) < 0.2) return "";
-  const pct = Math.round(cacheShare(t) * 100);
+/** One scope line from short-receipt figures ({ energyWh, carbonGrams, waterMl, treeTimeMinutes }). */
+function scopeLine(name, c, width) {
+  const parts = [formatEnergy(c.energyWh), formatCarbon(c.carbonGrams)];
+  // No energy means no water claim (2.6.12), not "0 mL".
+  if (c.waterMl > 0) parts.push(`${formatWater(c.waterMl)} water`);
+  parts.push(`${formatTreeTime(c.treeTimeMinutes)} tree-time`);
+  return name.padEnd(width) + parts.join(SEP);
+}
+
+/** The comparisons line, from the account total only. */
+export function comparisonLine(account) {
+  const c = account.counted;
   return (
-    label("tokens") +
-    `${formatTokens(t.input)} in (${pct}% cache read)${SEP}${formatTokens(t.output)} out`
+    `${accountName(account.linked)} so far is ${formatPhoneCharges(c.energyWh)}, ` +
+    `or ${formatDriving(c.carbonGrams)} of driving.`
   );
 }
 
-function footerLine(d) {
-  const models = [...new Set(d.models)];
-  // A model with no published figure says so on the receipt itself, because a
-  // wrapper receipt has no session to `explain`.
-  const note = !d.modelsInTable ? " (not in table)" : d.provenance === "unknown" ? " (no published figure)" : "";
-  const names = models.length === 0 ? "unknown model" : models.join(", ") + note;
-  return `estimate, ${d.confidence} confidence${SEP}${names}${SEP}${d.aiedsVersion}`;
+/** The basis line. A model with no published figure says so here. */
+function basisLine(d) {
+  const lines = ["A guess, not a measurement. Cached text counted as free. Comparisons are for scale only."];
+  const missing = d.noFigure ?? [];
+  if (missing.length > 0) {
+    lines.push(`No published figure for ${missing.join(", ")}, so a general guess is used.`);
+  }
+  return lines.join(" ");
 }
 
 /**
- * The one printer. `scopes` is an ordered list of { name, d } (one disclosure
- * each); `tokenScope` is the disclosure whose tokens line may appear; `footer`
- * is the disclosure the last line describes. Returns four lines at most.
+ * The one printer. `scopes` is an ordered list of { name, c } (short-receipt
+ * figures each); `basis` is the disclosure the basis line describes;
+ * `account`, when present, adds the comparisons line.
  */
-function receiptLines(scopes, tokenScope, footer) {
-  return [
-    ...scopes.map((s) => scopeLine(s.name, s.d)),
-    tokensLine(tokenScope.tokens),
-    footerLine(footer),
-  ].filter((x) => x.length > 0);
+function receiptLines(scopes, basis, account) {
+  const width = Math.max(MIN_LABEL_WIDTH, ...scopes.map((s) => s.name.length + 2));
+  const lines = scopes.map((s) => scopeLine(s.name, s.c, width));
+  if (account) lines.push(comparisonLine(account));
+  lines.push(basisLine(basis));
+  return lines;
 }
 
-const sessionName = (s) => `session (${s.calls})`;
-
 /**
- * The receipt text a user sees after each response: this response and the
- * session on two lines (never one number), the tokens line when the cache
- * explains the size, and one line of basis. Cached tokens are counted as input
- * (methodology 2.4.1); the breakdown is in `aieds explain`. Plain ASCII.
+ * The receipt text a user sees after each response: this response, this
+ * session and the account total, one line each, then the comparisons from the
+ * account total and one line of basis. `account` is
+ * { counted, linked } (see store.mjs accountTotal); without it the receipt has
+ * the two transcript scopes only. Plain ASCII.
  */
-export function formatReceipt(receipt) {
+export function formatReceipt(receipt, account) {
   const { response: r, session: s } = receipt;
-  return receiptLines(
-    [
-      { name: "this response", d: r },
-      { name: sessionName(s), d: s },
-    ],
-    r,
-    s,
-  ).join("\n");
+  const scopes = [
+    { name: "this response", c: r.counted },
+    { name: "this session", c: s.counted },
+  ];
+  if (account) scopes.push({ name: accountName(account.linked), c: account.counted });
+  return receiptLines(scopes, s, account).join("\n");
 }
 
 /**
@@ -524,12 +561,20 @@ export function formatReceipt(receipt) {
  * completion) and the Copilot hook. There is no session to total.
  */
 export function formatResponseReceipt(d) {
-  return receiptLines([{ name: "this response", d }], d, d).join("\n");
+  return receiptLines([{ name: "this response", c: d.counted }], d).join("\n");
 }
 
-/** `aieds receipt`: the session so far, one scope. */
-export function formatSessionReceipt(session) {
-  return receiptLines([{ name: sessionName(session), d: session }], session, session).join("\n");
+/** `aieds account`: the account line, its comparisons, and where it is kept. */
+export function formatAccount(account, info = {}) {
+  const lines = receiptLines([{ name: accountName(account.linked), c: account.counted }], {}, account);
+  const n = info.sessions ?? 0;
+  const since = typeof info.since === "string" && info.since.length > 0 ? ` since ${info.since.slice(0, 10)}` : "";
+  lines.push(
+    `${n} ${n === 1 ? "session" : "sessions"} counted${since}. Kept only on this computer` +
+      (info.file ? ` (${info.file})` : "") +
+      ". This total is never sent anywhere.",
+  );
+  return lines.join("\n");
 }
 
 /** One scope of `aieds explain`: the unrounded figures, the range, the full counts. */
@@ -553,7 +598,16 @@ function unroundedBlock(name, d) {
     `  basis ${d.aiedsVersion}, methodology ${d.methodologyVersion}; ` +
       basisLabel(d.provenance, d.models, d.modelsInTable),
   );
+  if (d.counted) lines.push(countedLine(d.counted));
   return lines;
+}
+
+/** The short receipt's count, unrounded, for `aieds explain`. */
+function countedLine(c) {
+  return (
+    `  short receipt (cache reads free): energy ${c.energyWh} Wh, carbon ${c.carbonGrams} gCO2e, ` +
+    `water ${c.waterMl} mL, tree-time ${c.treeTimeMinutes} minutes`
+  );
 }
 
 /**
@@ -562,7 +616,7 @@ function unroundedBlock(name, d) {
  * receipt rounds away: the unrounded figures, the water range and the full
  * token counts.
  */
-export function formatExplanation(receipt) {
+export function formatExplanation(receipt, account) {
   const lines = [];
   lines.push(
     `AiEDs ${FACTORS.impactModelVersion} receipt, methodology ${METHODOLOGY_VERSION}.`,
@@ -593,6 +647,14 @@ export function formatExplanation(receipt) {
   lines.push(
     "Cached prefill (section 2.4.1): cache-write and cache-read tokens are input and are charged at the full input rate. " +
       "That is a conservative bias, not a measurement.",
+  );
+  lines.push("");
+  lines.push(
+    "Short receipt (PROPOSED methodology section 2.7, not ratified): the receipt shown after each response counts " +
+      "cache-read tokens as free, and charges plain input, cache writes and output at the coefficients below, with PUE. " +
+      "That is a floor, an understatement, until a provider publishes what a cache read costs. " +
+      "It rounds to one significant figure. The comparisons come from the account total: " +
+      `${PHONE_CHARGE_WH} Wh per phone charge, ${CAR_DRIVING_GRAMS_CO2E_PER_KM} gCO2e per km of driving.`,
   );
   lines.push("");
   lines.push("Water (methodology section 2.6, Table 5): consumed water, inference only.");
@@ -632,9 +694,18 @@ export function formatExplanation(receipt) {
   lines.push("Full text: https://standard.rand0m.ai");
   if (receipt) {
     lines.push("");
-    lines.push("This receipt, unrounded (the receipt shows two figures while confidence is low):");
+    lines.push(
+      "This receipt, unrounded. The first figures are the ratified count (cache reads at the full input rate); " +
+        "the short receipt line is what the receipt rounds to one figure:",
+    );
     lines.push(...unroundedBlock("this response", receipt.response));
     lines.push(...unroundedBlock(`session (${receipt.session.calls})`, receipt.session));
+  }
+  if (account) {
+    lines.push("");
+    lines.push(`${accountName(account.linked)}, short receipt count, unrounded:`);
+    lines.push(countedLine(account.counted));
+    lines.push(`  ${account.sessions} ${account.sessions === 1 ? "session" : "sessions"} counted, kept only on this computer.`);
   }
   lines.push("");
   lines.push(REQUIRED_COPY.join(" "));

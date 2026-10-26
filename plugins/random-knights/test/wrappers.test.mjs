@@ -8,18 +8,26 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { disclosureFromResponse } from "../vendor/lib/dist/index.js";
-import { formatEnergy } from "../scripts/core.mjs";
+import { disclose, formatEnergy } from "../scripts/core.mjs";
 import {
+  callFromUsage,
   ollamaBaseUrl,
   ollamaChat,
   receiptTextFromUsage,
   usageFromChatCompletion,
   usageFromOllama,
 } from "../scripts/wrappers.mjs";
+
+// Every child process gets its own config folder, so the local account
+// total a receipt writes never lands in the real user config.
+const TEST_CONFIG_DIR = mkdtempSync(join(tmpdir(), "rk test config "));
+process.on("exit", () => rmSync(TEST_CONFIG_DIR, { recursive: true, force: true }));
 
 const here = dirname(fileURLToPath(import.meta.url));
 const script = join(resolve(here, ".."), "scripts", "aieds.mjs");
@@ -29,7 +37,7 @@ const EN_DASH = String.fromCharCode(0x2013);
 function run(args, input, { env = {}, timeoutMs = 15000 } = {}) {
   return new Promise((resolvePromise) => {
     const child = spawn(process.execPath, [script, ...args], {
-      env: { ...process.env, ...env },
+      env: { ...process.env, AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -82,14 +90,17 @@ function libraryWh(provider, model, inputTokens, outputTokens) {
   return disclosureFromResponse({ provider, model, inputTokens, outputTokens }).energyWh;
 }
 
-// The receipt prints the energy at two figures (low confidence), so the figure
-// the library computed must appear in exactly that rounding.
+// The receipt prints the energy at one figure (low confidence), so the figure
+// the library computed must appear in exactly that rounding. `wh` is the
+// short receipt's count: cache reads left out.
 function assertWh(receiptText, wh, label) {
   assert.ok(
-    receiptText.includes(`this response   ${formatEnergy(wh)} - `),
+    receiptText.includes(`this response   ${formatEnergy(wh)}, `),
     `${label}: ${formatEnergy(wh)} not in: ${receiptText}`,
   );
 }
+
+const BASIS = "A guess, not a measurement. Cached text counted as free. Comparisons are for scale only.";
 
 // -- usage readers ------------------------------------------------------------
 
@@ -128,7 +139,7 @@ test("chat completion: prompt and completion tokens, cached tokens when present"
 
 // -- receipt text ---------------------------------------------------------------
 
-test("receipt: figures equal the library, cached tokens never change them", () => {
+test("receipt: figures equal the library, and cached tokens count as free on the receipt", () => {
   const plain = receiptTextFromUsage({
     provider: "Hugging Face",
     model: "meta-llama/Llama-3.1-8B-Instruct",
@@ -142,31 +153,35 @@ test("receipt: figures equal the library, cached tokens never change them", () =
     outputTokens: 40,
     cachedTokens: 100,
   });
-  const want = libraryWh("Hugging Face", "meta-llama/Llama-3.1-8B-Instruct", 120, 40);
-  assertWh(plain, want, "plain");
-  assertWh(cached, want, "cached");
-  // 100 of 120 input tokens are cache reads (83 percent), so the tokens line shows.
-  assert.match(cached, /tokens {10}120 in \(83% cache read\) - 40 out/);
-  assert.doesNotMatch(plain, /^tokens /m, "no cache, no tokens line");
+  assertWh(plain, libraryWh("Hugging Face", "meta-llama/Llama-3.1-8B-Instruct", 120, 40), "plain");
+  // 100 of the 120 input tokens are cache reads: only 20 are charged.
+  assertWh(cached, libraryWh("Hugging Face", "meta-llama/Llama-3.1-8B-Instruct", 20, 40), "cached");
+  assert.notEqual(plain, cached);
+  // The ratified count still charges them: the record a sync sends is unchanged.
+  const call = callFromUsage({ provider: "Hugging Face", model: "meta-llama/Llama-3.1-8B-Instruct", inputTokens: 120, outputTokens: 40, cachedTokens: 100 });
+  approx(disclose([call]).energyWh, libraryWh("Hugging Face", "meta-llama/Llama-3.1-8B-Instruct", 120, 40), "ratified");
+  for (const text of [plain, cached]) {
+    assert.doesNotMatch(text, /tokens|cache read|%/, "no tokens line on the short receipt");
+  }
   assert.doesNotMatch(plain, /offset/i);
   assert.ok(!plain.includes(EM_DASH) && !plain.includes(EN_DASH));
 });
 
-test("receipt: a listed model says its provenance, an unlisted one says class estimate", () => {
+test("receipt: a listed model gets the plain basis line, an unlisted one says there is no published figure", () => {
   const listed = receiptTextFromUsage({
     provider: "OpenAI",
     model: "gpt-5.4",
     inputTokens: 10,
     outputTokens: 5,
   });
-  assert.match(listed, /^estimate, low confidence - gpt-5\.4 - AiEDs v2$/m);
+  assert.equal(listed.split("\n").at(-1), BASIS);
   const unlisted = receiptTextFromUsage({
     provider: "Ollama",
     model: "llama3.2:1b",
     inputTokens: 10,
     outputTokens: 5,
   });
-  assert.match(unlisted, /^estimate, low confidence - llama3\.2:1b \(not in table\) - AiEDs v2$/m);
+  assert.equal(unlisted.split("\n").at(-1), `${BASIS} No published figure for llama3.2:1b, so a general guess is used.`);
 });
 
 // -- ollama --------------------------------------------------------------------
@@ -193,9 +208,10 @@ test("ollama: one request to the named host, receipt from the response's counts"
   assert.equal(seen[0].body.stream, false);
   assert.deepEqual(seen[0].body.options, { num_ctx: 2048 });
   assert.equal(r.text, "CANARY_REPLY_TEXT");
-  assert.match(r.receipt, /51 in \(98% cache read\) - 107 out/);
+  // 51 in, 50 of them cached, 107 out: the receipt charges 1 in and 107 out.
+  assert.deepEqual([r.usage.inputTokens, r.usage.cachedTokens, r.usage.outputTokens], [51, 50, 107]);
   assert.doesNotMatch(r.receipt, /CANARY_/);
-  assertWh(r.receipt, libraryWh("Ollama", "llama3.2:1b", 51, 107), "ollama");
+  assertWh(r.receipt, libraryWh("Ollama", "llama3.2:1b", 1, 107), "ollama");
 });
 
 test("ollama: a response without counts is an error, not a zero receipt", async () => {
@@ -224,8 +240,8 @@ test("ollama CLI: end to end against a local server, prints the reply then the r
     const r = await run(["ollama", "--model", "llama3.2:1b", "--host", host, "hello", "there"]);
     assert.equal(r.code, 0, r.stderr);
     assert.match(r.stdout, /^CANARY_REPLY_TEXT\n/);
-    assert.match(r.stdout, /^this response {3}.* Wh - .* g CO2e - .* tree-time/m);
-    assert.match(r.stdout, /51 in \(98% cache read\) - 107 out/);
+    assert.match(r.stdout, /^this response {3}~.* Wh, ~.* g CO2e, ~.* water, ~.* tree-time$/m);
+    assertWh(r.stdout, libraryWh("Ollama", "llama3.2:1b", 1, 107), "ollama CLI");
     assert.equal(hits, 1);
 
     const quiet = await run(["ollama", "--model", "m", "--host", host, "--no-text", "hi"]);
@@ -256,7 +272,8 @@ test("chat-completion CLI: reads a response from stdin and labels the provider",
     JSON.stringify(CHAT_BODY),
   );
   assert.equal(r.code, 0, r.stderr);
-  assert.match(r.stdout, /^estimate, low confidence - meta-llama\/Llama-3\.1-8B-Instruct \(not in table\) - AiEDs v2$/m);
+  assert.match(r.stdout, / No published figure for meta-llama\/Llama-3\.1-8B-Instruct, so a general guess is used\.$/m);
+  assertWh(r.stdout, libraryWh("Hugging Face", "meta-llama/Llama-3.1-8B-Instruct", 120, 40), "chat-completion");
   assert.doesNotMatch(r.stdout, /CANARY_/);
 });
 
@@ -273,8 +290,8 @@ test("usage CLI: raw token counts give a receipt, bad input a usage line", async
     "usage", "--provider", "Hugging Face", "--model", "x/y", "--input", "1000", "--output", "250", "--cached", "400",
   ]);
   assert.equal(r.code, 0, r.stderr);
-  assert.match(r.stdout, /tokens {10}1.0k in \(40% cache read\) - 250 out/);
-  assertWh(r.stdout, libraryWh("Hugging Face", "x/y", 1000, 250), "usage");
+  // 1000 in, 400 of them cached: the receipt charges 600 in and 250 out.
+  assertWh(r.stdout, libraryWh("Hugging Face", "x/y", 600, 250), "usage");
 
   const missing = await run(["usage", "--model", "x"]);
   assert.equal(missing.code, 2);

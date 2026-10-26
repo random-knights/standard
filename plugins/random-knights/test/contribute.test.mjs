@@ -74,7 +74,9 @@ test("default OFF (real processes): status, preview, a hook and an unknown comma
     const bad = await runCli(["contribute", "nope"], { env });
     assert.equal(bad.code, 2);
     assert.equal(server.requests.length, 0);
-    assert.ok(!existsSync(join(dir, "config")), "nothing was written");
+    // The hook keeps the local account total and nothing else: no contribute
+    // token, queue or state file.
+    assert.deepEqual(readdirSync(join(dir, "config")), ["account-total.json"], "nothing else was written");
   } finally {
     await server.close();
   }

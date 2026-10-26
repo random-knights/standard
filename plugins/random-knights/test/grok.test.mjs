@@ -21,12 +21,21 @@ import { fileURLToPath } from "node:url";
 
 import { disclosureFromResponse } from "../vendor/lib/dist/index.js";
 import { formatReceipt, parseSession, receiptFor } from "../scripts/core.mjs";
+import { scopeLines } from "./helpers.mjs";
 import {
   TESTED_HOSTS,
   findHostSession,
   parseGrokSession,
   sniffFormat,
 } from "../scripts/hosts.mjs";
+
+// Every child process gets its own config folder, so the local account
+// total a receipt writes never lands in the real user config.
+const TEST_CONFIG_DIR = mkdtempSync(join(tmpdir(), "rk test config "));
+process.on("exit", () => rmSync(TEST_CONFIG_DIR, { recursive: true, force: true }));
+
+/** The receipt the hook should print for a session file's text, as scope lines. */
+const expectedScopes = (text) => scopeLines(formatReceipt(receiptFor(parseSession(text))));
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolve(here, "..");
@@ -38,7 +47,7 @@ const CANARIES = /CANARY_[A-Z0-9_]+/;
 function run(args, input, { env = {}, timeoutMs = 15000 } = {}) {
   return new Promise((resolvePromise) => {
     const child = spawn(process.execPath, [script, ...args], {
-      env: { ...process.env, ...env },
+      env: { ...process.env, AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -130,7 +139,7 @@ test("grok: receipt energy equals the library, and model calls are summed", () =
 
 test("grok: the basis says there is no published figure, not that the model is unlisted", () => {
   const text = formatReceipt(receiptFor(parseGrokSession(fixtureText("grok-updates.jsonl"))));
-  assert.match(text, /^estimate, low confidence - .*\(no published figure\) - AiEDs v2$/m);
+  assert.match(text, / No published figure for grok-4\.6, grok-4\.6-mini, so a general guess is used\.$/m);
   assert.doesNotMatch(text, /not in table/);
   assert.doesNotMatch(text, CANARIES);
 });
@@ -155,9 +164,10 @@ test("grok hook: camelCase and snake_case fields both work", async () => {
   const camel = await runHook(base);
   assert.equal(camel.code, 0);
   const text = JSON.parse(camel.stdout).systemMessage;
-  assert.match(text, /^tokens {10}30\.0k in \(67% cache read\) - 700 out$/m);
+  // prompt-B's 30,000 in and 700 out (see the energy test above) and all seven calls.
+  assert.deepEqual(scopeLines(text), expectedScopes(fixtureText("grok-updates.jsonl")));
   assert.doesNotMatch(text, CANARIES);
-  assert.match(text, /^estimate, low confidence - .* - AiEDs v2$/m);
+  assert.match(text, /^A guess, not a measurement\. Cached text counted as free\./m);
 
   const snake = await runHook({
     hook_event_name: "stop",
@@ -197,7 +207,9 @@ test("grok hook: waits for the turn_completed record of this prompt", async () =
       reason: "end_turn",
     });
     assert.equal(r.code, 0);
-    assert.match(JSON.parse(r.stdout).systemMessage, /30\.0k in/);
+    const got = scopeLines(JSON.parse(r.stdout).systemMessage);
+    assert.deepEqual(got, expectedScopes([...upToA, late].join("\n")), "prompt-B is the response");
+    assert.notDeepEqual(got, expectedScopes(upToA.join("\n")));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -242,9 +254,8 @@ test("grok: a session file in a shape this reader does not know prints nothing",
 test("grok receipt: --transcript prints the session total from the session file", async () => {
   const r = await run(["receipt", "--transcript", fixture("grok-updates.jsonl")]);
   assert.equal(r.code, 0);
-  assert.match(r.stdout, /^session \(7\) {5}/m);
-  assert.match(r.stdout, /43.4k in/);
-  assert.match(r.stdout, /791 out/);
+  // The session line is all seven calls, 43,366 in and 791 out (see above).
+  assert.deepEqual(scopeLines(r.stdout), expectedScopes(fixtureText("grok-updates.jsonl")));
   assert.doesNotMatch(r.stdout, CANARIES);
 });
 
@@ -263,7 +274,7 @@ test("grok receipt: --session finds updates.jsonl under GROK_HOME, ids are valid
     const r = await run(["receipt", "--session", id], undefined, {
       env: { GROK_HOME: dir, CLAUDE_CONFIG_DIR: join(dir, "none") },
     });
-    assert.match(r.stdout, /^session \(7\) {5}/m);
+    assert.deepEqual(scopeLines(r.stdout), expectedScopes(fixtureText("grok-updates.jsonl")));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

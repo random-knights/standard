@@ -180,19 +180,22 @@ Get an AiEDs receipt after every Claude Code response, with no code to write:
 /plugin install random-knights@standard
 ```
 
-After the second command, each response ends with one line: the modeled energy
-(Wh), carbon (gCO2e) and Tree-Time (minutes) of that response and of the session
-so far, with the token split and the two sentences AiEDs requires on every
-rendered disclosure. `/random-knights:aieds` prints the session total on demand
-and `/random-knights:aieds-explain` prints the formulas and the source of every
-coefficient.
+After the second command, each response ends with a short receipt: the modeled
+energy, carbon, water and Tree-Time of that response, of the session so far and
+of your own running total, at one significant figure, then a comparison and one
+plain line of basis. The short receipt counts cached text as free, a PROPOSED
+rule (methodology section 2.7) that is not yet ratified. `/random-knights:aieds`
+prints the receipt on demand and `/random-knights:aieds-explain` prints the
+formulas, the source of every coefficient, both counts and the sentences AiEDs
+requires on every rendered disclosure.
 
 - **What is measured:** token counts only (input, cache write, cache read,
   output) and the model name, read from the session transcript Claude Code
   already keeps. Prompt and response text are never read into a figure.
 - **Privacy:** until you run `aieds connect`, nothing leaves your computer (no
-  network access, no telemetry) and no file is written unless you set
-  `AIEDS_RECEIPT_LOG` to a path. After `connect`, and only then, each response's
+  network access, no telemetry). One file is written, your running total in
+  your own config folder (numbers and hashed session keys, never sent), and no
+  other unless you set `AIEDS_RECEIPT_LOG` to a path. After `connect`, and only then, each response's
   allowlisted numbers (time, model, token counts, our estimates, the tool's
   name and a random id) go to your own account; never prompts, replies, file
   names or keys. See the plugin README, "Network and privacy".

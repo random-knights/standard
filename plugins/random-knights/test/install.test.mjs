@@ -14,6 +14,8 @@ import {
   lineDiff,
   mergeCopilotHooks,
 } from "../scripts/install.mjs";
+import { disclose, formatResponseReceipt } from "../scripts/core.mjs";
+import { readCopilotUsage } from "../scripts/hosts/copilot.mjs";
 import { hermeticEnv, runCli, tmpDir, POSIX_HOME } from "./helpers.mjs";
 
 const cmds = { powershell: "node 'C:\\a\\aieds.mjs' hook copilot", bash: "node '/a/aieds.mjs' hook copilot" };
@@ -181,7 +183,11 @@ test("install copilot: the hook it writes runs and prints a receipt for a real u
     child.stdin.end(JSON.stringify({ sessionId: sid }));
   });
   assert.equal(out.code, 0);
-  assert.match(out.stdout, /^tokens {10}22\.8k in \(46% cache read\) - 56 out$/m);
+  // The receipt for exactly that one real usage line (22.8k in, 46% cache read, 56 out).
+  const eventsFile = join(dir, "copilot", "session-state", sid, "events.jsonl");
+  const { calls } = readCopilotUsage(eventsFile, 0);
+  assert.equal(calls.length, 1);
+  assert.equal(out.stdout.trim(), formatResponseReceipt(disclose(calls)));
 });
 
 // -- claude and codex -----------------------------------------------------------------------------

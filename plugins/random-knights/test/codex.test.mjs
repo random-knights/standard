@@ -23,12 +23,18 @@ import { fileURLToPath } from "node:url";
 
 import { disclosureFromResponse } from "../vendor/lib/dist/index.js";
 import { disclose, formatReceipt, parseSession, receiptFor } from "../scripts/core.mjs";
+import { scopeLines } from "./helpers.mjs";
 import {
   TESTED_HOSTS,
   findHostSession,
   parseCodexRollout,
   sniffFormat,
 } from "../scripts/hosts.mjs";
+
+// Every child process gets its own config folder, so the local account
+// total a receipt writes never lands in the real user config.
+const TEST_CONFIG_DIR = mkdtempSync(join(tmpdir(), "rk test config "));
+process.on("exit", () => rmSync(TEST_CONFIG_DIR, { recursive: true, force: true }));
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolve(here, "..");
@@ -40,7 +46,7 @@ const CANARIES = /CANARY_[A-Z0-9_]+/;
 function run(args, input, { env = {}, timeoutMs = 15000 } = {}) {
   return new Promise((resolvePromise) => {
     const child = spawn(process.execPath, [script, ...args], {
-      env: { ...process.env, ...env },
+      env: { ...process.env, AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -160,7 +166,10 @@ test("codex: the rollout's text never reaches the receipt", () => {
 
 // -- hook ----------------------------------------------------------------------
 
-test("codex hook: prints the receipt as systemMessage with the four-line shape", async () => {
+/** The receipt the hook should print for a rollout's text, as scope lines. */
+const expectedScopes = (text) => scopeLines(formatReceipt(receiptFor(parseSession(text))));
+
+test("codex hook: prints the receipt as systemMessage with the five-line shape", async () => {
   const r = await runHook({
     session_id: "00000000-0000-4000-8000-0000000000c1",
     turn_id: "turn-B",
@@ -175,10 +184,14 @@ test("codex hook: prints the receipt as systemMessage with the four-line shape",
   assert.equal(r.code, 0);
   const out = JSON.parse(r.stdout);
   assert.deepEqual(Object.keys(out), ["systemMessage"]);
-  assert.match(out.systemMessage, /^estimate, low confidence - .* - AiEDs v2$/m);
+  const lines = out.systemMessage.split("\n");
+  assert.equal(lines.length, 5);
+  assert.match(lines[4], /^A guess, not a measurement\. Cached text counted as free\./);
   assert.doesNotMatch(out.systemMessage, CANARIES);
-  assert.match(out.systemMessage, /^tokens {10}15\.7k in \(78% cache read\) - 5 out$/m);
-  assert.match(out.systemMessage, /gpt-5\.6-sol/);
+  // The response and session lines are the formatter's for this rollout:
+  // turn-B's 15,733 in and 5 out, and all three calls (see the energy test above).
+  assert.deepEqual(scopeLines(out.systemMessage), expectedScopes(fixtureText("codex-rollout.jsonl")));
+  assert.match(lines[2], /^your account on this computer {2}~/);
 });
 
 test("codex hook: a null transcript_path (an ephemeral run) is silent", async () => {
@@ -214,8 +227,10 @@ test("codex hook: waits for the rollout to hold this turn's token_count", async 
     });
     assert.equal(r.code, 0);
     const text = JSON.parse(r.stdout).systemMessage;
-    assert.match(text, /^session \(3\) {5}/m, "the late call is counted");
-    assert.match(text, /15.7k in/);
+    // The late call is counted: the lines are the full rollout's, which differ
+    // from the lines of the rollout without it.
+    assert.deepEqual(scopeLines(text), expectedScopes(fixtureText("codex-rollout.jsonl")), "the late call is counted");
+    assert.notDeepEqual(scopeLines(text), expectedScopes(early.join("\n")));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -272,8 +287,7 @@ test("codex receipt: --session finds a rollout by id under CODEX_HOME", async ()
     const r = await run(["receipt", "--session", id], undefined, {
       env: { CODEX_HOME: dir, CLAUDE_CONFIG_DIR: join(dir, "none"), GROK_HOME: join(dir, "none") },
     });
-    assert.match(r.stdout, /^session \(3\) {5}/m);
-    assert.match(r.stdout, /66.8k in/);
+    assert.deepEqual(scopeLines(r.stdout), expectedScopes(fixtureText("codex-rollout.jsonl")));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

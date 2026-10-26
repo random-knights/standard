@@ -1,14 +1,17 @@
-// Local files of the optional receipts sync: the per-device token file, the
-// queue of receipts not yet sent, a small state file, and the Copilot CLI read
-// marks. Everything lives in ONE directory, the user config dir:
+// Local files: the receipt's account total (account-total.json, numbers and
+// hashed session keys only, never sent anywhere), and, for the optional
+// receipts sync, the per-device token file, the queue of receipts not yet sent
+// and a small state file, plus the Copilot CLI read marks. Everything lives in
+// ONE directory, the user config dir:
 //
 //   Windows        %APPDATA%\random-knights
 //   macOS, Linux   $XDG_CONFIG_HOME/random-knights, or ~/.config/random-knights
 //
 // AIEDS_CONFIG_DIR names the directory itself (tests, and people who want it
-// elsewhere). Nothing here is created until the user runs `aieds connect` (or,
-// for the Copilot CLI marks, until the first Copilot receipt), and no file
-// ever holds prompt or response text: numbers, model names and random ids only.
+// elsewhere). The account total is created by the first receipt; the sync files
+// are created only when the user runs `aieds connect` (the Copilot CLI marks,
+// at the first Copilot receipt). No file ever holds prompt or response text:
+// numbers, model names and random or hashed ids only.
 //
 // The token file is written with mode 0600 on POSIX. Windows has no chmod: the
 // file sits in the per-user profile folder (%APPDATA%), whose default ACL
@@ -28,6 +31,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import { createHash } from "node:crypto";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -300,6 +304,159 @@ export function takeLock(env = process.env, nowMs = Date.now(), lockFile = undef
     }
   }
   return undefined;
+}
+
+// -- Account total (local only) ---------------------------------------------------
+//
+// The "your account" line of the receipt: this user's running total, kept in
+// this user's own config directory and never sent anywhere (no network code
+// touches this file). It holds one entry per session, keyed by a hash of the
+// host and the session id, never the id itself. Each entry is that session's
+// whole short-receipt total, not an increment, so recording the same session
+// again replaces its entry (the larger value of each figure wins) and a session
+// can never be counted twice. A write lost to a race with another session's
+// hook is repaired by that session's next receipt for the same reason.
+//
+// `aieds account reset` does not forget the sessions: it records each one's
+// current figures as its starting point, so a session still running counts
+// only what it uses after the reset.
+
+export const ACCOUNT_FORMAT = "rk-account-total/1";
+const ACCOUNT_FILE = "account-total.json";
+const ACCOUNT_LOCK_FILE = "account.lock";
+const ACCOUNT_FIELDS = ["energyWh", "carbonGrams", "waterMl", "treeTimeMinutes"];
+const ACCOUNT_KEY = /^[0-9a-f]{32}$/;
+
+export function accountPath(env = process.env) {
+  return join(configDir(env), ACCOUNT_FILE);
+}
+
+/** The entry key for a session: a hash, so the file never holds a session id. */
+export function accountKey(host, sessionId) {
+  return createHash("sha256")
+    .update(`rk-account\u0000${String(host)}\u0000${String(sessionId)}`)
+    .digest("hex")
+    .slice(0, 32);
+}
+
+function figuresOf(o) {
+  const out = {};
+  for (const f of ACCOUNT_FIELDS) {
+    const v = o !== null && typeof o === "object" ? o[f] : undefined;
+    out[f] = typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 0;
+  }
+  return out;
+}
+
+function emptyAccount() {
+  return { format: ACCOUNT_FORMAT, since: "", sessions: {} };
+}
+
+/** The stored account, or an empty one. A foreign or torn file reads as empty. */
+export function loadAccount(env = process.env) {
+  const a = readJson(accountPath(env));
+  const out = emptyAccount();
+  if (a === undefined || a.format !== ACCOUNT_FORMAT) return out;
+  if (typeof a.since === "string") out.since = a.since.slice(0, 40);
+  if (a.sessions !== null && typeof a.sessions === "object") {
+    for (const [k, v] of Object.entries(a.sessions)) {
+      if (!ACCOUNT_KEY.test(k) || v === null || typeof v !== "object") continue;
+      const entry = figuresOf(v);
+      if (v.base !== undefined) entry.base = figuresOf(v.base);
+      entry.atMs = Number.isFinite(v.atMs) ? v.atMs : 0;
+      out.sessions[k] = entry;
+    }
+  }
+  return out;
+}
+
+/**
+ * Pure: the account with one session's total recorded. `counted` is that
+ * session's whole short-receipt total. Never decreases a figure.
+ */
+export function withSession(account, key, counted, nowMs = Date.now()) {
+  const next = { ...account, sessions: { ...account.sessions } };
+  if (!next.since) next.since = new Date(nowMs).toISOString();
+  const prev = account.sessions[key];
+  const now = figuresOf(counted);
+  const entry = {};
+  for (const f of ACCOUNT_FIELDS) entry[f] = Math.max(prev ? prev[f] : 0, now[f]);
+  if (prev && prev.base) entry.base = prev.base;
+  entry.atMs = nowMs;
+  next.sessions[key] = entry;
+  return next;
+}
+
+/** Pure: the total since the last reset, and how many sessions add to it. */
+export function accountTotal(account) {
+  const counted = { energyWh: 0, carbonGrams: 0, waterMl: 0, treeTimeMinutes: 0 };
+  let sessions = 0;
+  for (const e of Object.values(account.sessions)) {
+    let adds = false;
+    for (const f of ACCOUNT_FIELDS) {
+      const v = Math.max(0, e[f] - (e.base ? e.base[f] : 0));
+      counted[f] += v;
+      if (v > 0) adds = true;
+    }
+    if (adds) sessions += 1;
+  }
+  return { counted, sessions, since: account.since };
+}
+
+export function saveAccount(account, env = process.env) {
+  writeAtomic(accountPath(env), JSON.stringify(account) + "\n", 0o600);
+}
+
+function pause(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function withAccountLock(env, fn) {
+  const lockFile = join(configDir(env), ACCOUNT_LOCK_FILE);
+  for (let i = 0; i < 8; i += 1) {
+    const release = takeLock(env, Date.now(), lockFile);
+    if (release !== undefined) {
+      try {
+        return { ran: true, value: fn() };
+      } finally {
+        release();
+      }
+    }
+    pause(25);
+  }
+  return { ran: false };
+}
+
+/**
+ * Records a session's total and returns the account as it now stands. Under a
+ * short lock; if the lock stays busy the write is skipped (the next receipt
+ * repairs it) and the in-memory result is still returned. Throws only if the
+ * file cannot be written at all; the hook catches that.
+ */
+export function recordSession(key, counted, env = process.env, nowMs = Date.now()) {
+  const r = withAccountLock(env, () => {
+    const next = withSession(loadAccount(env), key, counted, nowMs);
+    saveAccount(next, env);
+    return next;
+  });
+  return r.ran ? r.value : withSession(loadAccount(env), key, counted, nowMs);
+}
+
+/** Starts the total again from zero. Returns how many sessions it had. */
+export function resetAccount(env = process.env, nowMs = Date.now()) {
+  const r = withAccountLock(env, () => {
+    const a = loadAccount(env);
+    const before = accountTotal(a).sessions;
+    if (!existsSync(accountPath(env))) return before;
+    const next = { format: ACCOUNT_FORMAT, since: new Date(nowMs).toISOString(), sessions: {} };
+    for (const [k, e] of Object.entries(a.sessions)) {
+      next.sessions[k] = { ...figuresOf(e), base: figuresOf(e), atMs: e.atMs };
+    }
+    saveAccount(next, env);
+    return before;
+  });
+  if (!r.ran) throw new Error("The account total is busy. Try again in a moment.");
+  return r.value;
 }
 
 // -- Copilot marks ---------------------------------------------------------------

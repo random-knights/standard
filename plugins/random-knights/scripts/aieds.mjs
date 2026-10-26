@@ -16,6 +16,8 @@
 //   aieds explain [--session <id> | --transcript <file> | --last grok]
 //                                   Formulas and coefficient sources; with a session,
 //                                   also that receipt unrounded, with the water range.
+//   aieds account [reset]           The local account total on this computer; reset
+//                                   starts it again from zero.
 //
 // For tools with no hook mechanism:
 //   aieds ollama --model <m> [--host <url>] [--num-ctx <n>] [--stream] [--no-text] <prompt>
@@ -28,7 +30,9 @@
 //
 // NETWORK AND FILES. Until the user runs `aieds connect`, this tool makes no
 // network call except the one the user asks for (`ollama` talks to the Ollama
-// server the user names) and writes no file unless the user sets
+// server the user names). It writes one file of its own, the local account
+// total (account-total.json in the user config folder: numbers and hashed
+// session keys, never sent anywhere), and no other file unless the user sets
 // AIEDS_RECEIPT_LOG (the Copilot CLI reader also keeps a small file of read
 // marks, numbers only). After `connect`, and only then, each receipt's
 // allowlisted numbers go to the user's own account. After `aieds contribute on`,
@@ -160,6 +164,62 @@ async function loadSync() {
   return { receipts, flow };
 }
 
+/**
+ * The account total with this session in it: { counted, sessions, since, linked }.
+ * With write, the session's total is recorded in the local account file (see
+ * store.mjs); without, it is only merged in memory for display, so `receipt`
+ * and `explain` on any file never change the stored total. Never throws:
+ * undefined means no account line.
+ */
+async function accountFor(parsed, receipt, sessionId, env, { write }) {
+  try {
+    const store = await import("./store.mjs");
+    const key = store.accountKey(hostOf(parsed), sessionId);
+    const counted = receipt.session.counted;
+    let account;
+    try {
+      account = write
+        ? store.recordSession(key, counted, env)
+        : store.withSession(store.loadAccount(env), key, counted);
+    } catch {
+      // An unwritable config folder still gets a receipt: the line shows the
+      // stored total with this session merged in.
+      account = store.withSession(store.loadAccount(env), key, counted);
+    }
+    return { ...store.accountTotal(account), linked: store.loadConnection(env) !== undefined };
+  } catch {
+    return undefined;
+  }
+}
+
+/** `aieds account` and `aieds account reset`. Local only: no network, ever. */
+async function runAccount(args, env = process.env) {
+  const store = await import("./store.mjs");
+  const core = await import("./core.mjs");
+  const sub = args.find((a) => !a.startsWith("--"));
+  if (sub === "reset") {
+    try {
+      const n = store.resetAccount(env);
+      console.log(
+        `The account total on this computer starts again from zero (it had ${n} ${n === 1 ? "session" : "sessions"}). ` +
+          "A session still running counts only what it uses from now on.",
+      );
+    } catch (e) {
+      console.error(String(e && e.message ? e.message : e));
+      process.exitCode = 1;
+    }
+    return;
+  }
+  if (sub !== undefined && sub !== "show") {
+    console.error("usage: aieds account [show | reset]");
+    process.exitCode = 2;
+    return;
+  }
+  const t = store.accountTotal(store.loadAccount(env));
+  const account = { ...t, linked: store.loadConnection(env) !== undefined };
+  console.log(core.formatAccount(account, { sessions: t.sessions, since: t.since, file: store.accountPath(env) }));
+}
+
 function appendLog(core, receiptsMod, entries, receipt, sessionId, env) {
   const logPath = env.AIEDS_RECEIPT_LOG;
   if (typeof logPath !== "string" || logPath.length === 0) return;
@@ -212,13 +272,16 @@ async function runHook(hostArg, env = process.env) {
   }
 
   const receipt = core.receiptFor(parsed);
+  const sessionId = input.session_id ?? input.sessionId ?? sessionIdFromPath(transcriptPath);
+  // The local account total is updated before the receipt is printed, so the
+  // account line already includes this response.
+  const account = await accountFor(parsed, receipt, sessionId, env, { write: true });
   process.stdout.write(
-    JSON.stringify({ systemMessage: core.formatReceipt(receipt) }) + "\n",
+    JSON.stringify({ systemMessage: core.formatReceipt(receipt, account) }) + "\n",
   );
 
   // After the receipt is out: the optional log and the optional sync. Both are
   // best effort and bounded; neither can change what the host already showed.
-  const sessionId = input.session_id ?? input.sessionId ?? sessionIdFromPath(transcriptPath);
   const wantsLog = typeof env.AIEDS_RECEIPT_LOG === "string" && env.AIEDS_RECEIPT_LOG.length > 0;
   try {
     const { receipts, flow } = await loadSync();
@@ -364,7 +427,7 @@ async function runReceipt(args, env = process.env) {
     if (format === "rk-receipts") {
       for (const e of entries) console.log(receipts.receiptLogLine(e.receipt));
     } else {
-      console.log(core.formatSessionReceipt(core.receiptFor(parsed).session));
+      console.log(await receiptText(core, parsed, path, env));
     }
     if (wantsSync) {
       if (!flow.syncActive(env)) {
@@ -376,7 +439,14 @@ async function runReceipt(args, env = process.env) {
     }
     return;
   }
-  console.log(core.formatSessionReceipt(core.receiptFor(parsed).session));
+  console.log(await receiptText(core, parsed, path, env));
+}
+
+/** The receipt for a session file on demand. Shows the account total, never changes it. */
+async function receiptText(core, parsed, path, env) {
+  const receipt = core.receiptFor(parsed);
+  const account = await accountFor(parsed, receipt, sessionIdFromPath(path), env, { write: false });
+  return core.formatReceipt(receipt, account);
 }
 
 function intArg(args, flag) {
@@ -515,7 +585,7 @@ async function runUsage(args, env = process.env) {
 
 const USAGE =
   "usage: aieds hook [host] | connect | disconnect | status | flush | install <host> | " +
-  "receipt [--session <id> | --transcript <file> | --last grok] | explain [--session <id>] | " +
+  "receipt [--session <id> | --transcript <file> | --last grok] | explain [--session <id>] | account [reset] | " +
   "ollama | chat-completion | usage | contribute on|off|status|preview|submit|delete";
 
 /** The file the user ran (the bin, or the plugin script), symlinks resolved. */
@@ -559,6 +629,10 @@ export async function main() {
     await runReceipt(rest, env);
     return;
   }
+  if (mode === "account") {
+    await runAccount(rest, env);
+    return;
+  }
   if (mode === "ollama") {
     await runOllama(rest, env);
     return;
@@ -581,17 +655,21 @@ export async function main() {
       argValue(rest, "--transcript") !== undefined ||
       argValue(rest, "--last") !== undefined;
     let receipt;
+    let account;
     if (named) {
       const quiet = console.log;
       console.log = () => {};
       try {
         const found = await resolveTranscript(rest, core);
-        if (found !== undefined) receipt = core.receiptFor(found.parsed);
+        if (found !== undefined) {
+          receipt = core.receiptFor(found.parsed);
+          account = await accountFor(found.parsed, receipt, sessionIdFromPath(found.path), env, { write: false });
+        }
       } finally {
         console.log = quiet;
       }
     }
-    console.log(core.formatExplanation(receipt));
+    console.log(core.formatExplanation(receipt, account));
     return;
   }
   if (mode === "connect" || mode === "disconnect" || mode === "status" || mode === "flush") {
