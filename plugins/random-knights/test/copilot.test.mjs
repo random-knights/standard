@@ -18,6 +18,7 @@ import {
   readCopilotShutdownTotals,
   readCopilotUsage,
 } from "../scripts/hosts/copilot.mjs";
+import { disclose, formatResponseReceipt } from "../scripts/core.mjs";
 import { CANARY, fixtureText, hermeticEnv, runCli, tmpDir, POSIX_HOME } from "./helpers.mjs";
 
 const SESSION = "76271fba-e658-4ec1-8603-e756a8676870";
@@ -151,18 +152,25 @@ test("copilot hook: one receipt per turn, none when nothing is new, no text anyw
   const env = hermeticEnv(dir);
   const file = writeEvents(dir, TURN1);
 
+  // What the hook should print for a set of calls: the one-scope receipt.
+  const first = readCopilotUsage(file, 0);
+  assert.equal(first.calls.length, 2, "both calls of the turn are read");
+
   const t1 = await runCli(["hook", "copilot"], { input: hookInput(file), env });
   assert.equal(t1.code, 0);
   assert.match(t1.stdout, /this response {3}/);
-  assert.match(t1.stdout, /^tokens {10}47\.4k in \(70% cache read\) - 158 out$/m, "both calls of the turn");
+  assert.equal(t1.stdout.trim(), formatResponseReceipt(disclose(first.calls)), "both calls of the turn");
+  assert.notEqual(t1.stdout.trim(), formatResponseReceipt(disclose(first.calls.slice(0, 1))), "the test can tell one call from two");
   assert.doesNotMatch(t1.stdout, /Most of this is the session's context/, "the tokens line replaces the context note");
 
   const again = await runCli(["hook", "copilot"], { input: hookInput(file), env });
   assert.equal(again.stdout, "", "no new usage, no second receipt");
 
   appendFileSync(file, TURN2.map((l) => `${l}\n`).join(""));
+  const second = readCopilotUsage(file, first.nextPos);
+  assert.equal(second.calls.length, 1);
   const t2 = await runCli(["hook", "copilot"], { input: hookInput(file), env });
-  assert.match(t2.stdout, /^tokens {10}24\.5k in \(93% cache read\) - 92 out$/m);
+  assert.equal(t2.stdout.trim(), formatResponseReceipt(disclose(second.calls)), "only the new turn");
 
   for (const out of [t1.stdout, t1.stderr, t2.stdout, t2.stderr]) assert.ok(!out.includes("CANARY"));
   const marks = readFileSync(join(dir, "config", "copilot-marks.json"), "utf8");

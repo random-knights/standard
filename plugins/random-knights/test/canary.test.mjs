@@ -174,9 +174,9 @@ test("canary: Ollama wrapper, streaming and not, against a fake Ollama", async (
       // --no-text: the reply is the one thing this command prints by design,
       // so the stdout check applies to the receipt-only run.
       const plain = await runCli(["ollama", "--model", "llama3.2:1b", "--host", host, "--no-text", `${CANARY} prompt`], { env });
-      assert.match(plain.stdout, /^this response {3}.* Wh - /m);
+      assert.match(plain.stdout, /^this response {3}~.* Wh, /m);
       const streamed = await runCli(["ollama", "--model", "llama3.2:1b", "--host", host, "--stream", "--no-text", `${CANARY} prompt`], { env });
-      assert.match(streamed.stdout, /^this response {3}.* Wh - /m);
+      assert.match(streamed.stdout, /^this response {3}~.* Wh, /m);
       return [plain, streamed];
     });
     // With the text shown, the reply IS printed (that is the command's job), but still never queued or sent.

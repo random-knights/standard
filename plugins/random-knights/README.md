@@ -55,6 +55,21 @@ methodology section 2.6.
 
 ## What is new
 
+Not yet released (a draft for owner review; the plugin version is unchanged):
+
+- **A shorter, plainer receipt.** Three lines, one per scope: this response,
+  this session and your account. Each has energy, carbon, water and tree-time
+  at one significant figure with a tilde. Then one line comparing your account
+  total to phone charges and kilometers of driving, and one line of basis in
+  plain words. Cached text is counted as free on the receipt (PROPOSED
+  methodology section 2.7, not ratified), so the receipt is a floor, not the
+  ratified figure; `aieds explain` prints both counts.
+- **Your account total, kept on this computer.** A running total per user in
+  your config folder, one entry per session so a session is never counted
+  twice. `/random-knights:aieds-account` shows it and
+  `/random-knights:aieds-account-reset` starts it again from zero. It is never
+  sent anywhere.
+
 Plugin 0.6.0:
 
 - **A readable receipt.** The receipt is now up to four lines instead of one
@@ -117,34 +132,64 @@ whether the plugin is listed; it changes nothing itself.
 
 ## What you will see
 
-After each response, up to four lines:
+After each response, five lines:
 
 ```text
-this response   1.1 Wh - 0.47 g CO2e - 6.3 min tree-time - ~5.1 mL water
-session (37)    12 Wh - 5.3 g CO2e - 2.1 h tree-time - ~58 mL water
-tokens          52.3k in (92% cache read) - 1.2k out
-estimate, low confidence - claude-sonnet-4-5 - AiEDs v2
+this response                  ~50 Wh, ~20 g CO2e, ~0.2 L water, ~8 h tree-time
+this session                   ~60 Wh, ~30 g CO2e, ~0.3 L water, ~10 h tree-time
+your account on this computer  ~100 Wh, ~50 g CO2e, ~0.6 L water, ~20 h tree-time
+your account on this computer so far is about 10 phone charges, or about 300 m of driving.
+A guess, not a measurement. Cached text counted as free. Comparisons are for scale only.
 ```
 
-The numbers above are an illustration of the format, not a measurement.
+The numbers above come from a sample session file, not a measurement.
 
-- The two scopes are on two lines, never one number. The session line names its
-  number of model calls.
-- Units scale so the number reads between 1 and 999 where it can: Wh then kWh,
-  g CO2e then kg CO2e, minutes then hours (at 120 minutes), mL then L.
-- Figures carry two significant figures while confidence is low or the basis is
-  a class estimate (three otherwise), and never more than one decimal place at
-  1 or above. A low-confidence figure is not printed as if it were exact.
-- Water carries a tilde and no range.
-- The tokens line appears only when cache reads are 20 percent or more of the
-  input, because that is when it explains why a figure looks large. Cache tokens
-  count as input at the full input rate (methodology 2.4.1), so a one-word
-  reply at the end of a long session shows a large input and a small output.
-- The last line is the basis. It replaces the three sentences the receipt used
-  to repeat every time: energy and carbon are modeled estimates, Tree-Time and
-  equivalents are educational comparisons, and water is a modeled estimate. Those
-  sentences, the water range, the unrounded figures and the full token counts
-  are in `aieds explain`.
+- Three scopes, one line each. "This response" is the whole turn, every model
+  call the agent made to answer you. "Your account" is your own running total
+  (see [Your account total](#your-account-total)).
+- Every figure has one significant figure and a tilde, because the confidence is
+  low and a second figure would claim a precision the estimate does not have.
+- Units step up so the number stays small: Wh, kWh, MWh; g, kg, t CO2e; mL, then
+  L from 100 mL; minutes, hours, days, years. Large numbers get thousands
+  separators.
+- Cached text counts as free on the receipt. Plain input, text written to the
+  cache and output are charged at the model's coefficient with the data center
+  overhead (PUE). The ratified count charges cache reads at the full input
+  rate (methodology 2.4.1), which in a long agent session is most of the
+  figure. The real figure is very likely between the two; the receipt shows the
+  floor. This counting rule is a PROPOSAL (methodology section 2.7), not yet
+  ratified.
+- The comparisons line is computed from your account total only, with the
+  standard's own constants: 12 Wh per phone charge and 170 g CO2e per km of
+  driving. It is an educational comparison, not a claim about what was used.
+- The last line is the basis. A model with no published figure adds one more
+  sentence saying so. The three required sentences (energy and carbon are
+  modeled estimates, Tree-Time and equivalents are educational comparisons,
+  water is a modeled estimate), the water range, the unrounded figures, both
+  counts and the full token counts are in `aieds explain`.
+- A receipt from a wrapper (`aieds ollama`, `chat-completion`, `usage`) or the
+  Copilot CLI has the response line and the basis line only: there is no
+  session to total.
+
+### Your account total
+
+The account line is a running total for you, kept in a file in your user config
+folder (`account-total.json`, next to the files described under
+[Network and privacy](#network-and-privacy)). It holds one entry per session,
+keyed by a hash of the session id, with that session's four totals. A session
+that is recorded again replaces its own entry, so it is never counted twice. The
+file holds numbers and hashes only: no prompt, reply, model name, folder or
+session id. Nothing sends it anywhere, and it never includes another user's
+data: it lives in your own profile folder.
+
+Until you link an account with `aieds connect`, the line reads "your account on
+this computer". After you connect it reads "your account". The total itself is
+still the one on this computer; it is not combined across devices.
+
+| Command | What it does |
+| ------- | ------------ |
+| `/random-knights:aieds-account` (or `aieds account`) | Shows the total, its comparisons, how many sessions it counts and where the file is. |
+| `/random-knights:aieds-account-reset` (or `aieds account reset`) | Starts the total again from zero. A session still running counts only what it uses after the reset. |
 
 ### The water line
 
@@ -165,8 +210,10 @@ Two commands show more, on demand:
 
 | Command | What it prints |
 | ------- | -------------- |
-| `/random-knights:aieds` | The session total so far, with the token split. `/aieds` also works when no other command has that name. |
-| `/random-knights:aieds-explain` | The formulas, the constants and the source of every coefficient, read from the bundled library, then this session's receipt unrounded: the water range, the full token counts and the three disclaimers. |
+| `/random-knights:aieds` | The receipt for this session so far, the same five lines. `/aieds` also works when no other command has that name. |
+| `/random-knights:aieds-explain` | The formulas, the constants and the source of every coefficient, read from the bundled library, then this session's receipt unrounded: both counts (cache reads charged and cache reads free), the water range, the full token counts and the three disclaimers. |
+| `/random-knights:aieds-account` | Your account total on this computer. |
+| `/random-knights:aieds-account-reset` | Starts your account total again from zero. |
 
 ## What is measured
 
@@ -189,7 +236,10 @@ input rate (methodology section 2.4.1). That is a stated conservative bias, not 
 measurement: a cache read almost certainly costs less than recomputing the
 prefill it replaces, and no provider publishes the ratio. Coding-agent sessions
 carry a large cached context, so the figures run high for that reason, in a
-known direction.
+known direction. The short receipt shown after each response takes the other
+side of that gap: it counts cache reads as free (a proposal, methodology
+section 2.7), so it runs low. `aieds explain` prints both. The local log and the
+optional sync keep the ratified count.
 
 For models in the coefficient table the receipt uses that model's coefficient.
 Claude models carry a class estimate, because no per-query figure is published
@@ -210,10 +260,13 @@ Until you run `aieds connect` or `aieds contribute on`:
   network request, with one exception you ask for: `aieds ollama` talks to the
   Ollama server you name (by default on your own machine).
 - No telemetry. Nothing is sent to Random Knights or anyone else.
-- No file is written. The exceptions are a local log you turn on yourself
-  (below), and, for the Copilot CLI only, a small file of read positions (a
-  byte count and a random-looking hash per session, in your user config folder)
-  so that each reply gets one receipt.
+- One file is written: your account total (`account-total.json` in your user
+  config folder: four numbers and a hash per session, see
+  [Your account total](#your-account-total)). No code sends it anywhere. The
+  other exceptions are a local log you turn on yourself (below), and, for the
+  Copilot CLI only, a small file of read positions (a byte count and a
+  random-looking hash per session, in the same folder) so that each reply gets
+  one receipt.
 - Prompt and response text are never stored, printed, logged or sent.
 
 After you run `aieds connect`, and only then, each response's receipt goes to
@@ -366,6 +419,7 @@ response.
 | `aieds receipt ... --format rk-receipts` | Prints every response of that session as an rk-receipts/1 file, one JSON object per line. |
 | `aieds receipt ... --sync` | Queues those per-response receipts for your account (needs `connect`). |
 | `aieds explain` | The formulas and the source of every coefficient. |
+| `aieds account [reset]` | Your account total on this computer; `reset` starts it again from zero. Local only. |
 | `aieds connect \| disconnect \| status \| flush` | The optional account link (above). |
 | `aieds contribute on \| off \| status \| preview \| submit \| delete` | The optional community totals (above). Off by default. |
 

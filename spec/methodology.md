@@ -19,6 +19,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| Proposed | 2026-10-26 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Proposed version 2.6.0. New section 2.7, THE SHORT RECEIPT: three scope lines (this response, this session, the user's account), each with energy, carbon, water and Tree-Time; comparisons from the account total only, with the section 2.5 constants; one plain basis line. On the short receipt cache-read tokens count as free and plain input, cache-creation and output tokens are charged at the profile coefficients with PUE: an understatement floor, labeled as one, opposite the section 2.4.1 ceiling. No discount coefficient is introduced; a sourced cache-read coefficient is still needed before ratification. One significant figure with a tilde, unit steps, thousands separators. The account total is kept on the user's machine, one hashed entry per session, never sent. NUMBERS: nothing moves. Every coefficient, constant, table, schema field and ratified record is unchanged, and records, logs and synced receipts keep the section 2.4.1 count. |
 | 2.5.0   | 2026-10-18 | **MINOR (additive). No existing number changes; 2.0.0 through 2.4.0 records remain valid.** WORKING LABEL: the owner assigns the final number at publish. WHAT CHANGED: new section 2.6, WATER, and Table 5. A disclosure MAY carry a modeled water figure: `waterL = energyKWh x (siteWUE + gridWaterIntensity)`, consumption basis, inference only, always a low to high range, confidence `low` by rule. Defaults 0.36 L/kWh on site plus 4.52 L/kWh at the power plant (4.88 L/kWh; range 1.77 to 11.3), from LBNL-2001637 (Shehabi et al. 2024), the US average, labeled "US average" wherever it stands in for a region. NEW COPY: the third required sentence, "Water is a modeled estimate.", beside the two existing ones, plus a banned-word list for water copy and conformance rules W1 to W11. NEW COMPARISON: the teaspoon (5 mL), an educational comparison. SCHEMA: new optional top-level `water` block; records without it stay valid. WHAT DID NOT CHANGE: every coefficient, both grid intensities, Tables 1 to 4b, the equivalency constants, the provenance and confidence ladders, and the response-surface path. OUT OF SCOPE: training water, embodied water, scarcity weighting, market-based water. |
 | 2.4.0   | 2026-09-24 | **MINOR (additive). No existing number changes; 2.0.0 through 2.3.0 records remain valid.** WHAT CHANGED: new section 2.5.1, THE MATURE REFERENCE TREE, which defines the reference object behind Tree-Time, publishes its literature range, names its primary citation, and states the bias in its choice. THE NUMBER: `matureReferenceTreeCo2eGramsPerYear` stays at 21 000. Every coefficient, both grid intensities, Tables 2, 4 and 4b and every other constant are byte-identical to 2.3.0. WHY IT WAS NEEDED: the MRT drives the standard's most public figure and was its least defensible entry. It carried no `citation` field at all, although `citation` is a convention used nine times elsewhere in `aieds-factors.json`; it published a bare scalar for a quantity that varies about 4x; its conservative bias was real but unwritten, so a deliberate choice read as an arbitrary one; and "Mature Reference Tree" was never defined, so it could not be reconciled with any primary source, including one that agrees with it. WHAT 2.5.1 SETTLES: the reference object is one mature tree in steady-state growth, NOT mortality-discounted and NOT averaged over juvenile years; the published range is 10 to 40 kg CO2/year with a central tendency near 25, published to show the pin's width, NOT to let an implementation choose within it; 21 is below that center on purpose, because a lower denominator yields more tree-minutes and overstating disclosed impact is the correct direction, the same bias section 2.1 states for TDP; the units are consistent because CO2 has a GWP of exactly 1. NON-COMPARABILITY: the EPA calculator's 0.060 metric tons CO2 per urban tree PLANTED per year is about 3x the MRT and is a different object (10-year horizon, 59 percent survival discount, 11/89 coniferous/deciduous weighting). The two MUST NOT be substituted, and Tree-Time MUST NOT be presented as a number of trees to plant, which would be the offset claim section 1.1 forbids. CITATION: McPherson, van Doorn and Peper (2016), PSW-GTR-253, USDA Forest Service, as surfaced by the EPA Greenhouse Gas Equivalencies Calculator. Commercial tree-planting and offset vendors publish figures in the same range and are explicitly ruled out as sources: a seller's estimate of what its product absorbs is not an independent measurement. WHAT DID NOT CHANGE: the provenance ladder (the MRT stays `class-estimated`; a citation does not promote a class representative), the confidence ladder, the response-surface path, the schema, every measured device table, and the other four equivalency constants. |
 | 2.3.0 erratum | 2026-09-22 | **ERRATUM. No rule change, no number change, no version bump; 2.3.0 records remain valid.** Section 6 item 4 said the schema (`aieds.schema.json`) is MIT-licensed. That was wrong: the schema is licensed Apache 2.0 under `LICENSE`, as the path list at the end of `LICENSE` and the `NOTICE` file state. Item 4 now says Apache 2.0, and names the coefficient tables with the methodology text as CC BY 4.0, which is what `LICENSE-DOCS` already said. |
@@ -621,6 +622,99 @@ high 1.8 + 9.5). They are arithmetic, not measurements.
 | V5 | 0.00024 kWh, range | low 0.0004248 L, high 0.002712 L, low <= total <= high |
 | V6 | 1 kWh, range | low 1.77 L, high 11.3 L |
 | V7 | work with no regional figure | grid term 4.52, `gridBasis` `default`, view labels it "US average" |
+
+### 2.7 The short receipt (proposed 2026-10-26)
+
+> **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.**
+> Proposed version 2.6.0. Nothing in this section is normative yet. It changes
+> no coefficient, no constant, no table, no schema field and no ratified
+> record. The reference plugin implements it as a draft so the owner can judge
+> it on real output.
+
+**Why.** A coding agent's "response" is a whole turn: often hundreds of model
+calls, each one reading the cached context again. Under section 2.4.1 every
+cache read is charged at the full input rate. One sample turn of 2,550,000
+input tokens (2,320,000 of them cache reads) and 9,500 output tokens on the
+`claude` profile comes to about 450 Wh, and 91 percent of its input is cache
+reads. Section 2.4.1 names that charge as a conservative bias, not a
+measurement. Printed to two to five significant figures beside the label "low
+confidence", the figure looked exact and looked wrong.
+
+**Receipt shape.** A short receipt is what a tool prints after each response.
+It has, in this order:
+
+1. Three scope lines: this response, this session, and the user's account.
+   Each line has energy, carbon, water and Tree-Time. A tool with no session
+   (a single chat call) prints the response line only.
+2. One or two lines of comparisons, computed from the account total only.
+3. One basis line in plain words, for example "A guess, not a measurement.
+   Cached text counted as free. Comparisons are for scale only."
+
+The short receipt carries no level names, no version stamp, no percentages and
+no token counts. The full breakdown (both counts below, the token split, the
+coefficients, the water range and the three required sentences) stays
+available behind a detail command.
+
+**Counting rule (the floor).** On the short receipt, cache-read tokens count
+as free. Plain input tokens, cache-creation tokens and output tokens are
+charged at the profile coefficients, with PUE, exactly as in section 2.4:
+
+```
+chargedIn = plainIn + cacheCreationIn          (cacheReadIn is not charged)
+energyWh  = (chargedIn/1000 x whPer1kIn + outTok/1000 x whPer1kOut) x pue
+```
+
+This is an UNDERSTATEMENT FLOOR, and it is labeled as one. Section 2.4.1
+charges the same tokens at the full input rate and is a ceiling of the same
+kind. The real figure is very likely between the two. No discount coefficient
+is introduced: a guessed ratio would be a number without a source. **Open
+before ratification:** a sourced cache-read energy coefficient is still needed.
+When a provider publishes one it enters through section 6 and replaces the
+zero here. Until then the detail command prints both counts, and records,
+logs and synced receipts keep the section 2.4.1 count unchanged.
+
+On the sample turn above, the floor gives about 47 Wh (230,000 charged input
+tokens and 9,500 output tokens), about 20 g CO2e, about 0.2 L of water and
+about 8 hours of Tree-Time.
+
+**Rounding.** Every figure on the short receipt has one significant figure and
+a tilde, because a low-confidence estimate must not be printed as if it were
+exact. Units step up so the number stays small: Wh, kWh, MWh; g, kg, t CO2e;
+mL, then L from 100 mL; minutes, hours, days, years. The step is checked again
+after rounding, so 960 Wh reads "~1 kWh". Numbers of 1,000 or more carry
+thousands separators. Zero prints as "0" with no tilde; a scope with no energy
+prints no water figure (section 2.6.12).
+
+**Account total.** The third scope is a running total for one user, kept on
+that user's own machine, in the per-user configuration folder the tool already
+uses. It holds one entry per session, keyed by a one-way hash of the tool and
+the session id, never the id itself. Each entry is that session's whole total,
+so recording a session again replaces its own entry and a session is never
+counted twice. It is written atomically (a temporary file, then a rename), it
+holds numbers and hashes only, no network code reads it, and it never includes
+another user's data. One command shows it and one resets it; a reset starts the
+total from zero while a session still running counts only what it uses after
+the reset. Until the user links an account, the line reads "your account on
+this computer". This proposal does not define any cross-device total.
+
+**Comparisons scope.** The comparisons line uses the account total, not the
+response or the session, and only the section 2.5 constants: `phoneChargeWh`
+12 and `carDrivingGramsCo2ePerKm` 170 in `humanEquivalencies`
+(`ledBulbWatts` 10 and `laptopWatts` 50 are also allowed). It is rounded the
+same way. Below one phone charge it reads "less than one phone charge"; below
+one meter, "less than 1 m".
+
+**Open before ratification.**
+
+- The cache-read coefficient above.
+- Section 2.5 says equivalencies MUST be labeled educational, and rules W6 and
+  W11 in section 2.6.13 ask a rendered view with water for the three required
+  sentences and a way to reach the range. The short receipt says "Comparisons
+  are for scale only" and leaves the sentences and the range to the detail
+  command, as the 0.6.0 receipt did. Ratification must say whether that
+  satisfies 2.5, W6 and W11 for a short receipt, or what one line would.
+- Whether a linked account should read "your account" while the total is
+  still the one on this computer.
 
 ---
 

@@ -219,3 +219,15 @@ export async function connectDirect(env, server) {
   );
   return token;
 }
+
+/**
+ * The response and session lines of a receipt, with the label column
+ * squeezed to one space so a receipt with and without an account line
+ * compare equal.
+ */
+export function scopeLines(text) {
+  return String(text)
+    .split("\n")
+    .filter((l) => /^(this response|this session) {2,}/.test(l))
+    .map((l) => l.replace(/^(this response|this session) +/, "$1 "));
+}

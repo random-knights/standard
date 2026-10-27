@@ -125,7 +125,9 @@ test("no sync.json: the hook, usage, flush and status make no network call at al
     await runCli(["flush"], { env });
     await runCli(["status"], { env });
     assert.equal(server.requests.length, 0);
-    assert.deepEqual(readdirSync(join(dir)).filter((n) => n === "config"), [], "no config dir is even created");
+    // No token, queue or state file: the one file is the local account total,
+    // which no network code reads.
+    assert.deepEqual(readdirSync(join(dir, "config")), ["account-total.json"], "no sync file is created");
   } finally {
     await server.close();
   }
@@ -404,7 +406,7 @@ test("usage and chat-completion queue under host other, ollama under host ollama
 
     const file = fixture("ollama-stream.ndjson");
     const c = await runCli(["chat-completion", file, "--provider", "Ollama"], { env });
-    assert.match(c.stdout, /^this response {3}.* Wh - /m);
+    assert.match(c.stdout, /^this response {3}~.* Wh, /m);
     assert.equal(JSON.parse(server.requests.at(-1).raw).receipts[0].tokensIn, 28);
   } finally {
     await server.close();
