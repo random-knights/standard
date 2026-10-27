@@ -139,7 +139,7 @@ test("grok: receipt energy equals the library, and model calls are summed", () =
 
 test("grok: the basis says there is no published figure, not that the model is unlisted", () => {
   const text = formatReceipt(receiptFor(parseGrokSession(fixtureText("grok-updates.jsonl"))));
-  assert.match(text, / No published figure for grok-4\.6, grok-4\.6-mini, so a general guess is used\.$/m);
+  assert.match(text, /^No published figure for grok-4\.6, grok-4\.6-mini, so a general guess is used\.$/m);
   assert.doesNotMatch(text, /not in table/);
   assert.doesNotMatch(text, CANARIES);
 });

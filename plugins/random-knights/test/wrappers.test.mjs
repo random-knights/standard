@@ -100,7 +100,7 @@ function assertWh(receiptText, wh, label) {
   );
 }
 
-const BASIS = "A guess, not a measurement. Cached text counted as free. Comparisons are for scale only.";
+const BASIS = "A guess, not a measurement. Cached text counted as free.";
 
 // -- usage readers ------------------------------------------------------------
 
@@ -175,13 +175,14 @@ test("receipt: a listed model gets the plain basis line, an unlisted one says th
     outputTokens: 5,
   });
   assert.equal(listed.split("\n").at(-1), BASIS);
+  assert.equal(listed.split("\n").at(-2), "");
   const unlisted = receiptTextFromUsage({
     provider: "Ollama",
     model: "llama3.2:1b",
     inputTokens: 10,
     outputTokens: 5,
   });
-  assert.equal(unlisted.split("\n").at(-1), `${BASIS} No published figure for llama3.2:1b, so a general guess is used.`);
+  assert.equal(unlisted.split("\n").slice(-2).join("\n"), `${BASIS}\nNo published figure for llama3.2:1b, so a general guess is used.`);
 });
 
 // -- ollama --------------------------------------------------------------------
@@ -272,7 +273,7 @@ test("chat-completion CLI: reads a response from stdin and labels the provider",
     JSON.stringify(CHAT_BODY),
   );
   assert.equal(r.code, 0, r.stderr);
-  assert.match(r.stdout, / No published figure for meta-llama\/Llama-3\.1-8B-Instruct, so a general guess is used\.$/m);
+  assert.match(r.stdout, /^No published figure for meta-llama\/Llama-3\.1-8B-Instruct, so a general guess is used\.$/m);
   assertWh(r.stdout, libraryWh("Hugging Face", "meta-llama/Llama-3.1-8B-Instruct", 120, 40), "chat-completion");
   assert.doesNotMatch(r.stdout, /CANARY_/);
 });
