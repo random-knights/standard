@@ -1,7 +1,7 @@
 {
   "name": "@randomknights/k13",
-  "version": "4.0.0",
-  "description": "K13 - Ai General Response Standard 4.0.0: the standard text, a checker (k13 check <file>) for the twelve machine-gate checks of the quick squeeze, and test vectors for each",
+  "version": "4.1.0",
+  "description": "K13 - Ai General Response Standard 4.1.0: the standard text, a checker (k13 check <file>) for the thirteen machine-gate checks of the quick squeeze (check 4 retired), and test vectors for each",
   "type": "module",
   "main": "./src/index.mjs",
   "exports": {

@@ -1,12 +1,12 @@
-// K13 checks: the machine gate of K13 4.0.0, packaged so a report can be
+// K13 checks: the machine gate of K13 4.1.0, packaged so a report can be
 // checked outside the repository that defines it.
 //
-// K13 4.0.0 asks for one pass, the quick squeeze, and twelve gate checks:
+// K13 4.1.0 asks for one pass, the quick squeeze, and thirteen gate checks:
 //
 //   1 figures     every figure in the prose has a source or is derived
 //   2 confidence  the confidence is stated, with what it rests on
-//   3 plain words no long word, no hype word
-//   4 sentences   no long sentence, a short average
+//   3 plain words no hype word, no long form K13 replaces
+//   4 (retired)   retired in 4.1.0: always passes, the number is kept
 //   5 dash        no em dash, no en dash, no double-hyphen surrogate
 //   6 cost-line   the AiEDs tile gives energyKWh and gCO2e, or "not reported"
 //   7 structure   the three REQUIRED tiles, in order; an optional tile in place
@@ -73,17 +73,11 @@ function section(heading) {
 }
 
 /**
- * The limits table of K13.md "The quick squeeze": the longest word in letters,
- * the longest sentence in words and the average sentence in words. Read from
- * the table so the checker cannot hold a number the standard does not.
+ * The whole-answer ceilings of K13.md "The whole answer": the opening and the
+ * body, in words. Read from the table so the checker cannot hold a number the
+ * standard does not. Since K13 4.1.0 these are the only numeric limits.
  */
 export const LIMITS = (() => {
-  const body = section("The quick squeeze");
-  const grab = (label) => {
-    const m = new RegExp(String.raw`^\| ${label} \| (\d+) (?:letters|words) \|`, "m").exec(body);
-    if (!m) throw new Error(`K13.md "The limits" has no "${label}" row`);
-    return Number(m[1]);
-  };
   const ceiling = section("The whole answer");
   const grabCeiling = (label) => {
     const m = new RegExp(`^\\| ${label} \\| (\\d+) words \\|`, "m").exec(ceiling);
@@ -91,9 +85,6 @@ export const LIMITS = (() => {
     return Number(m[1]);
   };
   return {
-    longestWord: grab("longest word"),
-    longestSentence: grab("longest sentence"),
-    averageSentence: grab("average sentence"),
     openingWords: grabCeiling("the opening"),
     bodyWords: grabCeiling("the body"),
   };
@@ -131,7 +122,7 @@ export const TERMS_OF_ART = (() => {
 
 /**
  * Hype words and the long forms K13 replaces. Each is written in K13.md
- * ("The limits", "How to hit the quick squeeze"). A stem matches its endings.
+ * ("The quick squeeze", "The voice, in full"). A stem matches its endings.
  */
 const HYPE = [
   /\brevolutionar(?:y|ies)\b/i,
@@ -207,7 +198,7 @@ if (REQUIRED_TILES.length === 0) {
 
 /** Rules K13 writes down that this package does NOT check. */
 export const NOT_IMPLEMENTED = [
-  "that the writing is plain beyond the word and sentence limits (a program cannot judge a sentence)",
+  "the voice: simple words, one idea per sentence, correct grammar, no inside jokes (a program cannot judge a sentence)",
   "that every claim was actually checked against its source (step 1 and step 13 as process)",
   "that the confidence is the right confidence, only that it is stated with a reason",
   "the thirteen steps as process (cost logged, state verified, owner action named)",
@@ -447,7 +438,7 @@ export function checkConfidence(prose) {
 }
 
 // ---------------------------------------------------------------------------
-// Plain words and short sentences (gate checks 3 and 4).
+// Plain words (gate check 3; check 4 is retired).
 // ---------------------------------------------------------------------------
 
 /** Split prose into paragraphs: blank lines and list markers start a new one. */
@@ -491,9 +482,9 @@ export function sentencesOf(prose) {
 }
 
 /**
- * Words checked for length: code spans, quoted terms, links and anything with a
- * digit or a path, version or address character in it are named things, not
- * vocabulary, and are not read.
+ * The words of prose a reader reads as vocabulary: code spans, quoted terms,
+ * links and anything with a digit or a path, version or address character in
+ * it are named things, and are left out.
  */
 export function plainWordCandidates(prose) {
   const stripped = prose
@@ -508,46 +499,14 @@ export function plainWordCandidates(prose) {
   return out;
 }
 
-/** Gate check 3: no word over the letter limit outside a term, and no hype word. */
+/** Gate check 3: no hype word, and no long form K13 replaces. */
 export function checkPlainWords(prose) {
   const out = [];
-  const seen = new Set();
-  for (const w of plainWordCandidates(prose)) {
-    if (w.length > LIMITS.longestWord && !seen.has(w.toLowerCase())) {
-      seen.add(w.toLowerCase());
-      out.push(finding("plain-words", `"${w}" is ${w.length} letters; the limit is ${LIMITS.longestWord}. Use a shorter word, or put a technical name in backticks`));
-    }
-  }
   // A word named in backticks or double quotes is mentioned, not used.
   const flat = prose.replace(/`[^`]*`/g, " ").replace(/"[^"\n]*"/g, " ");
   for (const re of HYPE) {
     const m = re.exec(flat);
     if (m) out.push(finding("plain-words", `hype or long-form word "${m[0]}"`));
-  }
-  return out;
-}
-
-/** Gate check 4: no sentence over the word limit, and an average within its limit. */
-export function checkSentences(prose) {
-  const out = [];
-  const ss = sentencesOf(prose);
-  for (const s of ss) {
-    if (s.words > LIMITS.longestSentence) {
-      out.push(
-        finding(
-          "sentences",
-          `a sentence has ${s.words} words; the limit is ${LIMITS.longestSentence}: "${s.text.slice(0, 60)}${s.text.length > 60 ? "..." : ""}"`,
-        ),
-      );
-    }
-  }
-  if (ss.length) {
-    const avg = ss.reduce((n, s) => n + s.words, 0) / ss.length;
-    if (avg > LIMITS.averageSentence) {
-      out.push(
-        finding("sentences", `the average sentence is ${avg.toFixed(1)} words; the limit is ${LIMITS.averageSentence}`),
-      );
-    }
   }
   return out;
 }
@@ -952,14 +911,13 @@ function dataFigures(data) {
   return extractFigures(data.replace(/\|[\s:-]+\|/g, " "));
 }
 
-/** Checks 1 to 4 and 6 over a parsed report. */
+/** Checks 1, 2, 3 and 6, and 10 to 13, over a parsed report. */
 function contentFindings(rep) {
   const { prose, data } = reportParts(rep);
   const out = [];
   out.push(...checkFigures(prose, dataFigures(data)));
   out.push(...checkConfidence(prose));
   out.push(...checkPlainWords(prose));
-  out.push(...checkSentences(prose));
   const aieds = rep.tiles.get("aieds-disclosure");
   out.push(...(aieds === undefined ? [finding("cost-line", "no AiEDs disclosure tile")] : checkCostLine(aieds)));
   // The ceiling and the first pass. The opening is the "what happened" tile;
@@ -981,13 +939,12 @@ ${prose}`, level));
   return out;
 }
 
-/** Checks 1 to 5 over a bare passage and the run figures it came from. */
+/** Checks 1 to 5 over a bare passage and the run figures it came from. Check 4 is retired. */
 export function checkPassage(text, runFigures) {
   return [
     ...checkFigures(text, runFigures),
     ...checkConfidence(text),
     ...checkPlainWords(text),
-    ...checkSentences(text),
     ...checkDashes(text),
   ];
 }
@@ -1021,7 +978,8 @@ function vectorsDir() {
 
 /**
  * The vector list: a passing and a failing vector per machine gate check.
- * A vector is a bare `passage` with its `runFigures` (checks 1 to 5), or a
+ * Check 4 is retired and has none. A vector is a bare `passage` with its
+ * `runFigures` (checks 1 to 5), or a
  * `report` file, optionally with `replace` pairs that plant one defect in it
  * (checks 6 to 12).
  */
@@ -1058,7 +1016,7 @@ export function runVector(v) {
     case 3:
       return only(["plain-words"])(checkPassage(v.passage, v.runFigures));
     case 4:
-      return only(["sentences"])(checkPassage(v.passage, v.runFigures));
+      throw new Error(`vector ${v.id}: gate check 4 is retired in K13 4.1.0`);
     case 5:
       return checkDashes(v.passage);
     case 6:
@@ -1109,7 +1067,7 @@ export function checkText(text, format = "text") {
     ran.push("structure", "evidence", "whats-next");
     if (/\bFILL\b/.test(text)) {
       skipped.push(
-        "content checks: figures, confidence, plain-words, sentences, cost-line, " +
+        "content checks: figures, confidence, plain-words, cost-line, " +
           "ceiling-headline, ceiling-body, first-pass, precision " +
           "(unfilled template: FILL markers)",
       );
@@ -1119,7 +1077,6 @@ export function checkText(text, format = "text") {
         "figures",
         "confidence",
         "plain-words",
-        "sentences",
         "cost-line",
         "ceiling-headline",
         "ceiling-body",

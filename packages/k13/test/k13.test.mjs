@@ -14,6 +14,10 @@
 // (check 12). The tile list still has twelve entries, so this file pins the
 // COUNT, the ORDER and which three are REQUIRED, and it pins a minimal report
 // of three tiles passing where 3.0.0 would have failed it nine times.
+//
+// K13 4.1.0 retired gate check 4 and cut check 3 to hype words: the voice and
+// the humor rules replaced the numeric word and sentence rules, and a person
+// holds the voice. Check 4 keeps its number and has no vectors.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
@@ -39,7 +43,6 @@ import {
   checkFile,
   checkPassage,
   checkPlainWords,
-  checkSentences,
   checkText,
   exampleQuickSqueeze,
   extractFigures,
@@ -63,11 +66,8 @@ const EN_DASH = String.fromCharCode(0x2013);
 test("the version, limits and tiles come from K13.md", () => {
   const k13 = readFileSync(join(repoRoot, "K13.md"), "utf8");
   assert.ok(k13.includes(`**Version:** ${K13_VERSION}`));
-  assert.equal(K13_VERSION, "4.0.0");
+  assert.equal(K13_VERSION, "4.1.0");
   assert.deepEqual(LIMITS, {
-    longestWord: 12,
-    longestSentence: 20,
-    averageSentence: 14,
     openingWords: 40,
     bodyWords: 400,
   });
@@ -185,12 +185,12 @@ test("K13.md defines the two modes and the rules an answer-mode reply follows", 
 
 test("K13.md no longer defines response levels, identifiers or a levels file", () => {
   const body = readFileSync(join(repoRoot, "K13.md"), "utf8");
-  // The words survive only in the one line that says what changed in 4.0.0.
+  // The one line that says what changed in the current version is left out.
   const rest = body
     .split(String.fromCharCode(10))
-    .filter((l) => !l.startsWith("Changed in 4.0.0:"))
+    .filter((l) => !l.startsWith("Changed in 4.1.0:"))
     .join(String.fromCharCode(10));
-  assert.ok(rest.length < body.length, "the one-line 'Changed in 4.0.0' note is gone");
+  assert.ok(rest.length < body.length, "the one-line 'Changed in 4.1.0' note is gone");
   assert.doesNotMatch(rest, /response level/i);
   assert.doesNotMatch(rest, /k13-levels/);
   assert.doesNotMatch(rest, /soda pop|energy drink|black coffee|loose leaf|yerba mate/);
@@ -234,7 +234,6 @@ test("the reference templates and a filled document pass; K13.md passes the dash
         "figures",
         "confidence",
         "plain-words",
-        "sentences",
         "cost-line",
         "ceiling-headline",
         "ceiling-body",
@@ -288,25 +287,21 @@ test("confidence: a level word and a reason are both needed", () => {
   assert.equal(checkConfidence("Confidence is high.").length, 1);
 });
 
-test("plain words: the letter limit and the hype list", () => {
-  assert.equal(checkPlainWords("We checked interoperability today.").length, 1);
+test("plain words: the hype list only; a long word is not a finding in 4.1.0", () => {
+  assert.deepEqual(checkPlainWords("We checked interoperability today."), []);
   assert.deepEqual(checkPlainWords("We checked `interoperability` today."), []);
   assert.deepEqual(checkPlainWords('The term "interoperability" is defined here.'), []);
   assert.deepEqual(checkPlainWords("See https://example.org/interoperability-guidelines for it."), []);
   assert.deepEqual(checkPlainWords("A twelve-letter word, verification, is allowed."), []);
   assert.equal(checkPlainWords("An unlock for the team.").length, 1);
   assert.equal(checkPlainWords("We use it prior to the run.").length, 1);
+  assert.deepEqual(checkPlainWords('The word "seamless" is named, not used.'), []);
 });
 
-test("sentences: the word limit and the average", () => {
-  const short = "It is so. It is so. It is so.";
-  const twenty = Array(20).fill("word").join(" ") + ".";
-  assert.deepEqual(checkSentences(`${twenty} ${short}`), []);
-  assert.equal(checkSentences(`${Array(21).fill("word").join(" ")}. ${short}`).length, 1);
-  const eighteen = `Word ${Array(17).fill("word").join(" ")}.`;
-  const avg = checkSentences(`${eighteen} ${eighteen} ${eighteen}`);
-  assert.equal(avg.length, 1);
-  assert.match(avg[0].message, /average/);
+test("check 4 is retired: a long sentence and a long average pass checks 1 to 5", () => {
+  const long = `Word ${Array(29).fill("word").join(" ")}. Confidence is high, because we read it.`;
+  assert.deepEqual(checkPassage(long, []).filter((f) => !["figures"].includes(f.check)), []);
+  assert.throws(() => runVector({ id: "x", gate: 4 }), /retired/);
   assert.equal(sentencesOf("One. Two words here.\n\n- A list item.\n- Another one.").length, 4);
 });
 
@@ -397,9 +392,11 @@ test("evidence: a hostile file cannot make the check slow", () => {
   assert.ok(Date.now() - t0 < 2000, "the evidence check took too long");
 });
 
-test("vectors: every gate 1 to 13 has a passing and a failing vector, and each behaves", () => {
+test("vectors: every live gate 1 to 13 has a passing and a failing vector, and each behaves", () => {
   const vectors = loadVectors();
+  assert.ok(!vectors.some((v) => v.gate === 4), "check 4 is retired and has no vector");
   for (let gate = 1; gate <= 13; gate += 1) {
+    if (gate === 4) continue;
     for (const expect of ["pass", "fail"]) {
       assert.ok(
         vectors.some((v) => v.gate === gate && v.expect === expect),
@@ -424,7 +421,7 @@ test("vectors: every gate 1 to 13 has a passing and a failing vector, and each b
 test("vectors: a failing passage vector is named by its own check", () => {
   // A planted defect must be named by the check it is for and by no other
   // content check of the same kind, or the vector teaches the wrong lesson.
-  const names = { 1: "figures", 2: "confidence", 3: "plain-words", 4: "sentences", 5: "dash" };
+  const names = { 1: "figures", 2: "confidence", 3: "plain-words", 5: "dash" };
   for (const v of loadVectors().filter((x) => x.expect === "fail" && x.passage !== undefined)) {
     const all = checkPassage(v.passage, v.runFigures).map((f) => f.check);
     assert.ok(all.includes(names[v.gate]), v.id);

@@ -1,6 +1,6 @@
 # K13 Report: Copy check, short form
 
-<!-- The smallest conforming K13 4.0.0 report: the three REQUIRED tiles and
+<!-- The smallest conforming K13 4.1.0 report: the three REQUIRED tiles and
      nothing else. 3.0.0 would have failed this document nine times over, once
      per dropped tile. It is the vector that proves the tile cut. -->
 

@@ -1,6 +1,6 @@
 # K13 Report: [Lab Name]
 
-<!-- K13 v4.0.0 template for offline viewing.
+<!-- K13 v4.1.0 template for offline viewing.
      One pass: the quick squeeze. Same structure as temp1ate.html but rendered
      as markdown.
      License: this template is Apache 2.0, a reference implementation you may
@@ -13,9 +13,10 @@
          comma, a colon, or a new sentence.
        - ONE PASS. Write the quick squeeze once. Plain words, one idea per
          sentence, outcome first.
-       - LIMITS (K13.md "The limits"). No word over 12 letters outside a term in
-         backticks or double quotes. No sentence over 20 words. An average
-         sentence of 14 words or fewer. No hype words.
+       - VOICE (K13.md "The quick squeeze"). Write like a calm adult explaining
+         to a smart caveman: simple words, correct grammar, facts exactly
+         true. A technical word is fine once, if the sentence explains it.
+         No inside jokes. No hype words.
        - FIGURES. Every figure in the prose appears in the run data (the header
          strip, the environment card, the checks table, the evidence, the AiEDs
          tile), or is declared in its own sentence: "Derived: 8 from 5 and 3 by

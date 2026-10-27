@@ -6,8 +6,8 @@ title: "K13 - Ai General Response Standard"
 # same choice CITATION.cff makes for AiEDs. GitHub reads only CITATION.cff, so
 # this file is for humans and for tools pointed at it directly.
 type: software
-version: 4.0.0
-date-released: 2026-10-23
+version: 4.1.0
+date-released: 2026-10-27
 # Two licenses (see NOTICE): the K13 text is CC BY 4.0; the reference report
 # templates and the @randomknights/k13 checker code are Apache 2.0. CFF 1.2.0
 # accepts a list of SPDX identifiers here.
@@ -22,7 +22,8 @@ abstract: >-
   and write one plain, short pass, the quick squeeze, with every figure traced
   and the confidence stated. Version 4 caps the whole answer at a 40-word
   opening and a 400-word body, requires three report tiles rather than twelve,
-  and sets a voice rule for the opening. Model-agnostic. The canonical text is
+  and sets a voice rule for the opening. Version 4.1 writes the answer like a
+  calm adult explaining to a smart caveman, and carries the humor rules. Model-agnostic. The canonical text is
   K13.md in this repository.
 keywords:
   - Ai general response standard

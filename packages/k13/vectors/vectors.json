@@ -99,52 +99,12 @@
     "runFigures": []
   },
   {
-    "id": "gate-3-fail-long-word",
-    "gate": 3,
-    "expect": "fail",
-    "expectMessage": "\"interoperability\" is 16 letters",
-    "note": "A word over 12 letters, not a named term.",
-    "passage": "The build passed. We tested interoperability and it was clean. Confidence is high, because we watched it finish.",
-    "runFigures": []
-  },
-  {
     "id": "gate-3-fail-hype",
     "gate": 3,
     "expect": "fail",
     "expectMessage": "hype or long-form word \"seamless\"",
     "note": "A hype word, though it is short.",
     "passage": "The build passed. The upgrade was seamless. Confidence is high, because we watched it finish.",
-    "runFigures": []
-  },
-  {
-    "id": "gate-4-pass",
-    "gate": 4,
-    "expect": "pass",
-    "note": "Short sentences, a short average.",
-    "passage": "Six of our copies of the rules are old. They say version 1.1.0. The new rules are version 3.0.0. We looked in four places, so there may be an old copy we did not find. Confidence is high that these six are old, because we read each version number. Confidence is moderate that six is the whole count, because we searched four places.",
-    "runFigures": [
-      "6",
-      "4",
-      "1.1.0",
-      "3.0.0"
-    ]
-  },
-  {
-    "id": "gate-4-fail-long-sentence",
-    "gate": 4,
-    "expect": "fail",
-    "expectMessage": "the limit is 20",
-    "note": "One sentence of 28 words.",
-    "passage": "The build passed. We ran every test in the suite on the build machine and each of them passed on the first try without any retry or skip at all today.",
-    "runFigures": []
-  },
-  {
-    "id": "gate-4-fail-average",
-    "gate": 4,
-    "expect": "fail",
-    "expectMessage": "the average sentence",
-    "note": "No sentence is over 20 words, but the average is over 14.",
-    "passage": "We ran the whole test suite on the build machine and every test in it passed on the first try. We checked the output twice and the same tests passed both times with no change at all. We read the log of the run and we saw no error or warning in it anywhere.",
     "runFigures": []
   },
   {
@@ -366,13 +326,6 @@
   {
     "id": "example-gate-3",
     "gate": 3,
-    "expect": "pass",
-    "note": "The passage of \"One fact, one pass\" in K13.md, read at run time.",
-    "passageFrom": "K13.md#one-fact-one-pass"
-  },
-  {
-    "id": "example-gate-4",
-    "gate": 4,
     "expect": "pass",
     "note": "The passage of \"One fact, one pass\" in K13.md, read at run time.",
     "passageFrom": "K13.md#one-fact-one-pass"

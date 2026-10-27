@@ -1,6 +1,6 @@
 # K13 reference
 
-Companion to `K13.md`, version 4.0.0. `K13.md` is the standard. This file holds
+Companion to `K13.md`, version 4.1.0. `K13.md` is the standard. This file holds
 the longer detail that a reader rarely needs. Nothing here changes a rule in
 `K13.md`. Where the two disagree, `K13.md` is right.
 
@@ -38,41 +38,37 @@ The published places are these:
 Anything that mirrors this text SHOULD compare its copy against one of them on
 every change. It MUST NOT present a mirror as the standard.
 
-## The limits, in full
+## The voice, in full
 
-The limits are numbers, so a program can check them. They come from the juice
-box passages already in this standard, its README and its test vectors. We
-measured the longest word and sentence in those. Then we set each limit a
-little above them.
+The quick squeeze is written like a calm adult explaining to a smart caveman.
+The reader is smart and new. The words are simple, and the grammar is correct.
+Grunt speech is a miss. The caveman is the reader's vibe, not the grammar.
 
-| Limit | Value | Longest in the 2.x juice box examples |
-| --- | --- | --- |
-| longest word | 12 letters | 8 letters |
-| longest sentence | 20 words | 16 words |
-| average sentence | 14 words | 11.1 words |
+- One idea per sentence. If a sentence carries two, make it two.
+- Pick the short word. Use "before", not "prior to". Use "use", not "utilize".
+- A technical word is fine once, if the same sentence explains it.
+- The facts and the numbers stay exactly true. Only the sentence gets simpler.
+- No inside jokes. If a new reader needs a key to decode a word or a picture,
+  rewrite it in plain words, or explain it in the same line.
 
-These are ceilings, not targets. Shorter is better.
+A program cannot judge a sentence, so no gate check reads the voice. A person
+holds it. One part can be checked, and check 3 checks it:
+
+- A hype word fails. The hype words are `revolutionary`, `seamless`,
+  `game changing`, `cutting edge` and `unlock`. So are `utilize` and
+  `prior to`, where "use" and "before" work. A term in backticks or in double
+  quotes is mentioned, not used, and is not read.
+- Prose is text a reader reads as sentences. Code blocks, command lines, table
+  cells and evidence are data. The voice rules do not apply to data.
 
 The whole answer has its own ceiling, which `K13.md` states. It is 40 words or
 fewer in the opening, and 400 or fewer in the body, outside data. It governs an
 ANSWER or a REPORT, never reference text such as `K13.md` or this file. A
 longer piece of work goes in a linked artifact, and the answer links to it.
 
-Here is how the limits are read:
-
-- A word is a run of letters. A hyphenated word counts each part on its own.
-- A technical name keeps its name. A term in backticks or in double quotes
-  is not counted. A version, a path, a command and a link are not counted
-  either. Explain the term once, in the sentence where it first appears.
-- Prose is text a reader reads as sentences. Code blocks, command lines, table
-  cells and evidence are data. The limits do not apply to data.
-- A hype word fails whatever its length. The hype words are `revolutionary`,
-  `seamless`, `game changing`, `cutting edge` and `unlock`. So are `utilize`
-  and `prior to`, where "use" and "before" work.
-
 ## The first pass, in full
 
-The first pass is the voice rule of K13 4.0.0. The opening sentence names the
+The first pass is the opening rule of K13. The opening sentence names the
 thing in words a beginner knows, with no term of art. It gives one everyday
 comparison. The tone is friendly, and a light joke may ride under it.
 
@@ -95,7 +91,7 @@ This rule is normative, and no gate check reads it.
 
 ## The two modes, in full
 
-K13 4.0.0 is a response standard. Every answer is in one of two modes.
+K13 is a response standard. Every answer is in one of two modes.
 
 ANSWER MODE is the default, and it covers every response, in a chat or in a
 terminal. It carries no tile, no heading on a short answer, and no file. The
@@ -139,8 +135,7 @@ in the prose. An exact count is not an estimate, and a version is not a figure.
 Be clear about what a green result means. It means the shape and the stated
 sources are right. It does not mean more than that. The gate cannot check:
 
-- That the writing is plain beyond the word and sentence limits. A program
-  cannot judge a sentence.
+- That the writing follows the voice. A program cannot judge a sentence.
 - That a claim was really checked against its source. That is steps 1 and 13,
   done by a person or an agent.
 - That the confidence is the right confidence. It only checks that one is
@@ -183,7 +178,7 @@ A report or a tool MAY state conformance in one line, so claims can be
 compared:
 
 ```
-conforms to K13 4.0.0, quick squeeze, gate checks 1 to 13
+conforms to K13 4.1.0, quick squeeze, gate checks 1 to 13
 ```
 
 The line names the K13 version it was checked against. It names the gate checks
@@ -294,7 +289,7 @@ thing is not.
 - Cut hype words, such as `revolutionary`, `seamless`, `game changing`, `cutting edge` and `unlock`.
 - If you need a technical name, keep it and explain it once. The facts stay at
   full strength. Only the sentence gets simpler.
-- If a sentence is over 20 words, make it two sentences.
+- If a sentence carries two ideas, make it two sentences.
 
 ## What K13 does not mean
 
@@ -347,6 +342,8 @@ funnier. It usually is.
 4. Never attach humor to a number. The number stays clean. Put the color in the
    sentence beside it.
 5. No hype words in a costume. Wild praise for plain work is still hype.
+6. Read the sentence without the joke. If it reads better, drop the joke.
+7. No inside jokes. A joke the reader cannot decode is not a joke to them.
 
 ### Where humor is off
 
@@ -432,5 +429,5 @@ the answer is written. It never changes whether its cost is shown.
 Versions 1 and 2 asked for several passes of one answer. Version 3 asks for one.
 Version 4 keeps the one pass, and adds a ceiling on how long the answer may run.
 It also cuts the mandatory tiles from twelve to three.
-A 2.x juice box pass still conforms, if it meets the limits and the ceiling.
+A 2.x juice box pass still conforms, if it meets the voice and the ceiling.
 See the changelog for the rest.
