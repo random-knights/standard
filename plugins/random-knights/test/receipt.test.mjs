@@ -312,7 +312,7 @@ test("receipt: an unlisted model gets the class estimate and says so", () => {
   assert.equal(session.provenance, "unknown");
   const text = formatReceipt(receiptFor(parseTranscript(fixtureText("session-mixed-models.jsonl"))));
   // Only the model with no figure is named; the listed ones are not.
-  assert.match(text, / No published figure for acme-llm-1, so a general guess is used\.$/m);
+  assert.match(text, /^No published figure for acme-llm-1, so a general guess is used\.$/m);
   assert.deepEqual(session.noFigure, ["acme-llm-1"]);
   const gem = disclosureFromResponse({
     provider: "Anthropic",
@@ -363,7 +363,7 @@ const ALL_TEXTS = () => {
 /** The receipt line that starts with `label`, or "". */
 const lineOf = (text, label) => text.split("\n").find((l) => l.startsWith(`${label} `)) ?? "";
 
-const BASIS ="A guess, not a measurement. Cached text counted as free. Comparisons are for scale only.";
+const BASIS = "A guess, not a measurement. Cached text counted as free.";
 
 test("copy: the three required sentences live in explain, verbatim, and a receipt ends in one basis line", () => {
   assert.deepEqual(REQUIRED_COPY, [
@@ -378,8 +378,11 @@ test("copy: the three required sentences live in explain, verbatim, and a receip
     }
   }
   for (const name of ["receipt", "linkedReceipt", "mixedReceipt", "response"]) {
-    const last = texts[name].split("\n").at(-1);
-    assert.ok(last.startsWith(BASIS), `${name} does not end in the basis line: ${last}`);
+    const lines = texts[name].split("\n");
+    const at = lines.indexOf(BASIS);
+    assert.ok(at > 0 && lines[at - 1] === "", `${name} has no basis paragraph: ${texts[name]}`);
+    // Only the optional model-specific line may follow the basis line.
+    assert.ok(lines.slice(at + 1).every((l) => l.startsWith("No published figure for ")), `${name}: ${lines.slice(at + 1)}`);
     for (const sentence of REQUIRED_COPY) {
       assert.ok(!texts[name].includes(sentence), `${name} repeats the boilerplate: ${sentence}`);
     }
@@ -396,7 +399,7 @@ test("copy: the receipt is plain words: no Level, no version stamp, no percentag
 
 test("receipt shape: exactly three scope lines, then the comparisons line, then the basis line", () => {
   const lines = ALL_TEXTS().receipt.split("\n");
-  assert.equal(lines.length, 5);
+  assert.equal(lines.length, 7);
   assert.match(lines[0], /^this response {2,}~/);
   assert.match(lines[1], /^this session {2,}~/);
   assert.match(lines[2], /^your account on this computer {2}~/);
@@ -405,12 +408,14 @@ test("receipt shape: exactly three scope lines, then the comparisons line, then 
   }
   // The figures start in one column.
   assert.equal(new Set(lines.slice(0, 3).map((l) => l.indexOf("~"))).size, 1);
-  assert.match(lines[3], /^your account on this computer so far is (about [\d,.]+ phone charges?|less than one phone charge), or (about [\d,.]+ k?m|less than 1 m) of driving\.$/);
-  assert.equal(lines[4], BASIS);
+  assert.equal(lines[3], "");
+  assert.match(lines[4], /^Your account so far is (about [\d,.]+ phone charges?|less than one phone charge), or (about [\d,.]+ k?m|less than 1 m) of driving\.$/);
+  assert.equal(lines[5], "");
+  assert.equal(lines[6], BASIS);
   // Linked: the label is "your account", in the same column as the others.
   const linked = ALL_TEXTS().linkedReceipt.split("\n");
   assert.match(linked[2], /^your account {4}~/);
-  assert.match(linked[3], /^your account so far is /);
+  assert.match(linked[4], /^Your account so far is /);
   assert.equal(new Set(linked.slice(0, 3).map((l) => l.indexOf("~"))).size, 1);
 });
 
@@ -528,11 +533,11 @@ test("comparisons: phone charges and driving use the standard's own constants, r
   const account = { counted: { energyWh: 12 * 400, carbonGrams: 170 * 10, waterMl: 1, treeTimeMinutes: 1 }, linked: false };
   assert.equal(
     comparisonLine(account),
-    "your account on this computer so far is about 400 phone charges, or about 10 km of driving.",
+    "Your account so far is about 400 phone charges, or about 10 km of driving.",
   );
   assert.equal(
     comparisonLine({ ...account, linked: true }),
-    "your account so far is about 400 phone charges, or about 10 km of driving.",
+    "Your account so far is about 400 phone charges, or about 10 km of driving.",
   );
   const r = receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl")));
   const text = formatReceipt(r, account);
@@ -575,7 +580,9 @@ test("format: the cache-heavy receipt from the owner, exactly, cache reads count
       "this response                  ~10 Wh, ~5 g CO2e, ~50 mL water, ~2 h tree-time",
       "this session                   ~300 Wh, ~100 g CO2e, ~2 L water, ~2 days tree-time",
       "your account on this computer  ~300 Wh, ~100 g CO2e, ~2 L water, ~2 days tree-time",
-      "your account on this computer so far is about 30 phone charges, or about 800 m of driving.",
+      "",
+      "Your account so far is about 30 phone charges, or about 800 m of driving.",
+      "",
       BASIS,
     ].join("\n"),
   );
@@ -593,7 +600,9 @@ test("format: the owner's sample turn, 2.55M in with 2.32M cache read and 9.5k o
       "this response                  ~50 Wh, ~20 g CO2e, ~0.2 L water, ~8 h tree-time",
       "this session                   ~60 Wh, ~30 g CO2e, ~0.3 L water, ~10 h tree-time",
       "your account on this computer  ~60 Wh, ~30 g CO2e, ~0.3 L water, ~10 h tree-time",
-      "your account on this computer so far is about 5 phone charges, or about 200 m of driving.",
+      "",
+      "Your account so far is about 5 phone charges, or about 200 m of driving.",
+      "",
       BASIS,
     ].join("\n"),
   );
@@ -608,7 +617,9 @@ test("format: a tiny response, and a long session in kWh, kg and days", () => {
       "this response   ~0.007 Wh, ~0.003 g CO2e, ~0.03 mL water, ~0.07 min tree-time",
       "this session    ~0.007 Wh, ~0.003 g CO2e, ~0.03 mL water, ~0.07 min tree-time",
       "your account    ~0.007 Wh, ~0.003 g CO2e, ~0.03 mL water, ~0.07 min tree-time",
-      "your account so far is less than one phone charge, or less than 1 m of driving.",
+      "",
+      "Your account so far is less than one phone charge, or less than 1 m of driving.",
+      "",
       BASIS,
     ].join("\n"),
   );
@@ -631,7 +642,9 @@ test("format: a tiny response, and a long session in kWh, kg and days", () => {
       "this response   ~10 Wh, ~5 g CO2e, ~60 mL water, ~2 h tree-time",
       "this session    ~5 kWh, ~2 kg CO2e, ~30 L water, ~40 days tree-time",
       "your account    ~5 kWh, ~2 kg CO2e, ~30 L water, ~40 days tree-time",
-      "your account so far is about 400 phone charges, or about 10 km of driving.",
+      "",
+      "Your account so far is about 400 phone charges, or about 10 km of driving.",
+      "",
       BASIS,
     ].join("\n"),
   );
@@ -641,7 +654,7 @@ test("format: a wrapper receipt is the response line and the basis line, nothing
   const text = formatResponseReceipt(disclose(callsOf(1, { input_tokens: 800, cache_read_input_tokens: 200, output_tokens: 10 })));
   assert.equal(
     text,
-    ["this response   ~0.1 Wh, ~0.06 g CO2e, ~0.7 mL water, ~2 min tree-time", BASIS].join("\n"),
+    ["this response   ~0.1 Wh, ~0.06 g CO2e, ~0.7 mL water, ~2 min tree-time", "", BASIS].join("\n"),
   );
 });
 
@@ -957,7 +970,7 @@ test("account hook: once an account is linked the line reads your account", asyn
     );
     const text = JSON.parse(r.stdout).systemMessage;
     assert.match(text, /^your account {4}~/m);
-    assert.match(text, /^your account so far is /m);
+    assert.match(text, /^Your account so far is /m);
     assert.doesNotMatch(text, /on this computer/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -975,7 +988,7 @@ test("account command: shows the total and where it is kept; reset zeroes it", a
     await runHook({ session_id: "00000000-0000-4000-8000-0000000000f1", transcript_path: fixture("session-owner-sample.jsonl") }, { env });
     const shown = await runNode([script, "account", "show"], { env });
     assert.match(shown.stdout, /^your account on this computer {2}~60 Wh, ~30 g CO2e, ~0\.3 L water, ~10 h tree-time$/m);
-    assert.match(shown.stdout, /^your account on this computer so far is about 5 phone charges, or about 200 m of driving\.$/m);
+    assert.match(shown.stdout, /^Your account so far is about 5 phone charges, or about 200 m of driving\.$/m);
     assert.match(shown.stdout, /^1 session counted since \d{4}-\d{2}-\d{2}\./m);
     const reset = await runNode([script, "account", "reset"], { env });
     assert.equal(reset.code, 0);

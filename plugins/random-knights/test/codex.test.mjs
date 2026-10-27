@@ -185,8 +185,8 @@ test("codex hook: prints the receipt as systemMessage with the five-line shape",
   const out = JSON.parse(r.stdout);
   assert.deepEqual(Object.keys(out), ["systemMessage"]);
   const lines = out.systemMessage.split("\n");
-  assert.equal(lines.length, 5);
-  assert.match(lines[4], /^A guess, not a measurement\. Cached text counted as free\./);
+  assert.equal(lines.length, 7);
+  assert.match(lines[6], /^A guess, not a measurement\. Cached text counted as free\./);
   assert.doesNotMatch(out.systemMessage, CANARIES);
   // The response and session lines are the formatter's for this rollout:
   // turn-B's 15,733 in and 5 out, and all three calls (see the energy test above).

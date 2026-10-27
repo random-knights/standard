@@ -511,19 +511,19 @@ function scopeLine(name, c, width) {
 export function comparisonLine(account) {
   const c = account.counted;
   return (
-    `${accountName(account.linked)} so far is ${formatPhoneCharges(c.energyWh)}, ` +
+    `Your account so far is ${formatPhoneCharges(c.energyWh)}, ` +
     `or ${formatDriving(c.carbonGrams)} of driving.`
   );
 }
 
-/** The basis line. A model with no published figure says so here. */
-function basisLine(d) {
-  const lines = ["A guess, not a measurement. Cached text counted as free. Comparisons are for scale only."];
+/** The basis lines. A model with no published figure says so on its own line. */
+function basisLines(d) {
+  const lines = ["A guess, not a measurement. Cached text counted as free."];
   const missing = d.noFigure ?? [];
   if (missing.length > 0) {
     lines.push(`No published figure for ${missing.join(", ")}, so a general guess is used.`);
   }
-  return lines.join(" ");
+  return lines;
 }
 
 /**
@@ -534,8 +534,9 @@ function basisLine(d) {
 function receiptLines(scopes, basis, account) {
   const width = Math.max(MIN_LABEL_WIDTH, ...scopes.map((s) => s.name.length + 2));
   const lines = scopes.map((s) => scopeLine(s.name, s.c, width));
-  if (account) lines.push(comparisonLine(account));
-  lines.push(basisLine(basis));
+  lines.push("");
+  if (account) lines.push(comparisonLine(account), "");
+  lines.push(...basisLines(basis));
   return lines;
 }
 
