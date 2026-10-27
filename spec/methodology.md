@@ -646,9 +646,12 @@ It has, in this order:
 1. Three scope lines: this response, this session, and the user's account.
    Each line has energy, carbon, water and Tree-Time. A tool with no session
    (a single chat call) prints the response line only.
-2. One or two lines of comparisons, computed from the account total only.
-3. One basis line in plain words, for example "A guess, not a measurement.
-   Cached text counted as free. Comparisons are for scale only."
+2. After a blank line, one or two lines of comparisons, computed from the
+   account total only and starting "Your account so far is".
+3. After a blank line, the basis in plain words, one short line each, for
+   example "A guess, not a measurement. Cached text counted as free." and,
+   only when a model has no published figure, "No published figure for
+   <model>, so a general guess is used."
 
 The short receipt carries no level names, no version stamp, no percentages and
 no token counts. The full breakdown (both counts below, the token split, the
@@ -709,8 +712,8 @@ one meter, "less than 1 m".
 - The cache-read coefficient above.
 - Section 2.5 says equivalencies MUST be labeled educational, and rules W6 and
   W11 in section 2.6.13 ask a rendered view with water for the three required
-  sentences and a way to reach the range. The short receipt says "Comparisons
-  are for scale only" and leaves the sentences and the range to the detail
+  sentences and a way to reach the range. The short receipt no longer prints
+  "Comparisons are for scale only" (2026-10-27 layout change) and leaves the sentences and the range to the detail
   command, as the 0.6.0 receipt did. Ratification must say whether that
   satisfies 2.5, W6 and W11 for a short receipt, or what one line would.
 - Whether a linked account should read "your account" while the total is

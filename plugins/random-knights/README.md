@@ -132,14 +132,16 @@ whether the plugin is listed; it changes nothing itself.
 
 ## What you will see
 
-After each response, five lines:
+After each response, this:
 
 ```text
 this response                  ~50 Wh, ~20 g CO2e, ~0.2 L water, ~8 h tree-time
 this session                   ~60 Wh, ~30 g CO2e, ~0.3 L water, ~10 h tree-time
 your account on this computer  ~100 Wh, ~50 g CO2e, ~0.6 L water, ~20 h tree-time
-your account on this computer so far is about 10 phone charges, or about 300 m of driving.
-A guess, not a measurement. Cached text counted as free. Comparisons are for scale only.
+
+Your account so far is about 10 phone charges, or about 300 m of driving.
+
+A guess, not a measurement. Cached text counted as free.
 ```
 
 The numbers above come from a sample session file, not a measurement.
@@ -210,7 +212,7 @@ Two commands show more, on demand:
 
 | Command | What it prints |
 | ------- | -------------- |
-| `/random-knights:aieds` | The receipt for this session so far, the same five lines. `/aieds` also works when no other command has that name. |
+| `/random-knights:aieds` | The receipt for this session so far, the same receipt. `/aieds` also works when no other command has that name. |
 | `/random-knights:aieds-explain` | The formulas, the constants and the source of every coefficient, read from the bundled library, then this session's receipt unrounded: both counts (cache reads charged and cache reads free), the water range, the full token counts and the three disclaimers. |
 | `/random-knights:aieds-account` | Your account total on this computer. |
 | `/random-knights:aieds-account-reset` | Starts your account total again from zero. |
