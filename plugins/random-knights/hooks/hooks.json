@@ -1,6 +1,18 @@
 {
-  "description": "Prints an AiEDs receipt after each Claude Code response. No network unless you ran aieds connect.",
+  "description": "Prints an AiEDs receipt after each Claude Code response, and the K13 rules at session start. No network unless you ran aieds connect.",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/k13-session.mjs"],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

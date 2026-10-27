@@ -305,7 +305,7 @@ test("codex packaging: manifest, hook file and versions agree", () => {
   assert.ok(existsSync(join(pluginRoot, manifest.hooks)));
 
   const hooks = JSON.parse(readFileSync(join(pluginRoot, "hooks", "codex-hooks.json"), "utf8"));
-  assert.deepEqual(Object.keys(hooks.hooks), ["Stop"]);
+  assert.deepEqual(Object.keys(hooks.hooks), ["SessionStart", "Stop"]);
   const stop = hooks.hooks.Stop[0].hooks[0];
   assert.equal(stop.type, "command");
   // Codex runs a single command string; it has no args array. PLUGIN_ROOT is

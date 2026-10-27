@@ -33,7 +33,7 @@
         "codex plugin marketplace add Random-Knights/Standard",
         "codex plugin add random-knights@standard"
       ],
-      "note": "Then run /hooks once inside Codex and trust the Stop hook (again after each plugin update). `codex exec` runs the hook but prints nothing; synced receipts are still sent. Also ran on 0.163.0."
+      "note": "Then run /hooks once inside Codex and trust its hooks, the Stop receipt and the SessionStart K13 rules (again after each plugin update). `codex exec` runs the hook but prints nothing; synced receipts are still sent. Also ran on 0.163.0."
     },
     {
       "id": "ollama",

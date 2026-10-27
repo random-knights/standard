@@ -229,7 +229,7 @@ and was not seen.
 - **Numbers verified, live hook not yet run**: The token counts were checked against the tool's own totals on a real session file. The installed hook has not yet been run inside a live session of the tool.
 
 - **Claude Code**: Run on Claude Code 2.1.302 on Windows. The committed fixture carries the transcript's shape and counters with the text removed; a fixture of real numbers is still to be added.
-- **Codex CLI**: Then run /hooks once inside Codex and trust the Stop hook (again after each plugin update). `codex exec` runs the hook but prints nothing; synced receipts are still sent. Also ran on 0.163.0.
+- **Codex CLI**: Then run /hooks once inside Codex and trust its hooks, the Stop receipt and the SessionStart K13 rules (again after each plugin update). `codex exec` runs the hook but prints nothing; synced receipts are still sent. Also ran on 0.163.0.
 - **Ollama**: A wrapper, not a plugin: it makes the chat call itself and reads the counts from the reply. Add --stream for a streamed reply.
 - **Grok Build**: Grok 1.0.50 printed no automatic receipt in an interactive session, so the receipt is asked for. `npx @randomknights/aieds receipt --last grok` reads the newest session file; add --sync to send it.
 - **Copilot CLI**: Real counts: the hook reads only the session.usage_record lines of the session's own events file. The counts equal the session.shutdown totals of a real 1.0.100 session. The installed hook has not yet been run inside a live Copilot session.

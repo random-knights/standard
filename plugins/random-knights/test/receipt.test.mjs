@@ -1326,7 +1326,7 @@ test("manifests: plugin.json, marketplace.json, hooks and skills are consistent"
   assert.deepEqual(stop.args, ["${CLAUDE_PLUGIN_ROOT}/scripts/aieds.mjs", "hook"]);
   assert.ok(existsSync(join(pluginRoot, "scripts", "aieds.mjs")));
   assert.ok(stop.timeout <= 30, "a short timeout: a receipt must never stall a session");
-  assert.deepEqual(Object.keys(hooks.hooks), ["Stop"]);
+  assert.deepEqual(Object.keys(hooks.hooks), ["SessionStart", "Stop"]);
 
   for (const skill of ["aieds", "aieds-explain", "aieds-account", "aieds-account-reset"]) {
     const body = readFileSync(join(pluginRoot, "skills", skill, "SKILL.md"), "utf8");
