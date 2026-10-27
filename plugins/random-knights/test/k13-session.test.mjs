@@ -41,7 +41,7 @@ const SUBJECTS = [
   /next.command/i,
   /humor/i,
   /quick squeeze/i,
-  /limits/i,
+  /\bcut\b/i,
   /figure/i,
   /confidence/i,
   /gate/i,
@@ -73,23 +73,27 @@ test("k13 hook: names no step count other than thirteen", () => {
   for (const c of counts) assert.equal(c, "thirteen");
 });
 
-test("k13 hook: the limits are the limits K13.md sets", () => {
-  const limits = K13_STEPS[9];
+test("k13 hook: the cut step carries the voice and the ceilings K13.md sets", () => {
+  const cut = K13_STEPS[9];
   assert.match(k13, /\| the opening \| 40 words \|/);
   assert.match(k13, /\| the body \| 400 words \|/);
-  assert.match(k13, /\| longest word \| 12 letters \|/);
-  assert.match(k13, /\| longest sentence \| 20 words \|/);
-  for (const part of ["opening 40 words", "body 400", "word 12 letters", "sentence 20 words", "no hype word"]) {
-    assert.ok(limits.includes(part), part);
+  for (const part of ["simple words", "one idea per sentence", "correct grammar", "no hype word", "Opening 40 words", "body 400"]) {
+    assert.ok(cut.includes(part), part);
   }
+  // K13 4.1.0 sets no letter or sentence count, so the hook names none.
+  assert.doesNotMatch(k13SessionText(), /\bletters?\b|sentence \d+ words|average sentence/i);
 });
 
 test("k13 hook: the humor and voice lines carry every stop the owner set", () => {
   const humor = K13_STEPS[7];
-  for (const part of ["sparse", "one joke", "never on a number", "safety", "money", "loss", "errors the user did not cause", "frustrated user"]) {
+  assert.match(humor, /never on a number/);
+  assert.match(k13, /Never attach a joke to a number/);
+  for (const part of ["one dry joke", "money", "safety", "security", "privacy", "legal", "tax", "loss", "errors the user did not cause", "frustrated user"]) {
     assert.ok(humor.includes(part), part);
+    assert.ok(k13.toLowerCase().includes(part.toLowerCase()), `K13.md carries "${part}"`);
   }
   assert.match(k13SessionText(), /calm adult explaining to a smart caveman\. Simple words, correct grammar, facts stay true\./);
+  assert.match(k13, /calm adult explaining to a smart caveman/);
 });
 
 test("k13 hook: short, ASCII, no dash", () => {

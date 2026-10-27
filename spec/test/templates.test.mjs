@@ -214,7 +214,7 @@ test("both templates are one pass and keep no response level", () => {
       1,
       `${file} must carry exactly one quick squeeze pass`,
     );
-    assert.match(text, /v4\.0\.0/, `${file} does not name K13 4.0.0`);
+    assert.match(text, /v4\.1\.0/, `${file} does not name K13 4.1.0`);
   }
 });
 

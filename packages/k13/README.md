@@ -1,14 +1,14 @@
 # @randomknights/k13
 
-K13 - Ai General Response Standard, version 4.0.0, as an npm package: the
+K13 - Ai General Response Standard, version 4.1.0, as an npm package: the
 standard text and a checker for the thirteen checks of its machine gate.
 
-K13 4.0.0 asks for one pass, the quick squeeze: plain words, one idea per
-sentence, the outcome first, short, with every figure traced and the confidence
-stated. It caps the whole answer at a 40-word opening and a 400-word body, and
+K13 4.1.0 asks for one pass, the quick squeeze, written like a calm adult
+explaining to a smart caveman: simple words, one idea per sentence, correct
+grammar, the outcome first, with every figure traced and the confidence stated. It caps the whole answer at a 40-word opening and a 400-word body, and
 it requires three report tiles rather than twelve.
 
-4.0.0 is a RESPONSE standard with two modes. Answer mode is every response, and
+K13 is a RESPONSE standard with two modes. Answer mode is every response, and
 a machine can run checks 1 to 5 over one with `checkPassage`. Report mode is a
 report someone asked for, and `checkFile` runs all thirteen checks on it. See
 the changelog for what changed from 3.x.
@@ -47,8 +47,8 @@ list no longer matches.
 | --- | --- | --- | --- |
 | 1 | `figures` | Every figure in the prose is in the run data (the evidence, environment card, checks table, header strip and AiEDs tile), or is declared in a sentence "Derived: 8 from 5 and 3 by adding them." whose inputs are run figures. | the prose |
 | 2 | `confidence` | "Confidence is high, because ..." (high, moderate or low, and a reason). | the prose |
-| 3 | `plain-words` | No word over 12 letters outside a term in backticks or double quotes, a version, a path or a link. No hype word. | the prose |
-| 4 | `sentences` | No sentence over 20 words. An average of 14 words or fewer. | the prose |
+| 3 | `plain-words` | No hype word, and no long form K13 replaces, outside a term in backticks or double quotes. | the prose |
+| 4 | (retired) | Retired in 4.1.0. It always passes, and the number is kept so checks 5 to 13 keep theirs. | nothing |
 | 5 | `dash` | No em dash, no en dash, no double hyphen used as a dash. A flag such as `--json`, a table rule and an id such as `a--b` are not dashes. | every file |
 | 6 | `cost-line` | The AiEDs tile gives `energyKWh` and `gCO2e`, each a figure or "not reported". | the AiEDs tile |
 | 7 | `structure` | The three REQUIRED tiles of "The report template", in order. An optional tile that appears keeps the canonical order. | the report shape |
@@ -77,10 +77,10 @@ there is nothing to read yet.
 Prose means the finding, the verdict, how it fits, discrepancies, what's next,
 owner actions and what was not done, without code blocks, commands and table
 cells. The data tiles (header strip, environment, checks, evidence, AiEDs) are
-where run figures come from and are not held to the word limits.
+where run figures come from and are not held to the prose rules.
 
 Other passes. A 2.x report that still carries the other five passes is not
-failed for them. Only the `## quick squeeze` pass is read for checks 1 to 4 and
+failed for them. Only the `## quick squeeze` pass is read for checks 1 to 3 and
 6 to 9. The dash check reads the whole file.
 
 ## Checks 1 to 5 on a passage
@@ -88,14 +88,14 @@ failed for them. Only the `## quick squeeze` pass is read for checks 1 to 4 and
 A bare passage and the run figures it came from can be checked directly:
 
 ```js
-import { checkPassage, checkFigures, checkConfidence, checkPlainWords, checkSentences } from "@randomknights/k13";
+import { checkPassage, checkFigures, checkConfidence, checkPlainWords } from "@randomknights/k13";
 
 checkPassage("Six copies are old. Confidence is high, because we read each one.", ["6"]);
 // [] when checks 1 to 5 all pass; otherwise findings { check, message }
 ```
 
-`LIMITS` is `{ longestWord: 12, longestSentence: 20, averageSentence: 14,
-openingWords: 40, bodyWords: 400 }`, read out of K13.md. `TILES`,
+`LIMITS` is `{ openingWords: 40, bodyWords: 400 }`, read out of K13.md.
+`checkSentences` was removed in 4.1.0 with check 4. `TILES`,
 `REQUIRED_TILES`, `TERMS_OF_ART` and `PRECISION` are read from it too.
 
 Check 1 reads digit figures and spelled numbers from zero to twelve as the same
@@ -124,16 +124,18 @@ is right.
 K13 writes these rules down, and no code checks them. A clean result from this
 package is not a full pass of the standard.
 
-- That the writing is plain beyond the word and sentence limits.
+- The voice: simple words, one idea per sentence, correct grammar and no
+  inside jokes. A program cannot judge a sentence.
 - That every claim was actually checked against its source.
 - That the confidence is the right confidence, only that it is stated with a
   reason.
 - The thirteen steps as a process: cost logged, state verified, owner action
   named.
-- The humor rules, including that humor stays off a failure, a number, a cost
-  or a risk.
+- The humor rules: at most one dry joke, off for money, safety, security,
+  privacy, legal, tax, errors the user did not cause and a frustrated user,
+  and never on a number.
 - The everyday comparison of the first pass. It is only weakly checkable, and
-  K13 4.0.0 says so in its own gate table.
+  K13 says so in its own gate table.
 - The tone: that bad news leads, and that nothing was softened first.
 - That the answer lives in the reply, and was not also written to a file.
 - That no unrequested document, plan file or note was written beside it.
@@ -167,7 +169,7 @@ Two licenses, see `NOTICE`:
 
 - The checker code (`src/`, `bin/`): Apache 2.0, in `LICENSE`.
 - The standard text (`K13.md`): CC BY 4.0, in `LICENSE-DOCS`. Cite as:
-  Random Knights, LLC (2026). K13 - Ai General Response Standard, version 4.0.0.
+  Random Knights, LLC (2026). K13 - Ai General Response Standard, version 4.1.0.
   CC BY 4.0. https://github.com/random-knights/standard
 
 SPDX: `Apache-2.0 AND CC-BY-4.0`.

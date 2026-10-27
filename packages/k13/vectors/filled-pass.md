@@ -1,7 +1,7 @@
 # K13 Report: Copy check
 
 <!-- A filled document in the shape of templates/temp1ate.md. Every gate check
-     of K13 4.0.0 accepts it. The failing vectors in vectors.json plant one
+     of K13 4.1.0 accepts it. The failing vectors in vectors.json plant one
      defect in a copy of it. -->
 
 ---

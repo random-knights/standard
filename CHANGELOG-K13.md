@@ -2,6 +2,43 @@
 
 What changed in each version of K13, in plain words. The standard is `K13.md`.
 
+## 4.1.0
+
+Owner decision, 2026-10-27: the voice helps clarity more than a count does.
+
+- Voice: new. Write like a calm adult explaining to a smart caveman. Smart
+  caveman means simple words, not broken grammar. The facts and the numbers
+  stay exactly true. A technical word is fine once, if the same sentence
+  explains it. No inside jokes.
+- Removed: the letter limit on a word, the word limit on a sentence and the
+  limit on the average sentence. They are gone from the quick squeeze, from
+  step 10 and from the gate.
+- Step 10 is now "Cut it in the voice". The hype word ban stays. The whole
+  answer ceilings stay: 40 words in the opening, 400 in the body.
+- Step 8 now carries the humor rules: at most one dry joke. Humor is off for
+  money, safety, security, privacy, legal, tax, loss, errors the user did not
+  cause, and a frustrated user. Never attach a joke to a number. If the
+  sentence reads better without the joke, drop it.
+- Gate check 3 is now "No hype word". Gate check 4 is retired. Its number is
+  kept, so checks 5 to 13 keep theirs and a conformance line still reads
+  "gate checks 1 to 13". Check 4 always passes.
+- The reference: "The limits, in full" becomes "The voice, in full". The humor
+  rules gain two lines: drop a joke the sentence reads better without, and no
+  inside jokes.
+
+### What changes for a 4.0.0 conformance claim
+
+This is a MINOR bump. The gate only got looser. Every answer that passed 4.0.0
+passes 4.1.0, so a 4.0.0 claim still holds.
+
+- A tool that reads `LIMITS.longestWord`, `LIMITS.longestSentence` or
+  `LIMITS.averageSentence` from `@randomknights/k13` gets `undefined` at
+  4.1.0. `LIMITS` now holds the ceilings only.
+- `checkSentences` is removed from the checker. A finding named `sentences`
+  never appears. `checkPlainWords` reads hype words only.
+- A report checked at 4.1.0 can pass where 4.0.0 failed it on a long word or a
+  long sentence. The voice rules are held by a person, not by the gate.
+
 ## 4.0.0
 
 - Scope: K13 is a RESPONSE standard, not a report standard. It governs every

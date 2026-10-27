@@ -1,9 +1,9 @@
-// Dogfood gate: K13.md and its companion files are held to the same limits.
-//
-// K13 4.0.0 sets numeric limits for the quick squeeze (longest word, longest
-// sentence, average sentence, no hype word, no dashes). The standard's own
-// text is prose a person reads, so it has to pass the same checks it asks of
+// Dogfood gate: K13.md and its companion files pass the checks they ask of
 // everyone else.
+//
+// K13 4.1.0 holds prose to the voice, which a person judges, and to two checks
+// a program can run: no hype word and no dash. The standard's own text is
+// prose a person reads, so it has to pass both.
 //
 // NOT the whole-answer ceiling. K13 4.0.0 "What the ceiling governs" exempts
 // reference text by name, this file's three documents included, so the 40-word
@@ -17,28 +17,11 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  LIMITS,
-  checkDashes,
-  checkPlainWords,
-  checkSentences,
-  plainWordCandidates,
-  sentencesOf,
-} from "../../packages/k13/src/index.mjs";
+import { LIMITS, checkDashes, checkPlainWords } from "../../packages/k13/src/index.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (f) => readFileSync(resolve(repoRoot, f), "utf8");
 const NL = String.fromCharCode(10);
-
-// Owner-approved exceptions to the sentence limit. Each is the exact sentence
-// text and the reason. Nothing else may be over the limit.
-const EXCEPTIONS = [
-  {
-    sentence:
-      "A quick squeeze and you're hit with a burst of sweet, simple goodness: easy to consume, easy to digest ... and oddly transparent.",
-    reason: "owner wording 2026-10-15",
-  },
-];
 
 /**
  * The prose of a K13 document: outside code fences, tables, headings and the
@@ -61,10 +44,7 @@ export function proseOf(src, stop) {
     if (/^\*\*[A-Za-z ]+:\*\*/.test(line)) continue; // metadata header
     out.push(line.replace(/^>\s?/, ""));
   }
-  let text = out.join(NL);
-  // An approved exception is cut out before measuring.
-  for (const e of EXCEPTIONS) text = text.replace(e.sentence, " ");
-  return text;
+  return out.join(NL);
 }
 
 const DOCS = [
@@ -86,23 +66,10 @@ test("K13.md stays small enough to read in one sitting", () => {
   assert.ok(lines <= 345, `K13.md is ${lines} lines; the guard is 345. Cut prose, do not move a rule out.`);
 });
 
-test("every owner-approved exception is in K13.md word for word", () => {
-  for (const e of EXCEPTIONS) {
-    assert.ok(read("K13.md").includes(e.sentence), `exception not found: ${e.reason}`);
-  }
-});
-
 for (const d of DOCS) {
-  test(`${d.file} prose meets the quick squeeze limits`, () => {
-    assert.deepEqual(LIMITS, {
-      longestWord: 12,
-      longestSentence: 20,
-      averageSentence: 14,
-      openingWords: 40,
-      bodyWords: 400,
-    });
-    assert.deepEqual(checkSentences(prose[d.file]), [], "a sentence or the average is over the limit");
-    assert.deepEqual(checkPlainWords(prose[d.file]), [], "a long word or a hype word");
+  test(`${d.file} prose has no hype word and no dash`, () => {
+    assert.deepEqual(LIMITS, { openingWords: 40, bodyWords: 400 });
+    assert.deepEqual(checkPlainWords(prose[d.file]), [], "a hype word");
     assert.deepEqual(checkDashes(prose[d.file]), [], "a dash");
   });
 
@@ -113,19 +80,6 @@ for (const d of DOCS) {
     );
   });
 }
-
-test("measured numbers are printed so a reader can see the margin", () => {
-  for (const d of DOCS) {
-    const ss = sentencesOf(prose[d.file]);
-    const longest = Math.max(...ss.map((s) => s.words));
-    const avg = ss.reduce((n, s) => n + s.words, 0) / ss.length;
-    const longestWord = Math.max(...plainWordCandidates(prose[d.file]).map((w) => w.length));
-    console.log(
-      `${d.file}: ${ss.length} sentences, longest ${longest} words, average ${avg.toFixed(1)}, longest word ${longestWord} letters`,
-    );
-    assert.ok(longest <= LIMITS.longestSentence);
-  }
-});
 
 // Served at standard.rand0m.ai/k13/v1/. Nothing served may carry the retired
 // reader-level or school framing (owner decision 2026-10-15). Matched on the

@@ -17,7 +17,7 @@
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const K13_VERSION = "4.0.0";
+export const K13_VERSION = "4.1.0";
 
 export const K13_STEPS = [
   "Verify state from real sources. Do not guess.",
@@ -27,16 +27,16 @@ export const K13_STEPS = [
   "Turn the cost into meaning, not raw numbers.",
   "Name the owner action: the exact click or command.",
   "Give the next command, with model and effort.",
-  "Humor sparse, at most one joke, never on a number. Off for safety, money, loss, errors the user did not cause, and a frustrated user.",
+  "Check the humor: at most one dry joke, never on a number. Off for money, safety, security, privacy, legal, tax, loss, errors the user did not cause, and a frustrated user. Drop a joke the sentence reads better without.",
   "Draft the quick squeeze.",
-  "Cut to the limits: opening 40 words, body 400, word 12 letters, sentence 20 words, no hype word.",
+  "Cut it in the voice: simple words, one idea per sentence, correct grammar, no hype word. Opening 40 words, body 400.",
   "Source every figure.",
   "State the confidence and what it rests on.",
   "Run the gate: no dashes, every claim checked.",
 ];
 
 export const K13_VOICE =
-  "Voice: write like a calm adult explaining to a smart caveman. Simple words, correct grammar, facts stay true.";
+  "Voice: write like a calm adult explaining to a smart caveman. Simple words, correct grammar, facts stay true. No inside jokes.";
 
 export function k13SessionText() {
   return [
