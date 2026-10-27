@@ -212,7 +212,7 @@ Two commands show more, on demand:
 
 | Command | What it prints |
 | ------- | -------------- |
-| `/random-knights:aieds` | The receipt for this session so far, the same five lines. `/aieds` also works when no other command has that name. |
+| `/random-knights:aieds` | The receipt for this session so far, the same receipt. `/aieds` also works when no other command has that name. |
 | `/random-knights:aieds-explain` | The formulas, the constants and the source of every coefficient, read from the bundled library, then this session's receipt unrounded: both counts (cache reads charged and cache reads free), the water range, the full token counts and the three disclaimers. |
 | `/random-knights:aieds-account` | Your account total on this computer. |
 | `/random-knights:aieds-account-reset` | Starts your account total again from zero. |
