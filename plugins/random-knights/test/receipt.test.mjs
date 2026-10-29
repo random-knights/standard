@@ -54,6 +54,7 @@ import {
   receiptFor,
   receiptsEnabled,
 } from "../scripts/core.mjs";
+import { sniffFormat } from "../scripts/hosts.mjs";
 import {
   ACCOUNT_FORMAT,
   accountKey,
@@ -813,6 +814,56 @@ test("hook: prints exactly the systemMessage the library-backed formatter builds
     assert.ok(first.includes(`${formatEnergy(lib.energyWh)}, `), first);
     assert.ok(first.includes(`${formatCarbon(lib.carbonGrams)}, `), first);
     assert.ok(first.endsWith(`${formatTreeTime(lib.treeTimeMinutes)} tree-time`), first);
+    assert.doesNotMatch(r.stdout, CANARIES);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("hook: a transcript whose first conversation record sits megabytes in still gets a receipt", async () => {
+  const dir = tmp();
+  try {
+    // Desktop transcripts open with many metadata lines, and the first user
+    // record can be a very large line. Neither may hide the host.
+    const meta = [];
+    for (let i = 0; i < 30000; i++) {
+      meta.push(
+        JSON.stringify({
+          type: i % 2 ? "file-history-snapshot" : "queue-operation",
+          messageId: `meta-${i}`,
+          snapshot: { trackedFileBackups: {}, timestamp: "2026-01-01T00:00:00.000Z" },
+          note: "x".repeat(100),
+        }),
+      );
+    }
+    const header = `${meta.join(String.fromCharCode(10))}${String.fromCharCode(10)}`;
+    assert.ok(header.length > 4 * 1024 * 1024, "header is several MB");
+    const body = fixtureText("session-tool-turns.jsonl").replace(
+      "CANARY_PROMPT_TEXT_1",
+      "CANARY_PROMPT_TEXT_1" + "y".repeat(40000),
+    );
+    assert.ok(body.split(String.fromCharCode(10))[0].length > 30000, "first conversation record is over 30 KB");
+    const text = header + body;
+    assert.equal(sniffFormat(text), "claude");
+    const transcript = join(dir, "deep session.jsonl");
+    writeFileSync(transcript, text);
+    const r = await runHook(
+      {
+        session_id: "00000000-0000-4000-8000-000000000001",
+        transcript_path: transcript,
+        hook_event_name: "Stop",
+        stop_hook_active: false,
+      },
+      { env: { AIEDS_CONFIG_DIR: join(dir, "config") }, timeoutMs: 60000 },
+    );
+    assert.equal(r.code, 0);
+    assert.equal(r.stderr, "");
+    const out = JSON.parse(r.stdout);
+    const receipt = receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl")));
+    assert.equal(
+      out.systemMessage,
+      formatReceipt(receipt, { counted: receipt.session.counted, linked: false }),
+    );
     assert.doesNotMatch(r.stdout, CANARIES);
   } finally {
     rmSync(dir, { recursive: true, force: true });

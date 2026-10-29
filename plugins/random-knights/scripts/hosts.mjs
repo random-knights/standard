@@ -31,15 +31,21 @@ export const TESTED_HOSTS = Object.freeze({
   copilot: TESTED_COPILOT_VERSION,
 });
 
+const MAX_SNIFF_RECORDS = 1000000;
+
 /**
  * Names the host that wrote a session file from its first records:
  * "codex", "grok", "claude" or "unknown". Content decides, not the hook's
  * name, because Grok deliberately sends Claude-shaped hook input.
  */
 export function sniffFormat(text) {
+  // Desktop transcripts open with many metadata lines, and the first
+  // conversation record can start megabytes in or be a very large line, so the
+  // whole text is read and the first user or assistant record decides. The
+  // record bound only stops a pathological file from being walked forever.
   let seen = 0;
-  for (const entry of jsonLines(String(text).slice(0, 200000))) {
-    if (seen++ > 60) break;
+  for (const entry of jsonLines(text)) {
+    if (seen++ >= MAX_SNIFF_RECORDS) break;
     if (looksLikeCodex(entry)) return "codex";
     if (looksLikeGrok(entry)) return "grok";
     if (
