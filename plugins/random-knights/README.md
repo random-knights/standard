@@ -35,7 +35,7 @@ a tool that was not run.
 - **Numbers verified, live hook not yet run**: The token counts were checked against the tool's own totals on a real session file. The installed hook has not yet been run inside a live session of the tool.
 
 - **Claude Code**: Run on Claude Code 2.1.302 on Windows. The committed fixture carries the transcript's shape and counters with the text removed; a fixture of real numbers is still to be added.
-- **Codex CLI**: Then run /hooks once inside Codex and trust its hooks, the Stop receipt and the SessionStart K13 rules (again after each plugin update). `codex exec` runs the hook but prints nothing; synced receipts are still sent. Also ran on 0.163.0.
+- **Codex CLI**: Then run /hooks once inside Codex and trust its hook, the Stop receipt (again after each plugin update). `codex exec` runs the hook but prints nothing; synced receipts are still sent. Also ran on 0.163.0.
 - **Ollama**: A wrapper, not a plugin: it makes the chat call itself and reads the counts from the reply. Add --stream for a streamed reply.
 - **Grok Build**: Grok 1.0.50 printed no automatic receipt in an interactive session, so the receipt is asked for. `npx @randomknights/aieds receipt --last grok` reads the newest session file; add --sync to send it.
 - **Copilot CLI**: Real counts: the hook reads only the session.usage_record lines of the session's own events file. The counts equal the session.shutdown totals of a real 1.0.100 session. The installed hook has not yet been run inside a live Copilot session.
@@ -55,16 +55,17 @@ methodology section 2.6.
 
 ## What is new
 
+Plugin 0.7.1:
+
+- **Removed the K13 session-start hook.** Version 0.7.0 added a SessionStart
+  hook, in Claude Code and in Codex; 0.7.1 drops it (K13 retired 2026-11-03).
+  The receipt, the Stop hook and everything else are unchanged. Codex users
+  trust the plugin's hooks again in /hooks after the update, as after any
+  update.
+
 Plugin 0.7.0 (installed copies pick up everything in this list, including the
 two receipt items that were drafts under 0.6.0):
 
-- **K13 rules at session start.** A SessionStart hook, in Claude Code and in
-  Codex, adds the thirteen K13 steps and the K13 voice line to the model's
-  context, about 150 words, before the first prompt. It reads no file, makes no
-  network call and never blocks. The text is `hooks/k13-session.mjs`, and
-  `test/k13-session.test.mjs` holds it to `K13.md` in this repository: the same
-  version, thirteen steps in order, the same limits. Codex users trust it in
-  /hooks, as they do the Stop hook.
 - **A shorter, plainer receipt.** Three lines, one per scope: this response,
   this session and your account. Each has energy, carbon, water and tree-time
   at one significant figure with a tilde. Then one line comparing your account
@@ -113,8 +114,8 @@ its `aieds` command, versioned with the methodology):
 
 Installed copies of this plugin update only when its version changes, so
 0.5.0 is the first version that carries `aieds contribute`, 0.6.0 is the
-first with the four-line receipt, and 0.7.0 is the first with the K13 session
-start hook.
+first with the four-line receipt, and 0.7.0 is the first with the three-line
+receipt and the local account total.
 
 ## Install
 
