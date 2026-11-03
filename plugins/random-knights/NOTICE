@@ -1,4 +1,4 @@
-Random Knights standards: AiEDs, K13 and E+
+Random Knights standards: AiEDs and E+
 Copyright 2026 Random Knights, LLC
 
 This repository and the npm packages built from it carry two licenses, split
@@ -15,8 +15,6 @@ npm packages built from this repository:
   @randomknights/aieds   the AiEDs reference library (Apache 2.0), the AiEDs
                          JSON Schema (Apache 2.0) and the published coefficient
                          tables (CC BY 4.0). SPDX: Apache-2.0 AND CC-BY-4.0
-  @randomknights/k13     the K13 checker code (Apache 2.0) and the K13 standard
-                         text, K13.md (CC BY 4.0). SPDX: Apache-2.0 AND CC-BY-4.0
   @randomknights/earthplus
                          the E+ conformance checker (Apache 2.0) and the E+
                          methodology text, methodology.md (CC BY 4.0).

@@ -5,14 +5,13 @@
 // WHY THIS EXISTS. npm packs one directory and cannot reach outside it, but
 // every file these packages ship already has exactly one home elsewhere in the
 // repository: the factor table in spec/v2/, the schema in spec/, the reference
-// library in lib/, the K13 text at the root, the E+ checker and methodology in
-// eplus/v1/. Committing second copies is how a
+// library in lib/, the E+ checker and methodology in eplus/v1/. Committing second copies is how a
 // table drifts (see lib/src/factors.ts), so the copies are made at pack time
 // instead and are gitignored. Each package's "prepack" script runs this, so
 // `npm pack` and `npm publish` from packages/<name>/ always ship what is on the
 // checked-out commit.
 //
-// Usage: node scripts/stage-npm-package.mjs <aieds|k13|earthplus>
+// Usage: node scripts/stage-npm-package.mjs <aieds|earthplus>
 import { execSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -87,10 +86,6 @@ function stageAieds(pkgDir) {
   copy(join(plugin, "consent-contribute.txt"), join(pkgDir, "src", "cli", "consent-contribute.txt"));
 }
 
-function stageK13(pkgDir) {
-  copy(join(repoRoot, "K13.md"), join(pkgDir, "K13.md"));
-}
-
 function stageEarthPlus(pkgDir) {
   // The checker's compiled output is committed under eplus/v1/conformance/out/
   // and the conformance CI job refuses any out/ that is not byte-identical to
@@ -104,7 +99,7 @@ function stageEarthPlus(pkgDir) {
   copy(join(repoRoot, "eplus", "v1", "methodology.md"), join(pkgDir, "methodology.md"));
 }
 
-const STAGERS = { aieds: stageAieds, k13: stageK13, earthplus: stageEarthPlus };
+const STAGERS = { aieds: stageAieds, earthplus: stageEarthPlus };
 const stage = STAGERS[name];
 if (!stage) {
   console.error(`usage: node scripts/stage-npm-package.mjs <${Object.keys(STAGERS).join("|")}>`);

@@ -63,13 +63,12 @@ npm packages and the production site are released separately.
 
 ### npm packages
 
-Three packages are built from `packages/`, each staged at pack time from its
+Two packages are built from `packages/`, each staged at pack time from its
 canonical files by `scripts/stage-npm-package.mjs`:
 
 | Package | Version source | Contents |
 |---------|----------------|----------|
 | `@randomknights/aieds` | `spec/methodology.md` | reference library, JSON Schema, coefficient tables, and the `aieds` command (staged from `plugins/random-knights/scripts`) |
-| `@randomknights/k13` | `K13.md` | K13 text and the `k13 check` CLI |
 | `@randomknights/earthplus` | `eplus/v1/methodology.md` | E+ conformance checker (library and `eplus-conformance` CLI) and the E+ methodology text |
 
 Nothing else is published. The repository root, `lib/` and `mcp/` are marked
@@ -171,15 +170,14 @@ site check was green the whole time.
 
 ### Release tags and GitHub Releases
 
-This repository carries three standards and one tag namespace, and their
-version numbers collide (AiEDs 2.x, K13 2.x, E+ 1.x). The original series,
-`v1.0.0` to `v2.4.0`, tracks AiEDs and is not renamed or moved. K13 and E+ use
+This repository carries two standards and one tag namespace, and their
+version numbers collide (AiEDs 2.x, E+ 1.x). The original series,
+`v1.0.0` to `v2.4.0`, tracks AiEDs and is not renamed or moved. E+ uses
 a prefix:
 
 | Standard | Tag | Example | Version source |
 |----------|-----|---------|----------------|
 | AiEDs | `v<semver>` | `v2.4.0` | `spec/methodology.md` |
-| K13 | `k13-v<semver>` | `k13-v2.2.0` | `K13.md` |
 | E+ | `eplus-v<semver>` | `eplus-v1.2.1` | `eplus/v1/methodology.md` |
 
 Rules:
@@ -205,10 +203,11 @@ Rules:
 
 `npm run check:published` compares the newest tag in each series with the
 version in `spec/v2/standard-versions.json`. AiEDs keeps its exact-tag test.
-K13 and E+ fail when their newest tag is BEHIND the repository version or the
-series has no tag at all, and never fail when a tag is ahead. The daily
-`85-published-drift` run is therefore red for K13 and E+ until the owner cuts
-their first tags; that is the check working, not a fault in the check.
+E+ fails when its newest tag is BEHIND the repository version or the series
+has no tag at all, and never fails when a tag is ahead. A ratified version
+with no tag therefore turns the daily `85-published-drift` run red until the
+owner cuts it; that is the check working, not a fault in the check. Tags under
+any other prefix are not read.
 
 `npm test` in `spec/` runs `test/site-output.test.mjs`, which rebuilds the
 tree and refuses if any served file is not byte-identical to its repo source
@@ -239,10 +238,10 @@ that covers the path you changed, as listed at the end of
 
 - Apache 2.0 under [LICENSE](LICENSE): code and the schema, including `lib/`,
   `mcp/` (except its README), `spec/aieds.schema.json`, the E+ conformance
-  checker in `eplus/v1/conformance/` (except its README), `templates/`,
+  checker in `eplus/v1/conformance/` (except its README),
   `scripts/`, `packages/` (except the READMEs) and `.github/`.
 - CC BY 4.0 under [LICENSE-DOCS](LICENSE-DOCS): the standards' text and data,
-  including `K13.md`, `spec/methodology.md`, `spec/v2/aieds-factors.json`,
+  including `spec/methodology.md`, `spec/v2/aieds-factors.json`,
   `spec/v2/standard-versions.json`, `spec/examples/*.json`,
   `eplus/v1/methodology.md`, and the repository documentation.
 

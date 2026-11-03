@@ -3,13 +3,14 @@
 // names the repository publishes, and returns rows. check-published-site.mjs
 // does the fetching; spec/test/release-tags.test.mjs feeds this fixtures.
 //
-// ONE REPOSITORY, THREE TAG SERIES. The pre-existing series (v1.0.0 to
-// v2.4.0) tracks AiEDs. K13 (2.x) and E+ (1.x) version numbers collide with
-// it, so each gets its own prefix. Owner-approved naming (2026-10-15):
+// ONE REPOSITORY, TWO TAG SERIES. The pre-existing series (v1.0.0 to
+// v2.4.0) tracks AiEDs. E+ (1.x) version numbers collide with it, so E+ gets
+// its own prefix. Owner-approved naming (2026-10-15):
 //
 //   aieds   v<semver>         e.g. v2.4.0        (unchanged)
-//   k13     k13-v<semver>     e.g. k13-v2.2.0
 //   eplus   eplus-v<semver>   e.g. eplus-v1.2.1
+//
+// Tags under any other prefix are not read by either series.
 //
 // RULE. Same rule as the other surfaces: a series FAILS only when it is
 // BEHIND (newest published tag older than the repo version) or has no tag at
@@ -18,7 +19,6 @@
 
 export const RELEASE_SERIES = [
   { id: "aieds", name: "AiEDs", prefix: "v", exact: true },
-  { id: "k13", name: "K13", prefix: "k13-v", exact: false },
   { id: "eplus", name: "E+", prefix: "eplus-v", exact: false },
 ];
 
@@ -39,7 +39,7 @@ export function compareSemver(a, b) {
 }
 
 // Every x.y.z published under a prefix. The match is anchored on both ends, so
-// "v2.4.0" does not belong to the k13 series and "k13-v2.2.0" does not belong
+// "v2.4.0" does not belong to the E+ series and "eplus-v1.2.1" does not belong
 // to the AiEDs series.
 export function versionsForPrefix(tagNames, prefix) {
   const out = [];

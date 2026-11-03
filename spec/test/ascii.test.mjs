@@ -17,9 +17,8 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const SKIP_DIRS = new Set([".git", "node_modules", "dist", ".firebase"]);
-// .html joined this list with the K13 2.0.0 reference templates. Before that
-// there was no HTML in the tree, so the gate had never needed to read any, and
-// templates/temp1ate.html would have shipped unchecked.
+// .html is on this list so that any HTML file added to the tree is read by
+// the gate. Without it, an HTML file would ship unchecked.
 const TEXT = /\.(json|ts|md|mjs|yml|yaml|html)$/;
 // Extension-less text files, named explicitly rather than matched by "no dot":
 // a broad no-extension rule would also try to read a future binary asset as
@@ -110,9 +109,8 @@ test("no committed text file contains a non-ASCII character", () => {
 });
 
 test("no em dash or en dash anywhere, stated separately", () => {
-  // Called out on its own because it is the rule people break most and the
-  // one K13 step 13 fails on. A generic ASCII message does not make the fix
-  // obvious; this one does.
+  // Called out on its own because it is the rule people break most. A
+  // generic ASCII message does not make the fix obvious; this one does.
   const offenders = [];
   for (const file of walk(repoRoot)) {
     const rel = relative(repoRoot, file).replace(/\\/g, "/");

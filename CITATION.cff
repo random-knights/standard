@@ -35,6 +35,7 @@ authors:
 contact:
   - name: "Random Knights, LLC"
     email: knights@rand0m.ai
-# K13 - Ai General Response Standard lives in this same repository (K13.md) and has
-# its own citation file, CITATION.k13.cff. A CFF file describes one work, so
-# the two standards are not folded into one entry here.
+# E+ - Earth + Ai Impact Standard lives in this same repository
+# (eplus/v1/methodology.md) and has its own citation file, CITATION.eplus.cff.
+# A CFF file describes one work, so the two standards are not folded into one
+# entry here.

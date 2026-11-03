@@ -82,7 +82,10 @@ const repo = JSON.parse(
 );
 
 const REPO = "random-knights/standard";
-const PACKAGES = ["aieds", "k13", "earthplus"];
+// The packages this repository publishes. Only these are compared, so a
+// package that was published once and is no longer built here is not this
+// check's business, whatever the registry still holds for it.
+const PACKAGES = ["aieds", "earthplus"];
 
 async function getJson(url, headers = {}) {
   const res = await fetch(url, { headers: { "cache-control": "no-cache", ...headers } });
@@ -130,14 +133,14 @@ async function checkNpm() {
 
 // releases: methodology.md's own tagging note establishes that each ratified
 // version gets an annotated tag so it has a citable artifact. This asks, for
-// each standard with its own tag series (AiEDs v*, K13 k13-v*, E+ eplus-v*),
-// whether the CURRENT repo version has one. The comparison itself lives in
+// each standard with its own tag series (AiEDs v*, E+ eplus-v*), whether the
+// CURRENT repo version has one. The comparison itself lives in
 // scripts/release-tags.mjs so it can be tested against fixtures.
 //
-// AiEDs keeps its original exact-tag test. K13 and E+ compare the newest
-// published tag in their series to the repo version and fail only when it is
-// BEHIND (or the series has no tag at all), the same rule as the other
-// surfaces. See the tag naming scheme in CONTRIBUTING.md.
+// AiEDs keeps its original exact-tag test. E+ compares the newest published
+// tag in its series to the repo version and fails only when it is BEHIND (or
+// the series has no tag at all), the same rule as the other surfaces. See the
+// tag naming scheme in CONTRIBUTING.md.
 async function checkReleases(standards) {
   const headers = process.env.GITHUB_TOKEN
     ? { authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
@@ -270,9 +273,8 @@ async function main() {
   if (by("releases")) {
     console.error("RELEASES: owner action. Cut an annotated tag for the ratified");
     console.error("  version so it has a citable artifact: v<x.y.z> for AiEDs,");
-    console.error("  k13-v<x.y.z> for K13, eplus-v<x.y.z> for E+. See the tagging");
-    console.error("  scheme in CONTRIBUTING.md and the tagging note in");
-    console.error("  spec/methodology.md.");
+    console.error("  eplus-v<x.y.z> for E+. See the tagging scheme in");
+    console.error("  CONTRIBUTING.md and the tagging note in spec/methodology.md.");
   }
   return 1;
 }

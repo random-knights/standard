@@ -215,10 +215,9 @@ This LICENSE (Apache 2.0) applies to the code and the schema:
   spec/measurements/*/harness/      the measurement harness code
   eplus/v1/conformance/             the E+ conformance checker, except its
                                     README.md
-  templates/                        the K13 reference report templates
   scripts/                          build and release scripts
-  packages/                         the npm package manifests and the K13
-                                    checker code, except the README files
+  packages/                         the npm package manifests and code,
+                                    except the README files
   .github/                          CI and release workflows
 
 It does not apply to the standards' prose, the published coefficient tables,

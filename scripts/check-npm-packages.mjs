@@ -57,20 +57,6 @@ const EXPECTED = {
     "src/vendor/lib/dist/water.js",
     "src/vendor/spec/v2/aieds-factors.json",
   ],
-  k13: [
-    "K13.md",
-    "LICENSE",
-    "LICENSE-DOCS",
-    "NOTICE",
-    "README.md",
-    "bin/k13.mjs",
-    "package.json",
-    "src/index.mjs",
-    "vectors/filled-pass.html",
-    "vectors/filled-pass.md",
-    "vectors/minimal-pass.md",
-    "vectors/vectors.json",
-  ],
   earthplus: [
     "LICENSE",
     "LICENSE-DOCS",
@@ -128,16 +114,6 @@ const { waterFromEnergyWh, waterLine } = await import("@randomknights/aieds");
 const w = waterFromEnergyWh(0.24);
 if (!w || w.confidence !== "low" || w.basis !== "US average" || !/Modeled estimate\.$/.test(waterLine(w))) throw new Error("bad water estimate");
 console.log("aieds smoke ok", METHODOLOGY_VERSION);
-`,
-  k13: `
-import { checkText, K13_VERSION } from "@randomknights/k13";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
-const pkg = require("@randomknights/k13/package.json");
-if (pkg.version !== K13_VERSION) throw new Error("package version " + pkg.version + " is not K13 " + K13_VERSION);
-if (!checkText("fine.").ok) throw new Error("clean text failed");
-if (checkText("a " + String.fromCharCode(0x2014) + " b").ok) throw new Error("em dash passed");
-console.log("k13 smoke ok", K13_VERSION);
 `,
   // Both module systems, one conforming and one nonconforming sample document.
   earthplus: `
@@ -222,15 +198,6 @@ for (const name of Object.keys(EXPECTED)) {
       console.log("aieds bin ok (version, usage, status, install diff)");
     } catch (err) {
       fail(`aieds: the installed bin failed: ${err.message}`);
-    }
-  }
-  if (name === "k13") {
-    // The bin is linked and runs: exit 0 on a clean file.
-    writeFileSync(join(app, "clean.md"), "All clear.\n");
-    try {
-      npm("exec --offline -- k13 check clean.md", app);
-    } catch (err) {
-      fail(`k13: the installed k13 bin did not pass a clean file: ${err.message}`);
     }
   }
   if (name === "earthplus") {

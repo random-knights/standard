@@ -1,19 +1,18 @@
-// Gate: spec/v2/standard-versions.json IS the three canonical documents,
+// Gate: spec/v2/standard-versions.json IS the canonical documents,
 // mechanically, and the site's index page agrees with it.
 //
 // WHY THIS EXISTS, with the date on it. On 2026-09-15 the published site at
-// standard.rand0m.ai announced K13 at version 1.1.0. K13.md said 2.0.0.
-// CITATION.k13.cff said 2.0.0. The README template, the org profile page and
-// three repo READMEs all said 2.0.0. The site was wrong on its own subject for
-// a full major version, because scripts/build-site.mjs carried a LITERAL:
+// standard.rand0m.ai announced one standard a full major version behind what
+// its own canonical text, its citation file, the README template, the org
+// profile page and three repo READMEs all said, because
+// scripts/build-site.mjs carried that version as a LITERAL instead of reading
+// it out of the document.
 //
-//     const K13 = { name: "K13", version: "1.1.0", ... }
-//
-// AiEDs and E+ had always derived their versions from their documents, and
-// build-site.test.mjs already gated E+ against the text it declares. K13 had
-// neither. This file closes that gap for all three at once and adds the thing
-// that was missing generally: one machine-readable statement of the current
-// versions, published for consumers, that cannot drift from the documents.
+// AiEDs and E+ derive their versions from their documents, and
+// build-site.test.mjs gates E+ against the text it declares. This file holds
+// every standard to that rule and adds the thing that was missing generally:
+// one machine-readable statement of the current versions, published for
+// consumers, that cannot drift from the documents.
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
@@ -55,7 +54,6 @@ test("each standard's version matches the document that defines it", () => {
   // Stated separately from the byte check so a failure names the STANDARD
   // rather than just saying the file differs.
   assert.equal(byId.get("aieds").semver, documentVersion("spec/methodology.md"));
-  assert.equal(byId.get("k13").semver, documentVersion("K13.md"));
   assert.equal(byId.get("eplus").semver, documentVersion("eplus/v1/methodology.md"));
 });
 
@@ -74,7 +72,6 @@ test("each CITATION file agrees with the version it cites", () => {
     return m[1];
   };
   assert.equal(cff("CITATION.cff"), byId.get("aieds").semver, "CITATION.cff");
-  assert.equal(cff("CITATION.k13.cff"), byId.get("k13").semver, "CITATION.k13.cff");
   assert.equal(cff("CITATION.eplus.cff"), byId.get("eplus").semver, "CITATION.eplus.cff");
 });
 
@@ -101,20 +98,26 @@ test("the site serves the versions file at the root, byte-identical", () => {
   );
 });
 
-test("the index page states the K13 version its own document declares", () => {
-  // The gate that did not exist. build-site.test.mjs already had this for E+
-  // ("the index page lists E+ at the version and status its own text
-  // declares") and for AiEDs by way of the schema id check. K13 had no
-  // counterpart, which is exactly why K13 was the one that went stale.
+test("the index page states each versioned standard's version", () => {
+  // build-site.test.mjs checks E+ against its own text and AiEDs by way of the
+  // schema id. This checks every versioned row of the versions file, so a
+  // standard added later cannot reach the index page with a stale version.
   const html = expectedFiles().get("index.html").toString("utf8");
-  const k13 = byId.get("k13");
-  assert.ok(
-    html.includes(k13.semver),
-    `the index page does not mention the K13 version ${k13.semver}`,
-  );
-  assert.ok(
-    !/response standard 1\.1\.0/.test(html),
-    "the index page still carries the superseded hardcoded K13 version 1.1.0",
+  for (const s of committed.standards) {
+    if (s.semver === null) continue;
+    assert.ok(
+      html.includes(`methodology ${s.semver}`),
+      `the index page does not state ${s.name} ${s.semver}`,
+    );
+  }
+});
+
+test("only the standards that continue are listed", () => {
+  // The versions file is the table every consumer README renders, so the row
+  // set is pinned: a row that comes back by accident shows up here first.
+  assert.deepEqual(
+    committed.standards.map((s) => s.id),
+    ["eplus", "aieds", "ai-for-good"],
   );
 });
 

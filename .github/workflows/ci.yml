@@ -104,9 +104,9 @@ jobs:
       - name: Unit tests
         run: npm test
 
-  # The npm packages (packages/aieds, packages/k13, packages/earthplus) on
-  # every change: the K13 checker's own tests, then pack each package, hold its
-  # tarball to an exact file list (no tests, fixtures, secrets or .env files),
+  # The npm packages (packages/aieds, packages/earthplus) on every change: pack
+  # each package, hold its tarball to an exact file list (no tests, fixtures,
+  # secrets or .env files),
   # install the real tarball into an empty project and use it (for earthplus:
   # a conforming sample passes and a nonconforming one fails, as a library and
   # through its bin), then npm publish --dry-run. No
@@ -123,16 +123,12 @@ jobs:
         with:
           node-version: "20"
 
-      - name: K13 checker tests
-        run: cd packages/k13 && npm test
-
       - name: Pack, check tarball file lists, install and smoke test
         run: node scripts/check-npm-packages.mjs
 
       - name: npm publish --dry-run
         run: |
           (cd packages/aieds && npm publish --dry-run)
-          (cd packages/k13 && npm publish --dry-run)
           (cd packages/earthplus && npm publish --dry-run)
 
   # The Claude Code plugin (plugins/random-knights) and its marketplace
