@@ -42,8 +42,8 @@ name: Standard versions fan-out
 on:
   # THE EVENT IS THE VERSIONS FILE MOVING, NOT A RELEASE. Added 2026-09-28.
   # Until then this ran on `release: published` and manual dispatch only, so
-  # K13 2.1.0 (2026-09-22, #69) and AiEDs 2.4.0 (2026-09-24, #75) both landed
-  # on main without fanning out: no release was cut for either. Four consumer
+  # two version moves, #69 (2026-09-22) and AiEDs 2.4.0 (2026-09-24, #75),
+  # both landed on main without fanning out: no release was cut for either. Four consumer
   # READMEs then advertised superseded versions for a week and the scheduled
   # drift check in random-knights/.github went red every Monday with nobody
   # able to fix it from inside their own repo, which is the failure mode the

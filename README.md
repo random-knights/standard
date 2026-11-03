@@ -18,8 +18,6 @@
     <a href="https://randomknights.xyz"><strong>Read our docs site &raquo;</strong></a>
     <br />
     <br />
-    <a href="https://randomknights.xyz/k13/">K13</a>
-    &#183;
     <a href="https://randomknights.xyz/aieds/">AiEDs</a>
     &#183;
     <a href="eplus/v1/methodology.md">E+</a>
@@ -43,13 +41,13 @@
 
 ## <span style="color:#FAAFA5"><u> **STANDARD** </u></span>
 
-Open standard from Random Knights. K13 is how we write. AiEDs is how
-we report modeled energy and carbon from AI work. E+ scores the health of
-Earth systems and shows where Ai's resource use meets them.
+Open standard from Random Knights. AiEDs is how we report modeled energy
+and carbon from AI work. E+ scores the health of Earth systems and shows
+where Ai's resource use meets them.
 
 - Built with:
   - Maximum Effort
-  - Rand0m AI Standard : E+ w/ AiEDs & K13
+  - Rand0m AI Standard : E+ w/ AiEDs
   - Randomly & Knightly . Engineering
   - Node.js &middot; TypeScript &middot; JSON Schema 2020-12 &middot; nvidia-smi &middot; Ollama
 
@@ -59,14 +57,13 @@ Earth systems and shows where Ai's resource use meets them.
 
 </div>
 
-K13 and AiEDs are published and free to read. Both are CC BY 4.0, so you can
-adopt either without asking. E+ 1.2.0 was ratified on 2026-09-22, its wording-only patch 1.2.1 followed on
-2026-10-15, and it is published the same way, CC BY 4.0. All three live in this repository.
+AiEDs is published and free to read. It is CC BY 4.0, so you can adopt it
+without asking. E+ 1.2.0 was ratified on 2026-09-22, its wording-only patch 1.2.1 followed on
+2026-10-15, and it is published the same way, CC BY 4.0. Both live in this repository.
 
 | Standard                                  | Version                   | License                                              | Canonical text                                                          | Read it                                                                                                        |
 | ----------------------------------------- | ------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | **AiEDs - AI Energy Disclosure Standard** | methodology 2.5.0         | CC BY 4.0 prose and data, Apache 2.0 code and schema | [spec/methodology.md](spec/methodology.md) with `spec/`, `lib/`, `mcp/` | [standard.rand0m.ai](https://standard.rand0m.ai)                                                               |
-| **K13 - Ai General Response Standard**            | 4.1.0                     | CC BY 4.0 prose, Apache 2.0 reference templates      | [K13.md](K13.md) with `templates/`                                      | [randomknights.xyz/k13](https://randomknights.xyz/k13/)                                                        |
 | **E+ - Earth + Ai Impact Standard**       | 1.2.1, ratified           | CC BY 4.0 prose, Apache 2.0 conformance checker      | [eplus/v1/methodology.md](eplus/v1/methodology.md)                      | [standard.rand0m.ai/eplus/v1/methodology.md](https://standard.rand0m.ai/eplus/v1/methodology.md)               |
 
 <!-- E+ -->
@@ -88,63 +85,6 @@ wording-only patch: the 0 to 100 score keeps the name Earth Health Score and
 no rule moved. "Ai Impact" means modeled resource demand and the published
 context found near it, never cause. This version carries no impact data.
 Co-location is not causation.
-
-<!-- K13 -->
-
-## <span style="color:#ff4124"><u>**K13**</u></span> Ai General Response Standard
-
-Thirteen steps, run in order, every time. Every time does not mean every step
-takes real work: on short replies the steps collapse to a second each. That is
-the standard being met, not skipped.
-
-K13 4.1.0 asks for **one pass: the quick squeeze.** Write like a calm adult
-explaining to a smart caveman: simple words, one idea per sentence, correct
-grammar, the outcome first, with every figure traced to its source and the
-confidence stated. The six response levels of 2.x are no longer part of the
-standard. A 2.x juice box pass is a quick squeeze and conforms unchanged.
-
-Steps 9 to 12 make and check that one pass: draft it, cut it in the voice,
-source every figure, state the confidence. Step 13 runs the gate.
-
-4.0.0 makes K13 a **response** standard with two modes. Answer mode is the
-default and covers every response: no tiles, no headings on a short answer, no
-file. Report mode applies when a report or a document was asked for, and it
-carries three required tiles: what happened, what it cost, what is next. The
-other nine tiles stay defined and are optional.
-
-4.0.0 also adds a ceiling on the whole answer (a 40-word opening, a 400-word
-body), a voice rule for the opening, and four rules: no unrequested artifacts,
-verify before asserting, no contradiction or restatement, and precision that
-matches the stated confidence.
-
-4.1.0 lets the voice and the humor rules drive the cut: at most one dry joke,
-off for money, safety, security, privacy, legal, tax, errors the user did not
-cause and a frustrated user, and never on a number. The ceilings are numbers a
-program can check:
-
-| Ceiling     | Value     |
-| ----------- | --------- |
-| the opening | 40 words  |
-| the body    | 400 words |
-
-### Demo: one fact, one pass
-
-> Six of our copies of the rules are old. They say version 1.1.0. The new rules
-> are version 4.0.0. We looked in four places, so there may be an old copy we
-> did not find. Confidence is high that these six are old, because we read each
-> version number. Confidence is moderate that six is the whole count, because
-> we searched four places.
-
-Every figure is in the run data, the confidence is stated with its reason, and
-every word is plain. The `@randomknights/k13` package checks all of that.
-
-[Get started](https://randomknights.xyz/k13/get-started/) covers adopting it
-in your own pipeline.
-
-The standard is [K13.md](K13.md), about 260 lines. Longer detail is in
-[K13-REFERENCE.md](https://standard.rand0m.ai/k13/v1/K13-REFERENCE.md). What
-changed in each version is in
-[CHANGELOG-K13.md](https://standard.rand0m.ai/k13/v1/CHANGELOG-K13.md).
 
 <!-- AiEDs -->
 
@@ -509,8 +449,6 @@ AiEDs is specified in an owner-ratified architecture decision record. The key de
 | Reference library    | `lib/`                       | Apache 2.0 | Energy-first disclosures: per-model coefficients + provenance + citations (mirrors the rand0m.ai app; contract-tested)                                       |
 | MCP server           | `mcp/`                       | Apache 2.0 | TypeScript Node MCP: estimate / factors / disclose                                                                                                           |
 | Claude Code plugin   | `plugins/random-knights/`    | Apache 2.0 | An AiEDs receipt after every Claude Code or Codex response, computed locally from token usage with the reference library; Grok Build session files, Ollama and Hugging Face responses are read too (see the plugin README for what is verified). Marketplace: `.claude-plugin/marketplace.json` |
-| K13                  | `K13.md`                     | CC BY 4.0  | K13 - Ai General Response Standard, 4.1.0. The canonical text.                                                                                                       |
-| K13 report templates | `templates/`                 | Apache 2.0 | Reference markdown and HTML report templates. One rendering of the K13.md section list, not the requirement.                                                 |
 | E+                   | `eplus/v1/methodology.md`    | CC BY 4.0  | E+ - Earth + Ai Impact Standard, 1.2.1, ratified 2026-09-22. The canonical text, including the public implementation changelog.                              |
 
 <!-- ROADMAP -->
@@ -555,9 +493,6 @@ used.
 > Random Knights, LLC (2026). AiEDs - AI Energy Disclosure Standard,
 > version 2.2.0. CC BY 4.0. https://standard.rand0m.ai
 
-> Random Knights, LLC (2026). K13 - Ai General Response Standard, version 4.1.0.
-> CC BY 4.0. https://github.com/random-knights/standard
-
 E+ 1.2.1 is ratified (1.2.0, 2026-09-22; 1.2.1 renames the standard and moves
 no rule). Cite the version you implemented:
 
@@ -568,7 +503,6 @@ no rule). Cite the version you implemented:
 
 Machine-readable metadata: [CITATION.cff](CITATION.cff) describes AiEDs and
 is the file GitHub reads to offer APA and BibTeX exports from the sidebar;
-[CITATION.k13.cff](CITATION.k13.cff) describes K13 in the same format;
 [CITATION.eplus.cff](CITATION.eplus.cff) describes the E+ draft.
 
 <!-- LICENSE -->
@@ -592,10 +526,8 @@ CC BY 4.0.
 | `spec/test/`                              | [Apache 2.0](LICENSE)     |
 | `spec/measurements/*/harness/`            | [Apache 2.0](LICENSE)     |
 | `eplus/v1/conformance/` (code)            | [Apache 2.0](LICENSE)     |
-| `templates/`                              | [Apache 2.0](LICENSE)     |
 | `scripts/`, `.github/`                    | [Apache 2.0](LICENSE)     |
 | `packages/` (manifests and code)          | [Apache 2.0](LICENSE)     |
-| `K13.md`                                  | [CC BY 4.0](LICENSE-DOCS) |
 | `spec/methodology.md`                     | [CC BY 4.0](LICENSE-DOCS) |
 | `spec/v2/aieds-factors.json`              | [CC BY 4.0](LICENSE-DOCS) |
 | `spec/v2/standard-versions.json`          | [CC BY 4.0](LICENSE-DOCS) |
@@ -606,15 +538,9 @@ CC BY 4.0.
 
 <\div>
 
-The K13 report templates are the clearest case of that split. `templates/` is a
-reference implementation, so it is Apache 2.0 and forkable without attribution
-friction. The REQUIREMENT those files render, the ordered section list in
-K13.md under "The report template", is specification text and stays CC BY 4.0.
-Fork the markup freely; cite the standard.
-
 A file not in the table follows the same split: code is Apache 2.0, prose and
 data are CC BY 4.0. The two npm packages built from this repository,
-`@randomknights/aieds` and `@randomknights/k13`, each carry both licenses and
+`@randomknights/aieds` and `@randomknights/earthplus`, each carry both licenses and
 declare `Apache-2.0 AND CC-BY-4.0`; [NOTICE](NOTICE) says which part of each
 is which. Nothing in this repository is third-party material under another
 license.

@@ -1,6 +1,6 @@
 // Gate: the standard.rand0m.ai build derives its artifact paths from the
-// schema's own $id, ships the artifacts byte-identical to their spec/
-// sources, and never claims K13 is live before K13.md actually exists here.
+// schema's own $id and ships the artifacts byte-identical to their spec/
+// sources.
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "../..");
 
-const { PROPERTY_NAME, PROPERTY_NAME_HTML, expectedFiles } = await import(
+const { PROPERTY_NAME, PROPERTY_NAME_HTML, RETIRED_NOTICE_PATH, expectedFiles } = await import(
   "file://" + resolve(repoRoot, "scripts/build-site.mjs")
 );
 
@@ -56,7 +56,7 @@ test("every shipped AiEDs artifact is byte-identical to its spec/ source", () =>
   }
 });
 
-test("the index page lists AiEDs as live and K13.md as published", () => {
+test("the index page lists AiEDs as live", () => {
   const indexKey = [...files.keys()].find((k) => k === "index.html");
   const html = files.get(indexKey).toString("utf8");
 
@@ -65,26 +65,12 @@ test("the index page lists AiEDs as live and K13.md as published", () => {
   assert.match(html, new RegExp(schema.$id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(html, /Apache 2\.0/);
   assert.match(html, /randomknights\.xyz\/aieds\//);
-
-  // K13: K13.md is in this repository, so the index links to the served copy
-  // and the build ships it byte-identical. This is a honesty gate, not a
-  // style gate: it fails if K13.md is removed while the page still claims it.
-  assert.match(html, />K13</);
-  assert.match(html, /standard\.rand0m\.ai\/k13\/v1\/K13\.md/);
-  const k13Key = [...files.keys()].find(
-    (k) => k.replaceAll("\\", "/") === "k13/v1/K13.md",
-  );
-  assert.ok(k13Key, "no output file for k13/v1/K13.md");
-  assert.ok(
-    files.get(k13Key).equals(readFileSync(resolve(repoRoot, "K13.md"))),
-    "k13/v1/K13.md differs from K13.md; the build must copy bytes verbatim",
-  );
 });
 
 test("the index page lists E+ at the version and status its own text declares", () => {
-  // Same honesty gate as K13: the served copy is byte-identical to the repo
-  // file, the version on the page is parsed from the document header, and a
-  // draft is labeled as a draft until the text itself says otherwise.
+  // An honesty gate: the served copy is byte-identical to the repo file, the
+  // version on the page is parsed from the document header, and a draft is
+  // labeled as a draft until the text itself says otherwise.
   const indexKey = [...files.keys()].find((k) => k === "index.html");
   const html = files.get(indexKey).toString("utf8");
   const source = readFileSync(resolve(repoRoot, "eplus/v1/methodology.md"), "utf8");
@@ -106,23 +92,24 @@ test("the index page lists E+ at the version and status its own text declares", 
   );
 });
 
-test("K13 3.0.0 serves K13.md and its two companions: the level registry is gone", () => {
-  // K13 3.0.0 has one pass and no response levels, so k13-levels.json is no
-  // longer built or served. This test replaces the one that pinned the six
-  // level identifiers, their steps and the default (2026-10-15, K13 3.0.0).
+// TEMPORARY: delete this test with the notice it checks, on or after
+// 2027-02-01 (see RETIRED_NOTICE_PATH in scripts/build-site.mjs).
+test("the retired standard's old address serves one short notice and nothing else", () => {
   const keys = [...files.keys()].map((k) => k.replaceAll("\\", "/"));
+  const oldDir = RETIRED_NOTICE_PATH.split("/")[0] + "/";
   assert.deepEqual(
-    keys.filter((k) => k.startsWith("k13/")).sort(),
-    ["k13/v1/CHANGELOG-K13.md", "k13/v1/K13-REFERENCE.md", "k13/v1/K13.md"],
-    "k13/ must hold K13.md and its two companion files only",
+    keys.filter((k) => k.startsWith(oldDir)),
+    [RETIRED_NOTICE_PATH],
+    `${oldDir} must hold the one notice page only`,
   );
-  assert.ok(!keys.includes("k13/v1/k13-levels.json"), "k13-levels.json must not be served");
+  const notice = files.get(RETIRED_NOTICE_PATH).toString("utf8");
+  assert.match(notice, /has been retired as a standard/);
+  assert.match(notice, /href="https:\/\/randomknights\.xyz\/aieds\/"/);
+  assert.match(notice, /href="https:\/\/randomknights\.xyz\/eplus\/"/);
+  assert.deepEqual([...notice].filter((c) => c.charCodeAt(0) > 127), []);
+  // The index page links only to the standards that continue.
   const html = files.get("index.html").toString("utf8");
-  assert.doesNotMatch(html, /level registry/);
-  assert.doesNotMatch(html, /k13-levels/);
-  assert.doesNotMatch(html, /not yet published/);
-  const version = readFileSync(resolve(repoRoot, "K13.md"), "utf8").match(/\*\*Version:\*\*\s*(\S+)/)[1];
-  assert.ok(html.includes(`Ai General Response Standard ${version}`));
+  assert.ok(!html.includes(oldDir), `the index page must not link into ${oldDir}`);
 });
 
 test("chrome values match rk_branding/canon/site-canon.md verbatim", () => {

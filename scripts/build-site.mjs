@@ -4,7 +4,7 @@
 //
 // ARCHITECTURE (owner decision, encoded here, not revisited):
 //   standard.rand0m.ai   MACHINE artifacts at versioned, permanent paths.
-//                         Schemas, tables, the K13 text. Things
+//                         Schemas, tables, the standards' text. Things
 //                         pin to these URLs, so nothing here ever moves.
 //   randomknights.xyz     HUMAN home. Spec pages, demos, get-started.
 // This script builds the first. It links to the second; it does not
@@ -22,7 +22,6 @@
 // scripts/render.mjs: this repo's build tooling should not need a
 // node_modules to produce HTML.
 import {
-  existsSync,
   mkdirSync,
   readFileSync,
   rmSync,
@@ -97,53 +96,7 @@ export const PROPERTY_NAME = "Standard by Random Knights";
 export const PROPERTY_NAME_HTML = PROPERTY_NAME;
 const XYZ = "https://randomknights.xyz";
 
-// K13 lives in this repository under CC BY 4.0 (see LICENSE-DOCS): K13.md is
-// at the root. Through 2.2.0 the site also served a generated level registry,
-// k13-levels.json. K13 3.0.0 has one pass and no levels, so that file is no
-// longer built or served. The companion files K13-REFERENCE.md and
-// CHANGELOG-K13.md are served beside K13.md. Whether K13.md is present is a FACT about the
-// filesystem, not a flag a human sets and might forget to flip, so it is
-// checked here, not asserted.
-const K13_DIR = "k13/v1";
-const k13MdPresent = existsSync(join(repoRoot, "K13.md"));
-
-// K13's version is READ OUT OF K13.md, exactly as E+ reads its own and AiEDs
-// reads the methodology document. It used to be the literal "1.1.0" typed
-// here, and it went stale the moment K13 was ratified at 2.0.0: the published
-// index page announced a superseded major version of a standard whose own
-// canonical text, CITATION.k13.cff, the README template and four repo READMEs
-// all said 2.0.0. Nothing compared the literal to the document, so nothing
-// caught it. A version is a FACT about a document, never a flag beside it.
-const k13VersionMatch = readFileSync(join(repoRoot, "K13.md"), "utf8").match(
-  /\*\*Version:\*\*\s*([\d.]+)/,
-);
-if (!k13VersionMatch) {
-  throw new Error("Could not read the K13 version out of K13.md.");
-}
-
-const K13 = {
-  name: "K13",
-  version: k13VersionMatch[1],
-  dir: K13_DIR,
-  license: "CC BY 4.0",
-  licenseHref: "/LICENSE-DOCS",
-  xyzHref: `${XYZ}/k13/`,
-  files: [
-    { label: "K13.md", name: "K13.md", present: k13MdPresent },
-    {
-      label: "K13-REFERENCE.md",
-      name: "K13-REFERENCE.md",
-      present: existsSync(join(repoRoot, "K13-REFERENCE.md")),
-    },
-    {
-      label: "CHANGELOG-K13.md",
-      name: "CHANGELOG-K13.md",
-      present: existsSync(join(repoRoot, "CHANGELOG-K13.md")),
-    },
-  ],
-};
-
-// E+ has no schema yet, so like K13 its directory is a fixed path and its
+// E+ has no schema yet, so its directory is a fixed path and its
 // version is read out of the document's own header line. The document is
 // served byte-identical; the version string on the index page is the one
 // the text declares, never a flag set beside it.
@@ -292,7 +245,6 @@ h1 { font-size: 28px; margin: 0 0 8px; }
   padding: 20px 24px;
   margin-bottom: 24px;
 }
-.standard.unpublished { opacity: 0.6; }
 .standard h2 { margin: 0 0 4px; font-size: 20px; }
 .standard .version { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
 .standard .pending-note {
@@ -369,38 +321,62 @@ ${rows}
     </section>`;
 }
 
-function k13Section() {
-  const allPresent = K13.files.every((f) => f.present);
-  const rows = K13.files
-    .map((f) =>
-      f.present
-        ? `      <li>
-        <a href="${escapeHtml(`${HOST}/${K13.dir}/${f.name}`)}"><code>${escapeHtml(f.label)}</code></a>
-        <span class="license-tag"><a href="${escapeHtml(K13.licenseHref)}">${escapeHtml(K13.license)}</a></span>
-      </li>`
-        : `      <li>
-        <code>${escapeHtml(f.label)}</code>
-        <span class="license-tag">not yet published</span>
-      </li>`,
-    )
-    .join("\n");
-  const note = allPresent
-    ? ""
-    : `      <p class="pending-note">
-        Decided to join this repository under
-        <a href="${escapeHtml(K13.licenseHref)}">${escapeHtml(K13.license)}</a>.
-        ${escapeHtml(K13.files.filter((f) => !f.present).map((f) => f.label).join(" and "))}
-        has not moved in yet; nothing marked "not yet published" below resolves
-        until it lands.
-      </p>\n`;
-  return `    <section class="standard${allPresent ? "" : " unpublished"}">
-      <h2>K13</h2>
-      <p class="version">Ai General Response Standard ${escapeHtml(K13.version)}</p>
-${note}      <ul class="artifact-list">
-${rows}
-      </ul>
-      <a class="read-link" href="${escapeHtml(K13.xyzHref)}">read the standard on randomknights.xyz -&gt;</a>
-    </section>`;
+const FAMILY_FOOTER = `<footer class="family-footer">
+  <a class="family-link-xyz" href="${XYZ}/">&#7450;k.xyz</a>
+  &#183;
+  <a class="family-link-llc" href="https://randomknights.llc/">&#7450;k.llc</a>
+  &#183;
+  <a class="family-link-org" href="https://randomknights.org/">&#7450;k.org</a>
+  &#183;
+  <a class="app-link" href="https://rand0m.ai/">rand0m.ai</a>
+</footer>`;
+
+// TEMPORARY NOTICE AT AN OLD ADDRESS. Delete this notice, its entry in
+// expectedFiles() and its test in spec/test/build-site.test.mjs on or after
+// 2027-02-01.
+//
+// K13 was retired as a standard on 2026-11-03 and its files were removed from
+// this repository, so nothing is served under k13/v1/ any more and those URLs
+// return 404. The old address k13/ carries this one short page instead, so a
+// reader who follows an old link learns what happened. Nothing else is built
+// under k13/.
+export const RETIRED_NOTICE_PATH = "k13/index.html";
+
+function renderRetiredNoticeHtml() {
+  return `<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K13 is retired | ${PROPERTY_NAME_HTML}</title>
+<meta name="description" content="K13 has been retired as a standard. AiEDs and E+ continue.">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<style>${CANON_CSS}</style>
+</head>
+<body>
+<div class="site-backdrop"></div>
+<div class="site-grid"></div>
+<div class="edge-glow"></div>
+<div class="page-shell">
+<main>
+<h1>K13 is retired</h1>
+<p>
+  K13 has been retired as a standard. It was retired on 2026-11-03, and its
+  text and files are no longer published.
+</p>
+<p>
+  Two standards continue:
+  <a href="${escapeHtml(AIEDS.xyzHref)}">${escapeHtml(AIEDS.name)}, the ${escapeHtml(AIEDS.fullName)}</a>,
+  and <a href="${escapeHtml(EPLUS.xyzHref)}">${escapeHtml(EPLUS.name)}, the ${escapeHtml(EPLUS.fullName.replace(/^E\+ /, ""))}</a>.
+  Their files are listed on the <a href="/">index page</a>.
+</p>
+</main>
+${FAMILY_FOOTER}
+</div>
+</body>
+</html>
+`;
 }
 
 function renderIndexHtml() {
@@ -431,18 +407,9 @@ function renderIndexHtml() {
   <a href="${XYZ}/">randomknights.xyz</a>.
 </p>
 ${aiedsSection()}
-${k13Section()}
 ${eplusSection()}
 </main>
-<footer class="family-footer">
-  <a class="family-link-xyz" href="${XYZ}/">&#7450;k.xyz</a>
-  &#183;
-  <a class="family-link-llc" href="https://randomknights.llc/">&#7450;k.llc</a>
-  &#183;
-  <a class="family-link-org" href="https://randomknights.org/">&#7450;k.org</a>
-  &#183;
-  <a class="app-link" href="https://rand0m.ai/">rand0m.ai</a>
-</footer>
+${FAMILY_FOOTER}
 </div>
 </body>
 </html>
@@ -497,17 +464,9 @@ export function expectedFiles() {
       name,
       readFileSync(join(repoRoot, "assets", "icons", name)),
     ]),
+    // Temporary: delete on or after 2027-02-01 (see RETIRED_NOTICE_PATH).
+    [RETIRED_NOTICE_PATH, Buffer.from(renderRetiredNoticeHtml())],
   ]);
-  if (k13MdPresent) {
-    files.set(join(K13_DIR, "K13.md"), readFileSync(join(repoRoot, "K13.md")));
-  }
-  // The two companion files are served beside K13.md at fixed, version-pinned
-  // paths, byte for byte from the repository.
-  for (const name of ["K13-REFERENCE.md", "CHANGELOG-K13.md"]) {
-    if (existsSync(join(repoRoot, name))) {
-      files.set(join(K13_DIR, name), readFileSync(join(repoRoot, name)));
-    }
-  }
   return files;
 }
 
@@ -527,10 +486,6 @@ if (invokedDirectly) {
   writeSite();
   console.log(`standard.rand0m.ai site rendered to ${outputRoot}`);
   console.log(`AiEDs artifacts served from /${aiedsDir}/`);
-  const k13Status = K13.files.every((f) => f.present)
-    ? "published"
-    : `pending (${K13.files.filter((f) => !f.present).map((f) => f.label).join(", ")} not present)`;
-  console.log(`K13 artifacts at /${K13.dir}/: ${k13Status}`);
   console.log(
     `E+ methodology ${EPLUS.version} at /${EPLUS.dir}/ (${EPLUS.status || "no status line"})`,
   );

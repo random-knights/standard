@@ -1,27 +1,23 @@
 # Standard version sync: how it works, and the one step only the owner can do
 
-The same four-row STANDARD table is rendered in six places: the README template,
+The same three-row STANDARD table is rendered in six places: the README template,
 the org profile page, and the READMEs of `abc`, `r1-01` and `xyz-earth`. This is
 how those stay true without anybody retyping a version.
 
 ## What broke, so the design is not abstract
 
-On 2026-09-15 the published site at `standard.rand0m.ai` announced **K13 at
-version 1.1.0**. `K13.md` said 2.0.0. `CITATION.k13.cff` said 2.0.0. The
-template, the org profile and three repo READMEs all said 2.0.0. The site was
-wrong about its own subject by a full major version.
+On 2026-09-15 the published site at `standard.rand0m.ai` announced one of its
+standards a full major version behind what its own canonical text, its
+citation file, the template, the org profile and three repo READMEs all said.
+The site was wrong about its own subject.
 
 The cause was one line. `scripts/build-site.mjs` derived the AiEDs version from
 `spec/methodology.md` and the E+ version from `eplus/v1/methodology.md`, and
-carried K13 as a literal:
-
-```js
-const K13 = { name: "K13", version: "1.1.0", ... }
-```
+carried the third version as a literal typed into the script.
 
 `spec/test/build-site.test.mjs` already gated E+ against the version its own
-text declares. K13 had no such gate. Nothing compared the literal to the
-document, so nothing caught it.
+text declares. The third standard had no such gate. Nothing compared the
+literal to the document, so nothing caught it.
 
 At the same time two of the six README copies had drifted on the DESCRIPTION
 column, saying "AI Summary Reporting" where the others said "AI Response
@@ -30,10 +26,10 @@ Summary". Nobody noticed, because the description is the column nobody rereads.
 ## The shape of the fix
 
 ```
-  K13.md                     spec/methodology.md      eplus/v1/methodology.md
-        \                            |                        /
-         \                           |                       /
-          +--- scripts/emit-standard-versions.mjs -----------+
+       spec/methodology.md          eplus/v1/methodology.md
+                  \                          /
+                   \                        /
+          +--- scripts/emit-standard-versions.mjs ---+
                              |
                 spec/v2/standard-versions.json      (committed, gated)
                              |
@@ -173,7 +169,7 @@ credential that has not been created yet.
 ## Day to day
 
 - **Moving a version:** edit the version in the document that defines it
-  (`K13.md`, `spec/methodology.md`, `eplus/v1/methodology.md`), run
+  (`spec/methodology.md`, `eplus/v1/methodology.md`), run
   `node scripts/emit-standard-versions.mjs`, and commit both. The gate will
   fail if you skip the regeneration.
 - **On the next release:** the fan-out opens a pull request in each consumer.
@@ -195,6 +191,6 @@ credential that has not been created yet.
 - It does not deploy the site. `standard.rand0m.ai` is published by hand from a
   clean checkout of `main`, owner identity only, per CONTRIBUTING.md. **Until
   that deploy happens the live page keeps whatever it last had**, which is how a
-  stale K13 version survived on it.
+  stale version survived on it.
 - It does not cover private repos. The private README template carries no
   STANDARD block, so there is nothing there to sync.

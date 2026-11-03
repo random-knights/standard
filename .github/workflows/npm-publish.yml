@@ -1,6 +1,6 @@
-# Publish @randomknights/aieds, @randomknights/k13 or @randomknights/earthplus
-# to npm with npm trusted publishing (OIDC) and provenance. Manual dispatch
-# only, from main only.
+# Publish @randomknights/aieds or @randomknights/earthplus to npm with npm
+# trusted publishing (OIDC) and provenance. Manual dispatch only, from main
+# only.
 #
 # DISABLED until the owner links each package to this workflow on npmjs.com.
 # The job runs only when the repository variable NPM_TRUSTED_PUBLISHING is
@@ -36,7 +36,6 @@ on:
         type: choice
         options:
           - aieds
-          - k13
           - earthplus
 
 permissions:
@@ -66,9 +65,6 @@ jobs:
       # Trusted publishing needs npm 11.5.1 or newer.
       - name: npm with trusted publishing support
         run: npm install -g npm@^11.5.1 && npm --version
-
-      - name: K13 checker tests
-        run: cd packages/k13 && npm test
 
       # The same tarball gate CI runs on every change: exact file list, no
       # tests, fixtures, secrets or .env files, installed and smoke tested.

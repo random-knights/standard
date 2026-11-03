@@ -1,4 +1,4 @@
-AiEDs specification text, coefficient tables, and K13
+AiEDs specification text, coefficient tables
 Copyright 2026 Random Knights, LLC
 
 Licensed under CC BY 4.0 (Creative Commons Attribution 4.0 International).
@@ -34,7 +34,6 @@ Scope in this repository
 This license applies to the standards' prose and to the documents and data
 that describe or parameterize them:
 
-  K13.md                            the K13 - Ai General Response Standard text
   spec/methodology.md               the AiEDs methodology text
   spec/v2/aieds-factors.json        the published AiEDs coefficient tables
   spec/v2/standard-versions.json    the published standard version index
@@ -48,5 +47,5 @@ that describe or parameterize them:
   packages/*/README.md
 
 It does not apply to the reference library, the MCP server, the JSON Schema,
-the K13 reference templates, or any other code. Those are licensed Apache 2.0
+or any other code. Those are licensed Apache 2.0
 under LICENSE; see that file, NOTICE, and README.md for the exact path list.

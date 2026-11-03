@@ -1,9 +1,10 @@
-// Derives spec/v2/standard-versions.json from the three canonical documents.
+// Derives spec/v2/standard-versions.json from the canonical documents.
 //
-// WHY THIS EXISTS. On 2026-09-15 the published site announced K13 at version
-// 1.1.0 while K13.md, CITATION.k13.cff, the README template, the org profile
-// page and three repo READMEs all said 2.0.0. The site had a literal typed into
-// scripts/build-site.mjs; the documents had the truth; nothing compared them.
+// WHY THIS EXISTS. On 2026-09-15 the published site announced one standard at
+// a version a full major behind its own canonical text, its citation file, the
+// README template, the org profile page and three repo READMEs. The site had a
+// literal typed into scripts/build-site.mjs; the documents had the truth;
+// nothing compared them.
 // Six hand-maintained copies of one fact is the drift condition this workspace
 // keeps paying for, and the version column is the copy nobody rereads.
 //
@@ -67,8 +68,6 @@ export function buildVersions() {
 
   const eplusVersion = readVersion("eplus/v1/methodology.md");
   const eplusStatus = readStatus("eplus/v1/methodology.md");
-  const k13Version = readVersion("K13.md");
-  const k13Status = readStatus("K13.md");
   const aiedsStatus = readStatus("spec/methodology.md");
 
   return {
@@ -97,15 +96,6 @@ export function buildVersions() {
         status: aiedsStatus,
         description: "AI Energy Disclosure",
         canonicalText: "spec/methodology.md",
-      },
-      {
-        id: "k13",
-        name: "K13",
-        version: displayVersion(k13Version, k13Status),
-        semver: k13Version,
-        status: k13Status,
-        description: "Ai General Response",
-        canonicalText: "K13.md",
       },
       {
         // Not a Random Knights standard and carries no version of ours. It is
