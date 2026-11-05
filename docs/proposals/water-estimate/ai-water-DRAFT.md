@@ -65,7 +65,7 @@ region and period. `high` is not defined for water in this version.
 A producer SHOULD use a regional grid figure when Table 5 has one for the
 region that served the work. When it has none, the producer MUST use the
 default, which is a US average. It MUST record that (`gridBasis` is
-`default`). A rendered view MUST label that figure "US average". A producer
+`default`). A rendered view MUST label that figure "US avg". A producer
 MUST NOT apply a figure from one region to a work served in another and call
 it regional.
 

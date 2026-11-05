@@ -218,7 +218,7 @@
         "gridBasis": {
           "type": "string",
           "enum": ["default", "region"],
-          "description": "'default' is the US average and must be labeled 'US average' when shown (rule W10). 'region' requires gridRegion."
+          "description": "'default' is the US average and must be labeled 'US avg' when shown (rule W10). 'region' requires gridRegion."
         },
         "gridRegion": {
           "type": "string",

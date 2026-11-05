@@ -14,7 +14,7 @@ import { FACTORS, GRID_BASIS_DEFAULT_LABEL, GRID_WATER_L_PER_KWH, LITERS_ABOVE_T
 const REGIONAL_GRID_FIGURES = {};
 const isUsAverage = (region) => {
     const r = (region ?? "").trim().toLowerCase();
-    return r === "" || r === "us average" || r === "us";
+    return r === "" || r === "us average" || r === "us avg" || r === "us";
 };
 /**
  * Modeled water for a quantity of energy.
@@ -126,7 +126,7 @@ export function teaspoonPhrase(tsp) {
  *
  *   Water: about 1.2 mL (0.4 to 2.7 mL), about a quarter of a teaspoon. Modeled estimate.
  *
- * A grid term that stands in for another region is labeled `US average`.
+ * A grid term that stands in for another region is labeled `US avg`.
  */
 export function waterLine(estimate) {
     const { waterMl, teaspoons } = estimate;

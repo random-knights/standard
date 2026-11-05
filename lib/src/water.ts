@@ -34,7 +34,7 @@ export interface WaterEstimate {
   /** The same water in teaspoons (5 mL), an educational comparison. */
   readonly teaspoons: WaterRange;
   /**
-   * What the grid term rests on. `"US average"` unless Table 5 carries a
+   * What the grid term rests on. `"US avg"` unless Table 5 carries a
    * figure for the requested region (this version carries none), so a region
    * with no figure is never passed off as regional (methodology 2.6.5).
    */
@@ -50,7 +50,7 @@ const REGIONAL_GRID_FIGURES: Readonly<Record<string, number>> = {};
 
 const isUsAverage = (region: string | undefined): boolean => {
   const r = (region ?? "").trim().toLowerCase();
-  return r === "" || r === "us average" || r === "us";
+  return r === "" || r === "us average" || r === "us avg" || r === "us";
 };
 
 /**
@@ -183,7 +183,7 @@ export function teaspoonPhrase(tsp: number): string {
  *
  *   Water: about 1.2 mL (0.4 to 2.7 mL), about a quarter of a teaspoon. Modeled estimate.
  *
- * A grid term that stands in for another region is labeled `US average`.
+ * A grid term that stands in for another region is labeled `US avg`.
  */
 export function waterLine(estimate: WaterEstimate): string {
   const { waterMl, teaspoons } = estimate;

@@ -39,7 +39,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         "Confidence reflects the input path: gpuSeconds + known hardware -> 'med'; " +
         "tokens or flops only -> 'low'. Direct power measurement -> 'high' (not emitted by this tool). " +
         "For inference it also returns a modeled water estimate (consumption, a low to high range, " +
-        "confidence 'low', US average grid water) with a one-line plain-words summary.",
+        "confidence 'low', US avg grid water) with a one-line plain-words summary.",
       inputSchema: {
         type: "object",
         required: ["subject", "compute"],

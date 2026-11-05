@@ -266,7 +266,7 @@ test("water copy rules match the methodology prose", () => {
   assert.equal(factors.water.requiredCopy, "Water is a modeled estimate.");
   assert.ok(doc.includes(`- "${factors.water.requiredCopy}"`));
   assert.equal(factors.water.confidence, "low");
-  assert.equal(factors.water.gridBasisDefaultLabel, "US average");
+  assert.equal(factors.water.gridBasisDefaultLabel, "US avg");
   assert.equal(factors.water.comparison.milliliters, 5);
   const banned = doc.match(/```\noffset credit[^\n]*\n```/)[0].split("\n")[1].split(" ");
   assert.deepEqual(banned, factors.water.bannedWords);
