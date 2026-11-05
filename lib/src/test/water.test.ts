@@ -83,18 +83,18 @@ test("V6: 1 kWh range is 1.77 to 11.3 L", () => {
   close(e.waterMl.high / 1000, 11.3);
 });
 
-test("V7: a region with no figure uses the US average and says so", () => {
+test("V7: a region with no figure uses the US avg label and says so", () => {
   const none = waterFromEnergyWh(0.24)!;
-  assert.equal(none.basis, "US average");
+  assert.equal(none.basis, "US avg");
   assert.equal(none.requestedRegion, undefined);
   assert.equal(none.confidence, "low");
   const eu = waterFromEnergyWh(0.24, "France")!;
-  assert.equal(eu.basis, "US average", "no regional figure exists, so it is never labeled regional");
+  assert.equal(eu.basis, "US avg", "no regional figure exists, so it is never labeled regional");
   assert.equal(eu.requestedRegion, "France");
   close(eu.waterMl.default, 1.1712); // grid term is still 4.52
-  assert.match(waterLine(eu), /Grid water uses a US average\.$/);
-  const us = waterFromEnergyWh(0.24, "US average")!;
-  assert.equal(us.basis, "US average");
+  assert.match(waterLine(eu), /Grid water uses a US avg.$/);
+  const us = waterFromEnergyWh(0.24, "US avg")!;
+  assert.equal(us.basis, "US avg");
   assert.equal(us.requestedRegion, undefined);
 });
 

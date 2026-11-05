@@ -328,7 +328,7 @@
     ],
     "unit": "L/kWh",
     "confidence": "low",
-    "gridBasisDefaultLabel": "US average",
+    "gridBasisDefaultLabel": "US avg",
     "siteWue": {
       "unit": "L/kWh",
       "low": 0.27,

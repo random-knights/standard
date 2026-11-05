@@ -327,7 +327,7 @@ describe("aieds_estimate water", () => {
     near(w.waterMl.high, 2.712);
     near(w.teaspoons.default, 0.23424);
     assert.strictEqual(w.confidence, "low");
-    assert.strictEqual(w.basis, "US average");
+    assert.strictEqual(w.basis, "US avg");
     assert.strictEqual(
       w.line,
       "Water: about 1.2 mL (0.4 to 2.7 mL), about a quarter of a teaspoon. Modeled estimate.",

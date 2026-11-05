@@ -678,7 +678,7 @@ test("water: the receipt figure is the library's, from the same energy, and the 
   // The short receipt's water is the library's water of the short receipt's energy.
   assert.equal(response.counted.waterMl, waterFromEnergyWh(response.counted.energyWh).waterMl.default);
   assert.equal(response.water.confidence, "low");
-  assert.equal(response.water.basis, "US average");
+  assert.equal(response.water.basis, "US avg");
   // Water is linear in energy, so the session is at least the response.
   assert.ok(session.water.waterMl.default >= response.water.waterMl.default);
 });
@@ -732,7 +732,7 @@ test("explain: formulas and coefficient sources come from the library table", ()
   assert.match(text, /claude: 0\.145 \/ 0\.58, PUE 1\.2, class-estimated/);
   assert.match(text, /arxiv\.org\/abs\/2508\.15734/);
   assert.match(text, /waterL = siteL \+ gridL/);
-  assert.match(text, /site 0\.36 L\/kWh \(0\.27 to 1\.8\), grid 4\.52 L\/kWh \(1\.5 to 9\.5\), US average/);
+  assert.match(text, /site 0\.36 L\/kWh \(0\.27 to 1\.8\), grid 4\.52 L\/kWh \(1\.5 to 9\.5\), US avg/);
   assert.match(text, /LBNL-2001637/);
   assert.doesNotMatch(text, /This receipt, unrounded/, "no session, no receipt section");
   // The detail keeps what the short receipt leaves out: the counting rule and

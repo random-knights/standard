@@ -21,7 +21,7 @@ export interface WaterRange {
 export interface WaterEstimate {
   waterMl: WaterRange;
   teaspoons: WaterRange;
-  /** "US average": Table 5 has no regional grid figure in this version. */
+  /** "US avg": Table 5 has no regional grid figure in this version. */
   basis: string;
   confidence: "low";
   /** Plain-words receipt line, with the range. */

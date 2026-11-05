@@ -490,8 +490,7 @@ period. `high` is not defined for water in this version.
 A producer SHOULD use a regional grid figure when Table 5 has one for the region
 that served the work. Table 5 has none in this version. When there is none, the
 producer MUST use the default, which is a US average, and MUST record that
-(`gridBasis` is `default`). A rendered view MUST label that figure "US
-average". A producer MUST NOT apply a figure from one region to work served in
+(`gridBasis` is `default`). A rendered view MUST label that figure "US avg". A producer MUST NOT apply a figure from one region to work served in
 another and call it regional.
 
 #### 2.6.6 Location-based only
@@ -603,7 +602,7 @@ is no block. `basis` is always `consumption`. `gridBasis` is `default` or
 | W7 | No word from the banned-word list appears in water copy |
 | W8 | `gridBasis` `default` forbids a `gridRegion` claim |
 | W9 | No zero or placeholder in place of `null` |
-| W10 | A rendered view with `gridBasis` `default` labels the grid term "US average" |
+| W10 | A rendered view with `gridBasis` `default` labels the grid term "US avg" |
 | W11 | A rendered water line shows the range or a way to reach it, and never a bare central figure |
 
 W1, W2, W4, W5, W8 and W9 are checked by `spec/examples/validate.mjs` and the
@@ -621,7 +620,7 @@ high 1.8 + 9.5). They are arithmetic, not measurements.
 | V4 | 0.00024 kWh, grid factor unsourced | `gridL`, `waterL` and `rangeL` null |
 | V5 | 0.00024 kWh, range | low 0.0004248 L, high 0.002712 L, low <= total <= high |
 | V6 | 1 kWh, range | low 1.77 L, high 11.3 L |
-| V7 | work with no regional figure | grid term 4.52, `gridBasis` `default`, view labels it "US average" |
+| V7 | work with no regional figure | grid term 4.52, `gridBasis` `default`, view labels it "US avg" |
 
 ### 2.7 The short receipt (proposed 2026-10-26)
 

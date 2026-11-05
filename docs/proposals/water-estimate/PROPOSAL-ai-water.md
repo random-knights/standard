@@ -22,7 +22,7 @@ convention. This folder is new. `docs/` holds only one file today.
 8. Published per-prompt figures run from 0.12 mL to 45 mL. Scope explains most of the gap.
 9. The reader sees teaspoons, as an educational comparison, never as a credit.
 10. Water is not scarcity. A liter in a wet place and a dry place count the same here.
-11. The owner decided: a US average may stand in for other regions, labeled "US average". The first release holds the rendered water line.
+11. The owner decided: a US average may stand in for other regions, labeled "US avg". The first release holds the rendered water line.
 
 ## 1. Is a modeled water estimate defensible?
 
@@ -147,7 +147,7 @@ The final rule text should say it.
 
 Regional path. The default is a US-average grid figure, and the owner decided
 (2026-10-18) that it MAY stand in for regions without their own figure, always
-labeled "US average". For US regions, the
+labeled "US avg". For US regions, the
 LBNL Water IMPACT dataset (S15) gives water consumption intensity by grid
 balancing authority. It covers 2018 to 2022 on HydroShare, under CC BY. 
 For regions outside the US we found no dataset we could verify.
@@ -189,7 +189,7 @@ Google leaves out the grid term and does not say why (S2).
 **Decisions.** The owner answered "yes to both":
 
 1. A US-average grid water figure MAY stand in for regions without their own
-   figure. It is always labeled "US average".
+   figure. It is always labeled "US avg".
 2. The first release holds back the rendered water line until the
    coefficients are checked against the primary text. The record fields may
    ship. The check stays open until a person signs it off in the publish lane.
@@ -449,7 +449,7 @@ tool). The Google blog gives 0.12 mL (S3). To confirm.
 ## 8. Open questions for the owner (4)
 
 Answered on 2026-10-18 and removed: US-average default for all regions (yes,
-labeled "US average"); hold the rendered line in the first release (yes);
+labeled "US avg"); hold the rendered line in the first release (yes);
 re-check the coefficients against the primary text (done against the LBNL PDF
 text by the agent; the hold stays until a person signs off in the publish lane).
 

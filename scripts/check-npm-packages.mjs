@@ -112,7 +112,7 @@ const r = schemaRecordFromDisclosure(d, { id: "x", subject: { kind: "model", nam
 if (r.energyKWh !== d.energyWh / 1000) throw new Error("bad record");
 const { waterFromEnergyWh, waterLine } = await import("@randomknights/aieds");
 const w = waterFromEnergyWh(0.24);
-if (!w || w.confidence !== "low" || w.basis !== "US average" || !/Modeled estimate\.$/.test(waterLine(w))) throw new Error("bad water estimate");
+if (!w || w.confidence !== "low" || w.basis !== "US avg" || !/Modeled estimate\.$/.test(waterLine(w))) throw new Error("bad water estimate");
 console.log("aieds smoke ok", METHODOLOGY_VERSION);
 `,
   // Both module systems, one conforming and one nonconforming sample document.
