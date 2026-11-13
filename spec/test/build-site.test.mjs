@@ -133,7 +133,13 @@ test("the index page declares a canonical URL and a theme color matching its bac
 test("sitemap.xml lists only public pages that the build really serves, and robots.txt points at it", () => {
   const sitemap = files.get("sitemap.xml").toString("utf8");
   const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.ok(locs.includes("https://standard.rand0m.ai/"));
+  assert.ok(
+    locs.some((l) => {
+      const u = new URL(l);
+      return u.origin === "https://standard.rand0m.ai" && u.pathname === "/";
+    }),
+    "the home page is listed",
+  );
   assert.ok(locs.length >= 3, "home plus one methodology per standard");
   const served = new Set([...files.keys()].map((k) => k.replaceAll("\\", "/")));
   for (const loc of locs) {
