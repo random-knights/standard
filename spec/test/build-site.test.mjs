@@ -105,11 +105,54 @@ test("the retired standard's old address serves one short notice and nothing els
   const notice = files.get(RETIRED_NOTICE_PATH).toString("utf8");
   assert.match(notice, /has been retired as a standard/);
   assert.match(notice, /href="https:\/\/randomknights\.xyz\/aieds\/"/);
-  assert.match(notice, /href="https:\/\/randomknights\.xyz\/eplus\/"/);
+  assert.match(notice, /href="https:\/\/randomknights\.xyz\/earth\/"/);
+  assert.ok(!notice.includes("randomknights.xyz/eplus/"), "that address answers 404");
   assert.deepEqual([...notice].filter((c) => c.charCodeAt(0) > 127), []);
   // The index page links only to the standards that continue.
   const html = files.get("index.html").toString("utf8");
   assert.ok(!html.includes(oldDir), `the index page must not link into ${oldDir}`);
+});
+
+test("the index page links Earth+ to its live home, never the 404 /eplus/ address", () => {
+  const html = files.get("index.html").toString("utf8");
+  assert.ok(!html.includes("randomknights.xyz/eplus/"), "randomknights.xyz/eplus/ answers 404");
+  assert.match(html, /href="https:\/\/randomknights\.xyz\/earth\/"/);
+});
+
+test("the index page declares a canonical URL and a theme color matching its background", () => {
+  const html = files.get("index.html").toString("utf8");
+  assert.match(html, /<link rel="canonical" href="https:\/\/standard\.rand0m\.ai\/">/);
+  const theme = html.match(/<meta name="theme-color" content="(#[0-9a-f]{6})">/);
+  assert.ok(theme, "missing theme-color meta");
+  assert.ok(
+    html.includes(`background: ${theme[1]};`),
+    "theme-color must equal the color the body paints",
+  );
+});
+
+test("sitemap.xml lists only public pages that the build really serves, and robots.txt points at it", () => {
+  const sitemap = files.get("sitemap.xml").toString("utf8");
+  const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  assert.ok(
+    locs.some((l) => {
+      const u = new URL(l);
+      return u.origin === "https://standard.rand0m.ai" && u.pathname === "/";
+    }),
+    "the home page is listed",
+  );
+  assert.ok(locs.length >= 3, "home plus one methodology per standard");
+  const served = new Set([...files.keys()].map((k) => k.replaceAll("\\", "/")));
+  for (const loc of locs) {
+    const url = new URL(loc);
+    assert.equal(url.origin, "https://standard.rand0m.ai");
+    const path = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
+    assert.ok(served.has(path), `sitemap lists ${loc} but the build does not serve ${path}`);
+  }
+  assert.ok(!locs.some((l) => l.includes("/k13/")), "the retired notice is not a destination");
+  assert.deepEqual([...sitemap].filter((c) => c.charCodeAt(0) > 127), []);
+  const robots = files.get("robots.txt").toString("utf8");
+  assert.match(robots, /^Sitemap: https:\/\/standard\.rand0m\.ai\/sitemap\.xml$/m);
+  assert.ok(!/^Disallow:\s*\/\s*$/m.test(robots), "production must stay crawlable");
 });
 
 test("chrome values match rk_branding/canon/site-canon.md verbatim", () => {

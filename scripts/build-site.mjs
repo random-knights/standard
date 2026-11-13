@@ -116,7 +116,10 @@ const EPLUS = {
   version: eplusVersionMatch[1],
   status: eplusStatusMatch ? eplusStatusMatch[1].trim() : "",
   dir: EPLUS_DIR,
-  xyzHref: `${XYZ}/eplus/`,
+  // randomknights.xyz has no /eplus/ page (it answers 404). The human home of
+  // Earth+ there is /earth/, the "earth+ documentation" section, which is
+  // also where xyz's own landing page links it.
+  xyzHref: `${XYZ}/earth/`,
   artifacts: [
     {
       label: "methodology",
@@ -169,6 +172,7 @@ function escapeHtml(value) {
 // here without checking that file first; do not invent one that is missing
 // from it. The edge glow is the ratified 2026-08-26 single-radial ramp, not
 // the older three-stop version some older references still describe.
+const PAGE_BACKGROUND = "#0a0b08";
 const CANON_CSS = `
 :root {
   color-scheme: dark;
@@ -183,7 +187,7 @@ const CANON_CSS = `
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
-  background: #0a0b08;
+  background: ${PAGE_BACKGROUND};
   color: var(--ink);
   font: 400 16px/1.5 ui-sans-serif, system-ui, sans-serif;
   min-height: 100vh;
@@ -317,7 +321,7 @@ function eplusSection() {
 ${status}      <ul class="artifact-list">
 ${rows}
       </ul>
-      <a class="read-link" href="${escapeHtml(EPLUS.xyzHref)}">read the standard on randomknights.xyz -&gt;</a>
+      <a class="read-link" href="${escapeHtml(EPLUS.xyzHref)}">read the Earth+ docs on randomknights.xyz -&gt;</a>
     </section>`;
 }
 
@@ -386,6 +390,8 @@ function renderIndexHtml() {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${PROPERTY_NAME_HTML}</title>
+<link rel="canonical" href="${HOST}/">
+<meta name="theme-color" content="${PAGE_BACKGROUND}">
 <meta name="description" content="Machine artifacts for the standards Random Knights publishes: schemas, methodology, and reference tables at permanent versioned URLs.">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -416,6 +422,41 @@ ${FAMILY_FOOTER}
 `;
 }
 
+// PUBLIC PAGES FOR SEARCH. The sitemap is derived from the same data the index
+// page renders (the home page and each standard's methodology text), never
+// from a second typed list, so it cannot drift from what the build serves.
+// Schemas, coefficient tables, licenses and favicons are machine artifacts and
+// the retired-notice page is not a destination; none of them are listed.
+export function publicPageUrls() {
+  return [
+    `${HOST}/`,
+    ...[AIEDS, EPLUS].flatMap((standard) =>
+      standard.artifacts
+        .filter((a) => a.label === "methodology")
+        .map((a) => a.href),
+    ),
+  ];
+}
+
+function renderSitemapXml() {
+  const urls = publicPageUrls()
+    .map((u) => `  <url><loc>${escapeHtml(u)}</loc></url>`)
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>
+`;
+}
+
+function renderRobotsTxt() {
+  return `User-agent: *
+Allow: /
+
+Sitemap: ${HOST}/sitemap.xml
+`;
+}
+
 // Served at the root, sourced from assets/icons/<same name>. Rendered from the
 // RK mark (assets/icons is the only copy in this repo; the master lives with
 // the brand assets).
@@ -431,6 +472,8 @@ export const FAVICON_FILES = [
 export function expectedFiles() {
   const files = new Map([
     ["index.html", Buffer.from(renderIndexHtml())],
+    ["sitemap.xml", Buffer.from(renderSitemapXml())],
+    ["robots.txt", Buffer.from(renderRobotsTxt())],
     [
       join(aiedsDir, "aieds.schema.json"),
       readFileSync(join(repoRoot, "spec", "aieds.schema.json")),
