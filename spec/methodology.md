@@ -1,18 +1,18 @@
 # AiEDs Methodology
 
-> **CURRENT VERSION: 2.5.0. Versions 1.x are SUPERSEDED and MUST NOT be
+> **CURRENT VERSION: 2.5.1. Versions 1.x are SUPERSEDED and MUST NOT be
 > implemented.** 1.x specified a flat 0.30 gCO2e per 1k tokens for every model
-> and derived energy backward from carbon. Both are wrong. Implement 2.5.0 (see
+> and derived energy backward from carbon. Both are wrong. Implement 2.5.1 (see
 > the changelog below and `README.md`). Do not pick up 1.0.0 because it reads
-> like a stable base; it is not. 2.0.0, 2.1.0, 2.2.0, 2.3.0 and 2.4.0 records remain
-> valid: 2.1.0 is clarifying, and 2.2.0, 2.3.0, 2.4.0 and 2.5.0 are additive; none
-> changes an existing number.
+> like a stable base; it is not. 2.0.0, 2.1.0, 2.2.0, 2.3.0, 2.4.0 and 2.5.0 records
+> remain valid: 2.1.0 is clarifying, 2.2.0, 2.3.0, 2.4.0 and 2.5.0 are additive,
+> and 2.5.1 corrects a label; none changes an existing number.
 
 > **License:** CC BY 4.0 rand0m.ai - [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 
-**Version:** 2.5.0 (AiEDs methodology semver - distinct from repo/MCP server versions)
+**Version:** 2.5.1 (AiEDs methodology semver - distinct from repo/MCP server versions)
 **Status:** Ratified
-**Effective:** 2026-10-18
+**Effective:** 2026-11-19
 **Author:** Random Knights, LLC, ORCID https://orcid.org/0009-0006-5066-1693
 
 ## CHANGELOG
@@ -20,6 +20,7 @@
 | Version | Date       | Changes |
 |---------|------------|---------|
 | Proposed | 2026-10-26 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Proposed version 2.6.0. New section 2.7, THE SHORT RECEIPT: three scope lines (this response, this session, the user's account), each with energy, carbon, water and Tree-Time; comparisons from the account total only, with the section 2.5 constants; one plain basis line. On the short receipt cache-read tokens count as free and plain input, cache-creation and output tokens are charged at the profile coefficients with PUE: an understatement floor, labeled as one, opposite the section 2.4.1 ceiling. No discount coefficient is introduced; a sourced cache-read coefficient is still needed before ratification. One significant figure with a tilde, unit steps, thousands separators. The account total is kept on the user's machine, one hashed entry per session, never sent. NUMBERS: nothing moves. Every coefficient, constant, table, schema field and ratified record is unchanged, and records, logs and synced receipts keep the section 2.4.1 count. |
+| 2.5.1   | 2026-11-19 | **PATCH (correction). No number changes; 2.0.0 through 2.5.0 records remain valid.** Owner decision 2026-11-05: the label for the default grid water figure is "US avg", not "US average". WHAT CHANGED: `gridBasisDefaultLabel` in `aieds-factors.json`, section 2.6.5, W10 and V7 now say "US avg". INPUT: a requested region of "US avg" is read as the US average, the same as "US average", "US" or no region, so it does not set `requestedRegion`. WHAT DID NOT CHANGE: every coefficient, Table 5, the water defaults and range, the schema shape and every other rule. The 2.5.0 row below keeps the label 2.5.0 shipped with. |
 | 2.5.0   | 2026-10-18 | **MINOR (additive). No existing number changes; 2.0.0 through 2.4.0 records remain valid.** WORKING LABEL: the owner assigns the final number at publish. WHAT CHANGED: new section 2.6, WATER, and Table 5. A disclosure MAY carry a modeled water figure: `waterL = energyKWh x (siteWUE + gridWaterIntensity)`, consumption basis, inference only, always a low to high range, confidence `low` by rule. Defaults 0.36 L/kWh on site plus 4.52 L/kWh at the power plant (4.88 L/kWh; range 1.77 to 11.3), from LBNL-2001637 (Shehabi et al. 2024), the US average, labeled "US average" wherever it stands in for a region. NEW COPY: the third required sentence, "Water is a modeled estimate.", beside the two existing ones, plus a banned-word list for water copy and conformance rules W1 to W11. NEW COMPARISON: the teaspoon (5 mL), an educational comparison. SCHEMA: new optional top-level `water` block; records without it stay valid. WHAT DID NOT CHANGE: every coefficient, both grid intensities, Tables 1 to 4b, the equivalency constants, the provenance and confidence ladders, and the response-surface path. OUT OF SCOPE: training water, embodied water, scarcity weighting, market-based water. |
 | 2.4.0   | 2026-09-24 | **MINOR (additive). No existing number changes; 2.0.0 through 2.3.0 records remain valid.** WHAT CHANGED: new section 2.5.1, THE MATURE REFERENCE TREE, which defines the reference object behind Tree-Time, publishes its literature range, names its primary citation, and states the bias in its choice. THE NUMBER: `matureReferenceTreeCo2eGramsPerYear` stays at 21 000. Every coefficient, both grid intensities, Tables 2, 4 and 4b and every other constant are byte-identical to 2.3.0. WHY IT WAS NEEDED: the MRT drives the standard's most public figure and was its least defensible entry. It carried no `citation` field at all, although `citation` is a convention used nine times elsewhere in `aieds-factors.json`; it published a bare scalar for a quantity that varies about 4x; its conservative bias was real but unwritten, so a deliberate choice read as an arbitrary one; and "Mature Reference Tree" was never defined, so it could not be reconciled with any primary source, including one that agrees with it. WHAT 2.5.1 SETTLES: the reference object is one mature tree in steady-state growth, NOT mortality-discounted and NOT averaged over juvenile years; the published range is 10 to 40 kg CO2/year with a central tendency near 25, published to show the pin's width, NOT to let an implementation choose within it; 21 is below that center on purpose, because a lower denominator yields more tree-minutes and overstating disclosed impact is the correct direction, the same bias section 2.1 states for TDP; the units are consistent because CO2 has a GWP of exactly 1. NON-COMPARABILITY: the EPA calculator's 0.060 metric tons CO2 per urban tree PLANTED per year is about 3x the MRT and is a different object (10-year horizon, 59 percent survival discount, 11/89 coniferous/deciduous weighting). The two MUST NOT be substituted, and Tree-Time MUST NOT be presented as a number of trees to plant, which would be the offset claim section 1.1 forbids. CITATION: McPherson, van Doorn and Peper (2016), PSW-GTR-253, USDA Forest Service, as surfaced by the EPA Greenhouse Gas Equivalencies Calculator. Commercial tree-planting and offset vendors publish figures in the same range and are explicitly ruled out as sources: a seller's estimate of what its product absorbs is not an independent measurement. WHAT DID NOT CHANGE: the provenance ladder (the MRT stays `class-estimated`; a citation does not promote a class representative), the confidence ladder, the response-surface path, the schema, every measured device table, and the other four equivalency constants. |
 | 2.3.0 erratum | 2026-09-22 | **ERRATUM. No rule change, no number change, no version bump; 2.3.0 records remain valid.** Section 6 item 4 said the schema (`aieds.schema.json`) is MIT-licensed. That was wrong: the schema is licensed Apache 2.0 under `LICENSE`, as the path list at the end of `LICENSE` and the `NOTICE` file state. Item 4 now says Apache 2.0, and names the coefficient tables with the methodology text as CC BY 4.0, which is what `LICENSE-DOCS` already said. |
@@ -490,8 +491,9 @@ period. `high` is not defined for water in this version.
 A producer SHOULD use a regional grid figure when Table 5 has one for the region
 that served the work. Table 5 has none in this version. When there is none, the
 producer MUST use the default, which is a US average, and MUST record that
-(`gridBasis` is `default`). A rendered view MUST label that figure "US avg". A producer MUST NOT apply a figure from one region to work served in
-another and call it regional.
+(`gridBasis` is `default`). A rendered view MUST label that figure "US avg".
+A producer MUST NOT apply a figure from one region to work served in another
+and call it regional.
 
 #### 2.6.6 Location-based only
 

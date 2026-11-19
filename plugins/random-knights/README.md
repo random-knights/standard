@@ -49,11 +49,16 @@ claimed and nothing is shipped for them. Hugging Face is covered by the
 
 AiEDs is the AI Energy Disclosure Standard, published by Random Knights at
 <https://standard.rand0m.ai>. This plugin lives in the same repository as the
-standard, in `plugins/random-knights`. The figures use AiEDs 2.5.0, a working
-label until the owner assigns the final number at publish; the water part is
+standard, in `plugins/random-knights`. The figures use AiEDs 2.5.1; the water part is
 methodology section 2.6.
 
 ## What is new
+
+Plugin 0.7.2:
+
+- **AiEDs 2.5.1.** The water line labels the default grid figure "US avg"
+  (it said "US average"), and receipts name methodology 2.5.1. No number
+  changes.
 
 Plugin 0.7.1:
 

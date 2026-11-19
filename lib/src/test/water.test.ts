@@ -92,10 +92,13 @@ test("V7: a region with no figure uses the US avg label and says so", () => {
   assert.equal(eu.basis, "US avg", "no regional figure exists, so it is never labeled regional");
   assert.equal(eu.requestedRegion, "France");
   close(eu.waterMl.default, 1.1712); // grid term is still 4.52
-  assert.match(waterLine(eu), /Grid water uses a US avg.$/);
+  assert.match(waterLine(eu), /Grid water uses a US avg\.$/);
   const us = waterFromEnergyWh(0.24, "US avg")!;
   assert.equal(us.basis, "US avg");
   assert.equal(us.requestedRegion, undefined);
+  const old = waterFromEnergyWh(0.24, "US average")!;
+  assert.equal(old.basis, "US avg", "the 2.5.0 label is still read as the US average");
+  assert.equal(old.requestedRegion, undefined);
 });
 
 test("return shape: {waterMl, teaspoons, basis, confidence}", () => {
