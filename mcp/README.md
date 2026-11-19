@@ -1,7 +1,6 @@
 # aieds-mcp
 
-MCP server for the [AI Energy Disclosure Standard (AiEDs) 2.5.0](../spec/methodology.md)
-(2.5.0 is a working label until the owner assigns the final number at publish).
+MCP server for the [AI Energy Disclosure Standard (AiEDs) 2.5.1](../spec/methodology.md).
 Exposes three tools any agent or provider can wire in over stdio - keyless, no secrets, no network.
 
 ## What this server is not: a receipt source
@@ -82,7 +81,7 @@ Validates a disclosure object against `spec/aieds.schema.json` (JSON Schema draf
 { "disclosure": { ...your disclosure... } }
 ```
 
-Returns `{ conforms: bool, errors: [...], methodologyBadge: "AiEDs v2.5.0, med confidence" | null }`.
+Returns `{ conforms: bool, errors: [...], methodologyBadge: "AiEDs v2.5.1, med confidence" | null }`.
 
 AiEDs disclosures are **self-attested** - this tool checks schema conformance only. It does not re-derive or verify the energy math.
 
