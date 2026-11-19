@@ -357,7 +357,7 @@
         "high": "9.5: Washington row (9.501) of Table 1 in Li et al., same paper. Single places, used as the ends of the observed spread."
       },
       "crossChecks": "Li et al. US 3.1 L/kWh; Siddik et al. about 5.3 L/kWh (our arithmetic from their totals). Neither is the default.",
-      "note": "Location-based: the grid that served the work. LBNL's indirect factors do not reflect power purchase agreements or on-site generation. The US average may stand in for a region with no figure of its own and is then labeled US average."
+      "note": "Location-based: the grid that served the work. LBNL's indirect factors do not reflect power purchase agreements or on-site generation. The US average may stand in for a region with no figure of its own and is then labeled US avg."
     },
     "comparison": {
       "unit": "teaspoon",
