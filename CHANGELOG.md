@@ -18,6 +18,14 @@ the commit history. Numbers in parentheses are pull requests.
 
 ## [Unreleased]
 
+### Added
+
+- Plugin: `aieds receipt`, `aieds explain` and `aieds account` take `--json`
+  and print one JSON object of unrounded numbers, with no color and no prose.
+  `receipt --json` includes the session as a disclosure record that validates
+  against `spec/aieds.schema.json`. No figure, coefficient or rounding rule
+  changes, and the output without `--json` is the same as before.
+
 ## [2.5.1] - 2026-11-19
 
 A patch to a label. No number changes, and records made under 2.0.0 through
