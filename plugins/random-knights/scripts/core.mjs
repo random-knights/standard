@@ -346,9 +346,11 @@ export function receiptFor(parsed) {
 //
 // The short receipt (owner requirements 2026-10-26, PROPOSED in methodology
 // section 2.7, not yet ratified):
-//   - Three scopes, one line each: this response, this session, your account.
-//     Each line has energy, carbon, water and tree-time. A wrapper or Copilot
-//     receipt has no session, so it has the response line only.
+//   - One title line ("AiEDs energy receipt", no version) and one row of
+//     column names, then three scopes, one aligned row each: this response,
+//     this session, your account. Each row has energy, carbon, water and
+//     tree-time. A wrapper or Copilot receipt has no session, so it has the
+//     response row only.
 //   - Cache-read tokens count as free. Plain input, cache writes and output
 //     are charged at the profile coefficients with PUE, as before. That is a
 //     floor, an understatement; `aieds explain` prints both counts.
@@ -490,30 +492,86 @@ export function formatWaterDetail(d) {
   return d.water ? waterLine(d.water) : "";
 }
 
-const SEP = ", ";
 const MIN_LABEL_WIDTH = 16;
+const COLUMN_GAP = "  ";
+const TITLE_WORD = "AiEDs";
+const TITLE_REST = " energy receipt";
+
+// The four figure columns, left to right. `role` picks the color when a
+// colored mode is on; the name is the column heading.
+const COLUMNS = [
+  { role: "energy", name: "energy" },
+  { role: "carbon", name: "carbon" },
+  { role: "water", name: "water" },
+  { role: "tree", name: "tree-time" },
+];
+
+/**
+ * One styled piece of a receipt line: text plus a role (label, energy, carbon,
+ * water, tree, title or plain). `head` marks a column name, which takes its
+ * column's color without bold. Joining the text of every piece gives the plain
+ * ASCII receipt, so color can never change what a line says.
+ */
+function seg(text, role = "plain", head = false) {
+  return head ? { text, role, head } : { text, role };
+}
+
+function segText(line) {
+  return line.map((s) => s.text).join("");
+}
 
 /** The account line's name: "your account" only once an account is linked. */
 export function accountName(linked) {
   return linked ? "your account" : "your account on this computer";
 }
 
-/** One scope line from short-receipt figures ({ energyWh, carbonGrams, waterMl, treeTimeMinutes }). */
-function scopeLine(name, c, width) {
-  const parts = [formatEnergy(c.energyWh), formatCarbon(c.carbonGrams)];
-  // No energy means no water claim (2.6.12), not "0 mL".
-  if (c.waterMl > 0) parts.push(`${formatWater(c.waterMl)} water`);
-  parts.push(`${formatTreeTime(c.treeTimeMinutes)} tree-time`);
-  return name.padEnd(width) + parts.join(SEP);
+/** The four cells of one scope, from short-receipt figures ({ energyWh, carbonGrams, waterMl, treeTimeMinutes }). */
+function scopeCells(c) {
+  return [
+    formatEnergy(c.energyWh),
+    formatCarbon(c.carbonGrams),
+    // No energy means no water claim (2.6.12): the cell stays empty, not "0 mL".
+    c.waterMl > 0 ? formatWater(c.waterMl) : "",
+    formatTreeTime(c.treeTimeMinutes),
+  ];
+}
+
+/**
+ * One table row as styled pieces. Padding is always its own plain piece, so it
+ * sits outside every color span, and the last cell is never padded, so no line
+ * ends in a space.
+ */
+function tableRow(label, cells, widths, labelWidth, head) {
+  const row = [];
+  if (label.length > 0) row.push(seg(label, "label"));
+  let pad = labelWidth - label.length;
+  cells.forEach((cell, i) => {
+    if (cell.length === 0) {
+      pad += widths[i] + COLUMN_GAP.length;
+      return;
+    }
+    if (pad > 0) row.push(seg(" ".repeat(pad)));
+    row.push(seg(cell, COLUMNS[i].role, head));
+    pad = widths[i] - cell.length + COLUMN_GAP.length;
+  });
+  return row;
+}
+
+/** The comparisons line as styled pieces, from the account total only. */
+function comparisonSegments(account) {
+  const c = account.counted;
+  return [
+    seg("Your account so far is "),
+    seg(formatPhoneCharges(c.energyWh), "energy"),
+    seg(", or "),
+    seg(`${formatDriving(c.carbonGrams)} of driving`, "carbon"),
+    seg("."),
+  ];
 }
 
 /** The comparisons line, from the account total only. */
 export function comparisonLine(account) {
-  const c = account.counted;
-  return (
-    `Your account so far is ${formatPhoneCharges(c.energyWh)}, ` +
-    `or ${formatDriving(c.carbonGrams)} of driving.`
-  );
+  return segText(comparisonSegments(account));
 }
 
 /** The basis lines. A model with no published figure says so on its own line. */
@@ -532,50 +590,175 @@ function basisLines(d) {
  * `account`, when present, adds the comparisons line.
  */
 function receiptLines(scopes, basis, account) {
-  const width = Math.max(MIN_LABEL_WIDTH, ...scopes.map((s) => s.name.length + 2));
-  const lines = scopes.map((s) => scopeLine(s.name, s.c, width));
-  lines.push("");
-  if (account) lines.push(comparisonLine(account), "");
-  lines.push(...basisLines(basis));
+  const labelWidth = Math.max(MIN_LABEL_WIDTH, ...scopes.map((s) => s.name.length + 2));
+  const rows = scopes.map((s) => ({ name: s.name, cells: scopeCells(s.c) }));
+  const widths = COLUMNS.map((col, i) => Math.max(col.name.length, ...rows.map((r) => r.cells[i].length)));
+  const lines = [
+    [seg(TITLE_WORD, "title"), seg(TITLE_REST)],
+    tableRow("", COLUMNS.map((col) => col.name), widths, labelWidth, true),
+    ...rows.map((r) => tableRow(r.name, r.cells, widths, labelWidth, false)),
+    [],
+  ];
+  if (account) lines.push(comparisonSegments(account), []);
+  lines.push(...basisLines(basis).map((text) => [seg(text)]));
   return lines;
 }
 
+// -- Color -----------------------------------------------------------------------
+//
+// Color is paint over the same pieces. With depth "none" the receipt is plain
+// ASCII with no escape byte. The eight colors below are the only ones used.
+// Dark is the accent ramp of rk_branding chalk/tokens/tokens.json; light is the
+// maroon ramp for light terminals. The xterm numbers are the nearest palette
+// entries that still pass 4.5:1 on their background.
+
+const ESC = "\u001b";
+const RESET = `${ESC}[0m`;
+
+export const RECEIPT_RAMPS = Object.freeze({
+  dark: Object.freeze({
+    truecolor: Object.freeze(["#ff4124", "#f45d43", "#e97862", "#faafa5"]),
+    xterm: Object.freeze([202, 203, 173, 217]),
+  }),
+  light: Object.freeze({
+    truecolor: Object.freeze(["#723848", "#87374d", "#9d3551", "#b23456"]),
+    xterm: Object.freeze([88, 89, 125, 161]),
+  }),
+});
+
+const RAMP_INDEX = { energy: 0, carbon: 1, water: 2, tree: 3 };
+
+/** Color off: the default everywhere a caller does not ask for color. */
+export const PLAIN = Object.freeze({ depth: "none", theme: "dark" });
+
+/** The SGR color parameters for one ramp step: "38;2;255;65;36" or "38;5;202". */
+function colorParams(depth, theme, step) {
+  const ramp = RECEIPT_RAMPS[theme] ?? RECEIPT_RAMPS.dark;
+  if (depth === "truecolor") {
+    const hex = ramp.truecolor[step];
+    const n = (at) => parseInt(hex.slice(at, at + 2), 16);
+    return `38;2;${n(1)};${n(3)};${n(5)}`;
+  }
+  return `38;5;${ramp.xterm[step]}`;
+}
+
+function span(text, params, bold) {
+  return `${ESC}[${bold ? "1;" : ""}${params}m${text}${RESET}`;
+}
+
+function paintSegment(s, depth, theme) {
+  if (s.text.length === 0) return "";
+  if (s.role === "title") {
+    // One letter per span, stepping along the ramp from its first color to its last.
+    const letters = [...s.text];
+    const last = Math.max(letters.length - 1, 1);
+    return letters
+      .map((ch, i) => span(ch, colorParams(depth, theme, Math.round((i * 3) / last)), true))
+      .join("");
+  }
+  const step = RAMP_INDEX[s.role];
+  if (step === undefined) return s.text;
+  return span(s.text, colorParams(depth, theme, step), !s.head);
+}
+
 /**
- * The receipt text a user sees after each response: this response, this
- * session and the account total, one line each, then the comparisons from the
- * account total and one line of basis. `account` is
- * { counted, linked } (see store.mjs accountTotal); without it the receipt has
- * the two transcript scopes only. Plain ASCII.
+ * Turns styled lines into text lines. `depth` is "none", "256" or "truecolor";
+ * `theme` is "dark" or "light". Figures are bold in their column's color,
+ * column names take the same color without bold, and the letters of the title
+ * word step along the ramp. Labels, padding and everything else stay in the
+ * terminal's own color. Every span ends with a reset.
  */
-export function formatReceipt(receipt, account) {
+export function paint(lines, depth = "none", theme = "dark") {
+  if (depth !== "256" && depth !== "truecolor") return lines.map(segText);
+  return lines.map((line) => line.map((s) => paintSegment(s, depth, theme)).join(""));
+}
+
+/**
+ * Decides color for a command that prints to the user's own terminal.
+ * NO_COLOR (any non-empty value) always wins. AIEDS_COLOR is never, auto or
+ * always (default auto). FORCE_COLOR (set, and not "0") turns color on. auto
+ * needs a terminal and a TERM other than "dumb". COLORTERM truecolor or 24bit
+ * picks truecolor, anything else 256. AIEDS_THEME=light picks the maroon ramp
+ * for light terminals.
+ */
+export function colorMode(env = process.env, isTTY = false) {
+  const lower = (v) => String(v ?? "").trim().toLowerCase();
+  const theme = lower(env.AIEDS_THEME) === "light" ? "light" : "dark";
+  const off = { depth: "none", theme };
+  if (typeof env.NO_COLOR === "string" && env.NO_COLOR.length > 0) return off;
+  const want = lower(env.AIEDS_COLOR);
+  if (want === "never") return off;
+  const forced = typeof env.FORCE_COLOR === "string" && env.FORCE_COLOR.length > 0 && env.FORCE_COLOR !== "0";
+  if (want !== "always" && !forced && !(isTTY && lower(env.TERM) !== "dumb")) return off;
+  const colorterm = lower(env.COLORTERM);
+  return { depth: colorterm === "truecolor" || colorterm === "24bit" ? "truecolor" : "256", theme };
+}
+
+/**
+ * Hosts whose hook message is known, from a real screenshot, to render color.
+ * Empty on purpose: as of 2026-11-24 no host has been checked, and a host that
+ * prints escape text would spoil every receipt.
+ */
+export const HOOK_COLOR_HOSTS = Object.freeze([]);
+
+/**
+ * Color for a receipt printed by a hook. A hook writes to a pipe, never a
+ * terminal, so the default is plain. Only AIEDS_COLOR=always asks for color,
+ * and only on a host in HOOK_COLOR_HOSTS. NO_COLOR still wins.
+ */
+export function hookColorMode(env = process.env, host = "") {
+  if (!HOOK_COLOR_HOSTS.includes(host)) return PLAIN;
+  if (String(env.AIEDS_COLOR ?? "").trim().toLowerCase() !== "always") return PLAIN;
+  return colorMode(env, false);
+}
+
+function render(lines, color = PLAIN) {
+  return paint(lines, color.depth, color.theme).join("\n");
+}
+
+function receiptScopes(receipt, account) {
   const { response: r, session: s } = receipt;
   const scopes = [
     { name: "this response", c: r.counted },
     { name: "this session", c: s.counted },
   ];
   if (account) scopes.push({ name: accountName(account.linked), c: account.counted });
-  return receiptLines(scopes, s, account).join("\n");
+  return scopes;
+}
+
+/**
+ * The receipt text a user sees after each response: a title line, the column
+ * names, then this response, this session and the account total, one aligned
+ * row each, then the comparisons from the account total and one line of basis.
+ * `account` is { counted, linked } (see store.mjs accountTotal); without it the
+ * receipt has the two transcript scopes only. `color` is { depth, theme } from
+ * colorMode(); without it the text is plain ASCII.
+ */
+export function formatReceipt(receipt, account, color) {
+  return render(receiptLines(receiptScopes(receipt, account), receipt.session, account), color);
 }
 
 /**
  * One-response receipt for the wrappers (Ollama, any OpenAI-compatible chat
  * completion) and the Copilot hook. There is no session to total.
  */
-export function formatResponseReceipt(d) {
-  return receiptLines([{ name: "this response", c: d.counted }], d).join("\n");
+export function formatResponseReceipt(d, color) {
+  return render(receiptLines([{ name: "this response", c: d.counted }], d), color);
 }
 
 /** `aieds account`: the account line, its comparisons, and where it is kept. */
-export function formatAccount(account, info = {}) {
+export function formatAccount(account, info = {}, color) {
   const lines = receiptLines([{ name: accountName(account.linked), c: account.counted }], {}, account);
   const n = info.sessions ?? 0;
   const since = typeof info.since === "string" && info.since.length > 0 ? ` since ${info.since.slice(0, 10)}` : "";
-  lines.push(
-    `${n} ${n === 1 ? "session" : "sessions"} counted${since}. Kept only on this computer` +
-      (info.file ? ` (${info.file})` : "") +
-      ". This total is never sent anywhere.",
-  );
-  return lines.join("\n");
+  lines.push([
+    seg(
+      `${n} ${n === 1 ? "session" : "sessions"} counted${since}. Kept only on this computer` +
+        (info.file ? ` (${info.file})` : "") +
+        ". This total is never sent anywhere.",
+    ),
+  ]);
+  return render(lines, color);
 }
 
 /** One scope of `aieds explain`: the unrounded figures, the range, the full counts. */

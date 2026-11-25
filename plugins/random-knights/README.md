@@ -54,6 +54,17 @@ methodology section 2.6.
 
 ## What is new
 
+Plugin 0.8.0:
+
+- **A receipt that is easier to read.** It now starts with a title line,
+  "AiEDs energy receipt", and a row of column names, and the figures line up
+  in columns. No number changes, and no rounding or counting rule changes.
+- **Color in your own terminal.** `aieds account`, `aieds receipt` and the
+  wrapper commands print the figures in color when they write to a terminal:
+  orange on a dark terminal, maroon with `AIEDS_THEME=light`. `NO_COLOR` turns
+  it off. The receipt a tool prints after a response stays plain text, and so
+  does anything written to a file. See [Receipt color](#receipt-color).
+
 Plugin 0.7.2:
 
 - **AiEDs 2.5.1.** The water line labels the default grid figure "US avg"
@@ -150,9 +161,11 @@ whether the plugin is listed; it changes nothing itself.
 After each response, this:
 
 ```text
-this response                  ~50 Wh, ~20 g CO2e, ~0.2 L water, ~8 h tree-time
-this session                   ~60 Wh, ~30 g CO2e, ~0.3 L water, ~10 h tree-time
-your account on this computer  ~100 Wh, ~50 g CO2e, ~0.6 L water, ~20 h tree-time
+AiEDs energy receipt
+                               energy   carbon      water   tree-time
+this response                  ~50 Wh   ~20 g CO2e  ~0.2 L  ~8 h
+this session                   ~60 Wh   ~30 g CO2e  ~0.3 L  ~10 h
+your account on this computer  ~100 Wh  ~50 g CO2e  ~0.6 L  ~20 h
 
 Your account so far is about 10 phone charges, or about 300 m of driving.
 
@@ -161,6 +174,11 @@ A guess, not a measurement. Cached text counted as free.
 
 The numbers above come from a sample session file, not a measurement.
 
+- A title line and one row of column names, then the figures in aligned
+  columns. A row with no energy leaves its water cell empty.
+- In your own terminal the figures can be in color; see
+  [Receipt color](#receipt-color). The receipt a tool shows after a response is
+  always plain text.
 - Three scopes, one line each. "This response" is the whole turn, every model
   call the agent made to answer you. "Your account" is your own running total
   (see [Your account total](#your-account-total)).
@@ -454,6 +472,32 @@ Remove the line, or set it to `on`, to turn receipts back on. Any of `off`, `0`,
 but turns the account link off for that process.
 
 To disable the plugin entirely: `claude plugin disable random-knights`.
+
+## Receipt color
+
+Color applies to the commands you run yourself in a terminal: `aieds account`,
+`aieds receipt`, `aieds ollama`, `aieds chat-completion` and `aieds usage`.
+Three environment variables control it:
+
+| Variable | Values | What it does |
+| -------- | ------ | ------------ |
+| `AIEDS_COLOR` | `auto` (default), `always`, `never` | `auto` uses color only when the output is a terminal and `TERM` is not `dumb`. `always` uses it into a pipe too. `never` turns it off. |
+| `AIEDS_THEME` | `dark` (default), `light` | `dark` is the orange ramp, for dark terminals. `light` is the maroon ramp, for light terminals. |
+| `NO_COLOR` | any value | Turns color off. It wins over everything else, `AIEDS_COLOR=always` included. |
+
+`FORCE_COLOR` (set, and not `0`) turns color on the way `always` does. A
+terminal that sets `COLORTERM` to `truecolor` or `24bit` gets the exact brand
+colors; any other terminal gets the nearest of the 256 standard colors.
+
+The figures are bold, one color per column. Labels and the basis line stay in
+your terminal's own color. Remove the color codes and the text is the same,
+character for character.
+
+The receipt a tool prints after a response (the Claude Code, Codex, Grok and
+Copilot hooks) is plain text in every case, `AIEDS_COLOR=always` included. No
+tool has yet been checked to show color in a hook message, and a tool that
+printed the codes as text would spoil the receipt. The local log, synced
+receipts and the `rk-receipts` output never carry color.
 
 ## Optional local log
 

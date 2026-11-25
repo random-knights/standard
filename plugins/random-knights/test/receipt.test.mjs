@@ -68,6 +68,8 @@ import {
   withSession,
 } from "../scripts/store.mjs";
 
+import { plainEnv } from "./helpers.mjs";
+
 // Every child process gets its own config folder, so the local account
 // total a receipt writes never lands in the real user config.
 const TEST_CONFIG_DIR = mkdtempSync(join(tmpdir(), "rk test config "));
@@ -88,7 +90,7 @@ const EN_DASH = "\u2013";
 function runNode(args, { input, env = {}, timeoutMs = 15000 } = {}) {
   return new Promise((resolvePromise) => {
     const child = spawn(process.execPath, args, {
-      env: { ...process.env, AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
+      env: { ...plainEnv(), AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -393,31 +395,47 @@ test("copy: the three required sentences live in explain, verbatim, and a receip
 test("copy: the receipt is plain words: no Level, no version stamp, no percentages, no token counts", () => {
   const texts = ALL_TEXTS();
   for (const name of ["receipt", "linkedReceipt", "mixedReceipt", "response", "account"]) {
-    const t = texts[name];
+    const [title, ...rest] = texts[name].split("\n");
+    assert.equal(title, "AiEDs energy receipt", name);
+    const t = rest.join("\n");
     assert.doesNotMatch(t, /\bLevel\b|ladder|AiEDs|v2\b|methodology|%|cache read|tokens?\b|confidence|provenance|class estimate/i, `${name}: ${t}`);
   }
 });
 
-test("receipt shape: exactly three scope lines, then the comparisons line, then the basis line", () => {
+/** Where each of the four figures of a scope row starts. */
+const figureColumns = (line) => [...line.matchAll(/~/g)].map((m) => m.index);
+
+test("receipt shape: the title, the column names, three aligned scope rows, the comparisons line, the basis line", () => {
   const lines = ALL_TEXTS().receipt.split("\n");
-  assert.equal(lines.length, 7);
-  assert.match(lines[0], /^this response {2,}~/);
-  assert.match(lines[1], /^this session {2,}~/);
-  assert.match(lines[2], /^your account on this computer {2}~/);
-  for (const l of lines.slice(0, 3)) {
-    assert.match(l, /~\S+ (Wh|kWh|MWh), ~\S+ (g|kg|t) CO2e, ~\S+ (mL|L) water, ~\S+ (min|h|days?|years?) tree-time$/, l);
+  assert.equal(lines.length, 9);
+  assert.equal(lines[0], "AiEDs energy receipt");
+  assert.match(lines[1], /^ {2,}energy {2,}carbon {2,}water {2,}tree-time$/);
+  assert.match(lines[2], /^this response {2,}~/);
+  assert.match(lines[3], /^this session {2,}~/);
+  assert.match(lines[4], /^your account on this computer {2}~/);
+  const rows = lines.slice(2, 5);
+  for (const l of rows) {
+    assert.match(l, /~\S+ (Wh|kWh|MWh) {2,}~\S+ (g|kg|t) CO2e {2,}~\S+ (mL|L) {2,}~\S+ (min|h|days?|years?)$/, l);
   }
-  // The figures start in one column.
-  assert.equal(new Set(lines.slice(0, 3).map((l) => l.indexOf("~"))).size, 1);
-  assert.equal(lines[3], "");
-  assert.match(lines[4], /^Your account so far is (about [\d,.]+ phone charges?|less than one phone charge), or (about [\d,.]+ k?m|less than 1 m) of driving\.$/);
+  // Every figure starts in its column, under its column name.
+  const columns = figureColumns(rows[0]);
+  assert.equal(columns.length, 4);
+  for (const l of rows) assert.deepEqual(figureColumns(l), columns, l);
+  assert.deepEqual(
+    ["energy", "carbon", "water", "tree-time"].map((name) => lines[1].indexOf(name)),
+    columns,
+  );
+  // No line ends in a space.
+  for (const l of lines) assert.doesNotMatch(l, / $/, JSON.stringify(l));
   assert.equal(lines[5], "");
-  assert.equal(lines[6], BASIS);
+  assert.match(lines[6], /^Your account so far is (about [\d,.]+ phone charges?|less than one phone charge), or (about [\d,.]+ k?m|less than 1 m) of driving\.$/);
+  assert.equal(lines[7], "");
+  assert.equal(lines[8], BASIS);
   // Linked: the label is "your account", in the same column as the others.
   const linked = ALL_TEXTS().linkedReceipt.split("\n");
-  assert.match(linked[2], /^your account {4}~/);
-  assert.match(linked[4], /^Your account so far is /);
-  assert.equal(new Set(linked.slice(0, 3).map((l) => l.indexOf("~"))).size, 1);
+  assert.match(linked[4], /^your account {4}~/);
+  assert.match(linked[6], /^Your account so far is /);
+  for (const l of linked.slice(2, 5)) assert.deepEqual(figureColumns(l), figureColumns(linked[2]), l);
 });
 
 test("copy: the word offset never appears, in output or in shipped text", () => {
@@ -578,9 +596,11 @@ test("format: the cache-heavy receipt from the owner, exactly, cache reads count
   assert.equal(
     text,
     [
-      "this response                  ~10 Wh, ~5 g CO2e, ~50 mL water, ~2 h tree-time",
-      "this session                   ~300 Wh, ~100 g CO2e, ~2 L water, ~2 days tree-time",
-      "your account on this computer  ~300 Wh, ~100 g CO2e, ~2 L water, ~2 days tree-time",
+      "AiEDs energy receipt",
+      "                               energy   carbon       water   tree-time",
+      "this response                  ~10 Wh   ~5 g CO2e    ~50 mL  ~2 h",
+      "this session                   ~300 Wh  ~100 g CO2e  ~2 L    ~2 days",
+      "your account on this computer  ~300 Wh  ~100 g CO2e  ~2 L    ~2 days",
       "",
       "Your account so far is about 30 phone charges, or about 800 m of driving.",
       "",
@@ -598,9 +618,11 @@ test("format: the owner's sample turn, 2.55M in with 2.32M cache read and 9.5k o
   assert.equal(
     text,
     [
-      "this response                  ~50 Wh, ~20 g CO2e, ~0.2 L water, ~8 h tree-time",
-      "this session                   ~60 Wh, ~30 g CO2e, ~0.3 L water, ~10 h tree-time",
-      "your account on this computer  ~60 Wh, ~30 g CO2e, ~0.3 L water, ~10 h tree-time",
+      "AiEDs energy receipt",
+      "                               energy  carbon      water   tree-time",
+      "this response                  ~50 Wh  ~20 g CO2e  ~0.2 L  ~8 h",
+      "this session                   ~60 Wh  ~30 g CO2e  ~0.3 L  ~10 h",
+      "your account on this computer  ~60 Wh  ~30 g CO2e  ~0.3 L  ~10 h",
       "",
       "Your account so far is about 5 phone charges, or about 200 m of driving.",
       "",
@@ -615,9 +637,11 @@ test("format: a tiny response, and a long session in kWh, kg and days", () => {
   assert.equal(
     formatReceipt({ response: d, session: d }, asAccount(d, true)),
     [
-      "this response   ~0.007 Wh, ~0.003 g CO2e, ~0.03 mL water, ~0.07 min tree-time",
-      "this session    ~0.007 Wh, ~0.003 g CO2e, ~0.03 mL water, ~0.07 min tree-time",
-      "your account    ~0.007 Wh, ~0.003 g CO2e, ~0.03 mL water, ~0.07 min tree-time",
+      "AiEDs energy receipt",
+      "                energy     carbon         water     tree-time",
+      "this response   ~0.007 Wh  ~0.003 g CO2e  ~0.03 mL  ~0.07 min",
+      "this session    ~0.007 Wh  ~0.003 g CO2e  ~0.03 mL  ~0.07 min",
+      "your account    ~0.007 Wh  ~0.003 g CO2e  ~0.03 mL  ~0.07 min",
       "",
       "Your account so far is less than one phone charge, or less than 1 m of driving.",
       "",
@@ -640,9 +664,11 @@ test("format: a tiny response, and a long session in kWh, kg and days", () => {
   assert.equal(
     formatReceipt({ response: disclose(resp), session }, asAccount(session, true)),
     [
-      "this response   ~10 Wh, ~5 g CO2e, ~60 mL water, ~2 h tree-time",
-      "this session    ~5 kWh, ~2 kg CO2e, ~30 L water, ~40 days tree-time",
-      "your account    ~5 kWh, ~2 kg CO2e, ~30 L water, ~40 days tree-time",
+      "AiEDs energy receipt",
+      "                energy  carbon      water   tree-time",
+      "this response   ~10 Wh  ~5 g CO2e   ~60 mL  ~2 h",
+      "this session    ~5 kWh  ~2 kg CO2e  ~30 L   ~40 days",
+      "your account    ~5 kWh  ~2 kg CO2e  ~30 L   ~40 days",
       "",
       "Your account so far is about 400 phone charges, or about 10 km of driving.",
       "",
@@ -651,17 +677,23 @@ test("format: a tiny response, and a long session in kWh, kg and days", () => {
   );
 });
 
-test("format: a wrapper receipt is the response line and the basis line, nothing else", () => {
+test("format: a wrapper receipt is the title, the column names, the response row and the basis line, nothing else", () => {
   const text = formatResponseReceipt(disclose(callsOf(1, { input_tokens: 800, cache_read_input_tokens: 200, output_tokens: 10 })));
   assert.equal(
     text,
-    ["this response   ~0.1 Wh, ~0.06 g CO2e, ~0.7 mL water, ~2 min tree-time", "", BASIS].join("\n"),
+    [
+      "AiEDs energy receipt",
+      "                energy   carbon        water    tree-time",
+      "this response   ~0.1 Wh  ~0.06 g CO2e  ~0.7 mL  ~2 min",
+      "",
+      BASIS,
+    ].join("\n"),
   );
 });
 
 test("format: the receipt carries the tilde water figure and no range", () => {
   const text = formatReceipt(receiptFor(parseTranscript(fixtureText("session-tool-turns.jsonl"))));
-  assert.match(text, /^this response {3}~[\d.]+ Wh, ~[\d.]+ g CO2e, ~[\d.]+ (mL|L) water, ~[\d.]+ (min|h) tree-time$/m);
+  assert.match(text, /^this response {3}~[\d.]+ Wh {2,}~[\d.]+ g CO2e {2,}~[\d.]+ (mL|L) {2,}~[\d.]+ (min|h)$/m);
   assert.match(text, /^this session {4}~/m);
   assert.doesNotMatch(text, / to [\d.]+ (mL|L)|teaspoon/);
   assert.doesNotMatch(text, /claude-opus|claude-sonnet/, "a listed model is not named on the short receipt");
@@ -718,7 +750,10 @@ test("water: no banned word, no scarcity or credit claim, anywhere in the receip
 test("water: no energy means no water claim, never a zero", () => {
   const d = disclose([]);
   assert.equal(d.counted.waterMl, 0);
-  assert.doesNotMatch(formatResponseReceipt(d), /water/, "no energy, no water figure on the line");
+  // The column keeps its name; the cell under it stays empty.
+  const row = formatResponseReceipt(d).split("\n").find((l) => l.startsWith("this response"));
+  assert.match(row, /^this response {3}0 Wh {2,}0 g CO2e {2,}0 min$/, "no energy, no water figure on the row");
+  assert.doesNotMatch(formatResponseReceipt(d), /\d (mL|L)\b/);
   assert.ok(d.water === null || d.water.waterMl.default === 0);
 });
 
@@ -810,10 +845,10 @@ test("hook: prints exactly the systemMessage the library-backed formatter builds
       inputTokenBreakdown: { plain: 7, cacheCreation: 0, cacheRead: 0 },
       outputTokens: 390,
     });
-    const first = out.systemMessage.split("\n")[0];
-    assert.ok(first.includes(`${formatEnergy(lib.energyWh)}, `), first);
-    assert.ok(first.includes(`${formatCarbon(lib.carbonGrams)}, `), first);
-    assert.ok(first.endsWith(`${formatTreeTime(lib.treeTimeMinutes)} tree-time`), first);
+    const first = lineOf(out.systemMessage, "this response");
+    assert.ok(first.includes(` ${formatEnergy(lib.energyWh)}  `), first);
+    assert.ok(first.includes(` ${formatCarbon(lib.carbonGrams)}  `), first);
+    assert.ok(first.endsWith(`  ${formatTreeTime(lib.treeTimeMinutes)}`), first);
     assert.doesNotMatch(r.stdout, CANARIES);
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -993,7 +1028,7 @@ test("account hook: the same session twice is counted once; a second session add
     const again = JSON.parse((await runHook(input("00000000-0000-4000-8000-0000000000d1"), { env })).stdout).systemMessage;
     assert.equal(again, one, "a repeated Stop for the same session changes nothing");
     const lines = one.split("\n");
-    assert.equal(lines[2].replace(/^your account on this computer\s+/, ""), lines[1].replace(/^this session\s+/, ""));
+    assert.equal(lines[4].replace(/^your account on this computer\s+/, ""), lines[3].replace(/^this session\s+/, ""));
     const two = JSON.parse((await runHook(input("00000000-0000-4000-8000-0000000000d2"), { env })).stdout).systemMessage;
     const receipt = receiptFor(parseTranscript(fixtureText("session-owner-sample.jsonl")));
     const doubled = {
@@ -1034,11 +1069,11 @@ test("account command: shows the total and where it is kept; reset zeroes it", a
     const env = { AIEDS_CONFIG_DIR: join(dir, "config") };
     const empty = await runNode([script, "account"], { env });
     assert.equal(empty.code, 0, empty.stderr);
-    assert.match(empty.stdout, /^your account on this computer {2}0 Wh, 0 g CO2e, 0 min tree-time$/m);
+    assert.match(empty.stdout, /^your account on this computer {2}0 Wh {2,}0 g CO2e {2,}0 min$/m);
     assert.match(empty.stdout, /0 sessions counted\. Kept only on this computer \(.*account-total\.json\)\. This total is never sent anywhere\./);
     await runHook({ session_id: "00000000-0000-4000-8000-0000000000f1", transcript_path: fixture("session-owner-sample.jsonl") }, { env });
     const shown = await runNode([script, "account", "show"], { env });
-    assert.match(shown.stdout, /^your account on this computer {2}~60 Wh, ~30 g CO2e, ~0\.3 L water, ~10 h tree-time$/m);
+    assert.match(shown.stdout, /^your account on this computer {2}~60 Wh {2}~30 g CO2e {2}~0\.3 L {2}~10 h$/m);
     assert.match(shown.stdout, /^Your account so far is about 5 phone charges, or about 200 m of driving\.$/m);
     assert.match(shown.stdout, /^1 session counted since \d{4}-\d{2}-\d{2}\./m);
     const reset = await runNode([script, "account", "reset"], { env });
@@ -1184,7 +1219,7 @@ test("hook: an unwritable log path never changes the exit code or the receipt", 
       { env: { AIEDS_RECEIPT_LOG: join(dir, "no such dir", "x", "log.jsonl") } },
     );
     assert.equal(r.code, 0);
-    assert.match(JSON.parse(r.stdout).systemMessage, /^this response {3}/);
+    assert.match(JSON.parse(r.stdout).systemMessage, /^this response {3}/m);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -1225,7 +1260,7 @@ test("hook: waits for a lagging transcript to include the last message", async (
     const both = disclosureFromResponse({ provider: "Anthropic", model: "claude-sonnet-4-5", inputTokens: 200, outputTokens: 30 });
     const one = disclosureFromResponse({ provider: "Anthropic", model: "claude-sonnet-4-5", inputTokens: 100, outputTokens: 10 });
     assert.notEqual(formatEnergy(both.energyWh), formatEnergy(one.energyWh), "the test can tell one call from two");
-    assert.ok(lineOf(text, "this session").includes(` ${formatEnergy(both.energyWh)}, `), text);
+    assert.ok(lineOf(text, "this session").includes(` ${formatEnergy(both.energyWh)}  `), text);
     assert.doesNotMatch(text, CANARIES);
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -1242,7 +1277,7 @@ test("hook: a last message that never lands is not waited on forever", async () 
   assert.ok(Date.now() - start < 6000, "bounded wait");
   const all = receiptFor(parseTranscript(fixtureText("session-mixed-models.jsonl"))).session;
   assert.ok(
-    lineOf(JSON.parse(r.stdout).systemMessage, "this session").includes(` ${formatEnergy(all.counted.energyWh)}, `),
+    lineOf(JSON.parse(r.stdout).systemMessage, "this session").includes(` ${formatEnergy(all.counted.energyWh)}  `),
     "the session line holds all three calls",
   );
 });
@@ -1282,7 +1317,7 @@ test("receipt command: a session id is validated and found under the config dir"
     });
     assert.equal(r.code, 0);
     const all = receiptFor(parseTranscript(fixtureText("session-mixed-models.jsonl"))).session;
-    assert.ok(lineOf(r.stdout, "this session").includes(` ${formatEnergy(all.counted.energyWh)}, `), r.stdout);
+    assert.ok(lineOf(r.stdout, "this session").includes(` ${formatEnergy(all.counted.energyWh)}  `), r.stdout);
 
     const missing = await runNode(
       [script, "receipt", "--session", "00000000-0000-4000-8000-0000000000ff"],
@@ -1331,7 +1366,7 @@ test("paths: a transcript path with spaces and, on Windows, backslashes works", 
     const native = process.platform === "win32" ? transcript.replaceAll("/", "\\") : transcript;
     const r = await runHook({ transcript_path: native });
     assert.equal(r.code, 0);
-    assert.match(JSON.parse(r.stdout).systemMessage, /^this response {3}/);
+    assert.match(JSON.parse(r.stdout).systemMessage, /^this response {3}/m);
     if (process.platform === "win32") {
       assert.ok(native.includes("\\"));
     }

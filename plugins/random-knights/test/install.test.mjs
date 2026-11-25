@@ -16,7 +16,7 @@ import {
 } from "../scripts/install.mjs";
 import { disclose, formatResponseReceipt } from "../scripts/core.mjs";
 import { readCopilotUsage } from "../scripts/hosts/copilot.mjs";
-import { hermeticEnv, runCli, tmpDir, POSIX_HOME } from "./helpers.mjs";
+import { hermeticEnv, plainEnv, runCli, tmpDir, POSIX_HOME } from "./helpers.mjs";
 
 const cmds = { powershell: "node 'C:\\a\\aieds.mjs' hook copilot", bash: "node '/a/aieds.mjs' hook copilot" };
 
@@ -176,7 +176,7 @@ test("install copilot: the hook it writes runs and prints a receipt for a real u
   const out = await new Promise((resolve) => {
     const [shell, args] =
       process.platform === "win32" ? ["powershell", ["-NoProfile", "-Command", command]] : ["bash", ["-c", command]];
-    const child = spawn(shell, args, { env: { ...process.env, ...env }, stdio: ["pipe", "pipe", "pipe"] });
+    const child = spawn(shell, args, { env: { ...plainEnv(), ...env }, stdio: ["pipe", "pipe", "pipe"] });
     let stdout = "";
     child.stdout.on("data", (c) => (stdout += c));
     child.on("close", (code) => resolve({ code, stdout }));

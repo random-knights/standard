@@ -217,7 +217,22 @@ async function runAccount(args, env = process.env) {
   }
   const t = store.accountTotal(store.loadAccount(env));
   const account = { ...t, linked: store.loadConnection(env) !== undefined };
-  console.log(core.formatAccount(account, { sessions: t.sessions, since: t.since, file: store.accountPath(env) }));
+  console.log(
+    core.formatAccount(
+      account,
+      { sessions: t.sessions, since: t.since, file: store.accountPath(env) },
+      terminalColor(core, env),
+    ),
+  );
+}
+
+/**
+ * Color for a command the user ran themself. It follows the terminal the
+ * receipt is printed to, so a pipe or a file gets plain text. Hooks never use
+ * this: see core.hookColorMode.
+ */
+function terminalColor(core, env) {
+  return core.colorMode(env, Boolean(process.stdout.isTTY));
 }
 
 function appendLog(core, receiptsMod, entries, receipt, sessionId, env) {
@@ -277,7 +292,9 @@ async function runHook(hostArg, env = process.env) {
   // account line already includes this response.
   const account = await accountFor(parsed, receipt, sessionId, env, { write: true });
   process.stdout.write(
-    JSON.stringify({ systemMessage: core.formatReceipt(receipt, account) }) + "\n",
+    JSON.stringify({
+      systemMessage: core.formatReceipt(receipt, account, core.hookColorMode(env, hostOf(parsed))),
+    }) + "\n",
   );
 
   // After the receipt is out: the optional log and the optional sync. Both are
@@ -338,7 +355,9 @@ async function runCopilotHook(core, input, env) {
     tsMs,
   });
 
-  process.stdout.write(`${core.formatResponseReceipt(core.disclose(read.calls))}\n`);
+  process.stdout.write(
+    `${core.formatResponseReceipt(core.disclose(read.calls), core.hookColorMode(env, "copilot"))}\n`,
+  );
 
   const wantsLog = typeof env.AIEDS_RECEIPT_LOG === "string" && env.AIEDS_RECEIPT_LOG.length > 0;
   try {
@@ -446,7 +465,7 @@ async function runReceipt(args, env = process.env) {
 async function receiptText(core, parsed, path, env) {
   const receipt = core.receiptFor(parsed);
   const account = await accountFor(parsed, receipt, sessionIdFromPath(path), env, { write: false });
-  return core.formatReceipt(receipt, account);
+  return core.formatReceipt(receipt, account, terminalColor(core, env));
 }
 
 function intArg(args, flag) {
@@ -509,7 +528,8 @@ async function runOllama(args, env = process.env) {
   }
   try {
     const onText = stream && !noText ? (piece) => process.stdout.write(piece) : undefined;
-    const r = await wrappers.ollamaChat({ host, model, prompt, numCtx, stream, onText });
+    const color = terminalColor(await import("./core.mjs"), env);
+    const r = await wrappers.ollamaChat({ host, model, prompt, numCtx, stream, onText, color });
     if (stream) {
       if (!noText) process.stdout.write("\n\n");
     } else if (!noText) {
@@ -549,7 +569,8 @@ async function runChatCompletion(args, env = process.env) {
     process.exitCode = 1;
     return;
   }
-  console.log(wrappers.receiptTextFromUsage({ provider, ...usage }));
+  const color = terminalColor(await import("./core.mjs"), env);
+  console.log(wrappers.receiptTextFromUsage({ provider, ...usage }, color));
   await syncWrapperCall("other", wrappers.callFromUsage({ provider, ...usage }), env);
 }
 
@@ -579,7 +600,8 @@ async function runUsage(args, env = process.env) {
     outputTokens: output,
     cachedTokens: cached,
   };
-  console.log(wrappers.receiptTextFromUsage(usage));
+  const color = terminalColor(await import("./core.mjs"), env);
+  console.log(wrappers.receiptTextFromUsage(usage, color));
   await syncWrapperCall("other", wrappers.callFromUsage(usage), env);
 }
 

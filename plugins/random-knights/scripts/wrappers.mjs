@@ -52,8 +52,8 @@ export function callFromUsage({
   };
 }
 
-export function receiptTextFromUsage(usage) {
-  return formatResponseReceipt(disclose([callFromUsage(usage)]));
+export function receiptTextFromUsage(usage, color) {
+  return formatResponseReceipt(disclose([callFromUsage(usage)]), color);
 }
 
 /**
@@ -172,7 +172,7 @@ export function ollamaBaseUrl(value) {
  * for tests.
  */
 export async function ollamaChat(
-  { host, model, prompt, numCtx, stream = false, onText },
+  { host, model, prompt, numCtx, stream = false, onText, color },
   fetchImpl = globalThis.fetch,
 ) {
   const body = {
@@ -233,5 +233,5 @@ export async function ollamaChat(
     outputTokens: usage.outputTokens,
     cachedTokens: usage.cachedTokens,
   };
-  return { text, receipt: receiptTextFromUsage(used), usage: used };
+  return { text, receipt: receiptTextFromUsage(used, color), usage: used };
 }
