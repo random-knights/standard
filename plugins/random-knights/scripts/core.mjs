@@ -37,6 +37,7 @@ import {
   WATER_MODELED_ESTIMATE_COPY,
   disclosureFromResponse,
   energyProfileForModel,
+  schemaRecordFromDisclosure,
   treeTimeLabel,
   waterFromEnergyWh,
   waterLine,
@@ -794,6 +795,29 @@ function countedLine(c) {
   );
 }
 
+const WATER_SOURCE =
+  "LBNL-2001637 (Shehabi et al. 2024); the range ends cite Microsoft FY25, Siddik et al. 2021 and Li et al. 2025";
+const FULL_TEXT_URL = "https://standard.rand0m.ai";
+
+/**
+ * The response formulas with the constants' values in place of their names, so
+ * each reads as a calculation. The strings themselves are the library's.
+ */
+function responseFormulas() {
+  return FACTORS.responseSurface.formula.map((f) =>
+    f
+      .replace(
+        "gridIntensity.responseSurfacePinned",
+        String(MODELED_GRID_INTENSITY_GRAMS_PER_KWH),
+      )
+      .replace(
+        "matureReferenceTreeCo2eGramsPerYear",
+        String(MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR),
+      )
+      .replace("minutesPerYear", String(MINUTES_PER_YEAR)),
+  );
+}
+
 /**
  * Formulas, constants and coefficient sources, all read from the library.
  * Given a receipt ({ response, session }), also prints what the compact
@@ -812,21 +836,7 @@ export function formatExplanation(receipt, account) {
   lines.push("Formulas (methodology section 2.4):");
   // The table names the constants symbolically; print their values so the
   // formula reads as a calculation. The strings themselves are the library's.
-  for (const f of FACTORS.responseSurface.formula) {
-    lines.push(
-      "  " +
-        f
-          .replace(
-            "gridIntensity.responseSurfacePinned",
-            String(MODELED_GRID_INTENSITY_GRAMS_PER_KWH),
-          )
-          .replace(
-            "matureReferenceTreeCo2eGramsPerYear",
-            String(MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR),
-          )
-          .replace("minutesPerYear", String(MINUTES_PER_YEAR)),
-    );
-  }
+  for (const f of responseFormulas()) lines.push("  " + f);
   lines.push("");
   lines.push(
     "Cached prefill (section 2.4.1): cache-write and cache-read tokens are input and are charged at the full input rate. " +
@@ -848,7 +858,7 @@ export function formatExplanation(receipt, account) {
       `grid ${FACTORS.water.gridWaterIntensity.value} L/kWh (${FACTORS.water.gridWaterIntensity.low} to ${FACTORS.water.gridWaterIntensity.high}), ` +
       `${FACTORS.water.gridBasisDefaultLabel} for any region without its own figure`,
   );
-  lines.push("  source: LBNL-2001637 (Shehabi et al. 2024); the range ends cite Microsoft FY25, Siddik et al. 2021 and Li et al. 2025");
+  lines.push(`  source: ${WATER_SOURCE}`);
   lines.push("  Water covers cooling at the data center and the power plants that supply it.");
   lines.push("  It is not a measure of scarcity: a liter in a wet place and a dry place count the same here.");
   lines.push("");
@@ -875,7 +885,7 @@ export function formatExplanation(receipt, account) {
   lines.push(
     "Confidence is low: a token count is a proxy for energy, not a measurement of it. Water confidence is low by rule.",
   );
-  lines.push("Full text: https://standard.rand0m.ai");
+  lines.push(`Full text: ${FULL_TEXT_URL}`);
   if (receipt) {
     lines.push("");
     lines.push(
@@ -894,6 +904,157 @@ export function formatExplanation(receipt, account) {
   lines.push("");
   lines.push(REQUIRED_COPY.join(" "));
   return lines.join("\n");
+}
+
+// -- JSON (--json) ---------------------------------------------------------------
+//
+// The same figures as data, for `aieds receipt`, `aieds account` and
+// `aieds explain` with --json. Nothing here rounds, scales or colors: every
+// number is the one the library computed. The primary figures of a scope are
+// the methodology 2.4.1 count (cache reads at the full input rate), the same
+// ones the log and the sync keep; `counted` is the short receipt's floor
+// (cache reads free), kept apart under its own name.
+
+export { AIEDS_VERSION, METHODOLOGY_VERSION };
+
+/** One scope (a response or a session) as data. `water` is null when there is no water claim. */
+export function figuresJson(d) {
+  return {
+    calls: d.calls,
+    models: [...new Set(d.models)],
+    tokens: { ...d.tokens },
+    energyWh: d.energyWh,
+    carbonGrams: d.carbonGrams,
+    treeTimeMinutes: d.treeTimeMinutes,
+    water: d.water ?? null,
+    provenance: d.provenance,
+    confidence: d.confidence,
+    noFigure: [...(d.noFigure ?? [])],
+    counted: { ...d.counted },
+  };
+}
+
+/** The account total as the store keeps it: short-receipt figures only. */
+export function accountJson(account) {
+  return {
+    sessions: account.sessions ?? 0,
+    since: typeof account.since === "string" && account.since.length > 0 ? account.since : null,
+    linked: account.linked === true,
+    counted: { ...account.counted },
+  };
+}
+
+/** `aieds account --json`. `file` is where the total is kept on this computer. */
+export function accountReportJson(account, file) {
+  return {
+    aiedsVersion: AIEDS_VERSION,
+    methodologyVersion: METHODOLOGY_VERSION,
+    ...accountJson(account),
+    file,
+  };
+}
+
+/**
+ * The time a set of calls covers as an ISO 8601 duration in whole seconds,
+ * from the first to the last call the session file timestamps, never less
+ * than one second. Undefined when no call carries a time.
+ */
+export function windowOfCalls(calls) {
+  const times = calls.map((c) => c.tsMs).filter((t) => typeof t === "number" && t > 0);
+  if (times.length === 0) return undefined;
+  const seconds = Math.max(1, Math.ceil((Math.max(...times) - Math.min(...times)) / 1000));
+  return `PT${seconds}S`;
+}
+
+/**
+ * A disclosure record in the shape spec/aieds.schema.json validates, built by
+ * the library's schemaRecordFromDisclosure from a disclose() result. Energy,
+ * carbon and tokens are the 2.4.1 count. `options` is the library's
+ * { id, subject, scope, window, source, generatedAt? }.
+ */
+export function schemaRecordFor(d, options) {
+  return schemaRecordFromDisclosure(
+    {
+      energyWh: d.energyWh,
+      carbonGrams: d.carbonGrams,
+      totalTokens: d.tokens.input + d.tokens.output,
+      confidence: d.confidence,
+      provenance: d.provenance,
+      methodologyVersion: d.methodologyVersion,
+    },
+    { ...options, includeWater: true },
+  );
+}
+
+/**
+ * `aieds receipt --json`. `account` is what accountFor() returns, or undefined.
+ * `record` is the session as an AiEDs disclosure record, or undefined when the
+ * session file has no times to state a window from.
+ */
+export function receiptJson(receipt, account, { host, record } = {}) {
+  return {
+    aiedsVersion: receipt.session.aiedsVersion,
+    methodologyVersion: receipt.session.methodologyVersion,
+    host: host ?? "other",
+    response: figuresJson(receipt.response),
+    session: figuresJson(receipt.session),
+    account: account ? accountJson(account) : null,
+    record: record ?? null,
+  };
+}
+
+function profileJson(p) {
+  return {
+    matchPrefixes: [...p.matchPrefixes],
+    whPer1kIn: p.whPer1kIn,
+    whPer1kOut: p.whPer1kOut,
+    pue: p.pue,
+    provenance: p.confidence,
+    source: p.citation,
+  };
+}
+
+function waterTermJson(t) {
+  return { value: t.value, low: t.low, high: t.high };
+}
+
+/**
+ * `aieds explain --json`: what formatExplanation prints, as data. The
+ * formulas, constants and coefficients are read from the library; `receipt`
+ * and `account` are null unless a session was named and found.
+ */
+export function explanationJson(receipt, account) {
+  return {
+    aiedsVersion: AIEDS_VERSION,
+    methodologyVersion: METHODOLOGY_VERSION,
+    impactModelVersion: FACTORS.impactModelVersion,
+    formulas: {
+      response: responseFormulas(),
+      water: [...FACTORS.water.formula],
+    },
+    constants: {
+      gridIntensityGramsCo2ePerKWh: MODELED_GRID_INTENSITY_GRAMS_PER_KWH,
+      matureReferenceTreeCo2eGramsPerYear: MATURE_REFERENCE_TREE_CO2E_GRAMS_PER_YEAR,
+      minutesPerYear: MINUTES_PER_YEAR,
+      phoneChargeWh: PHONE_CHARGE_WH,
+      carDrivingGramsCo2ePerKm: CAR_DRIVING_GRAMS_CO2E_PER_KM,
+    },
+    water: {
+      siteWueLPerKWh: waterTermJson(FACTORS.water.siteWue),
+      gridWaterLPerKWh: waterTermJson(FACTORS.water.gridWaterIntensity),
+      gridBasisDefaultLabel: FACTORS.water.gridBasisDefaultLabel,
+      source: WATER_SOURCE,
+    },
+    coefficients: MODEL_ENERGY_PROFILES.map(profileJson),
+    anyOtherModel: profileJson(UNKNOWN_MODEL_PROFILE),
+    confidence: "low",
+    notes: [...REQUIRED_COPY],
+    fullText: FULL_TEXT_URL,
+    receipt: receipt
+      ? { response: figuresJson(receipt.response), session: figuresJson(receipt.session) }
+      : null,
+    account: account ? accountJson(account) : null,
+  };
 }
 
 // -- Locating a transcript -----------------------------------------------------

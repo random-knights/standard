@@ -455,8 +455,70 @@ response.
 | `aieds receipt ... --sync` | Queues those per-response receipts for your account (needs `connect`). |
 | `aieds explain` | The formulas and the source of every coefficient. |
 | `aieds account [reset]` | Your account total on this computer; `reset` starts it again from zero. Local only. |
+| `aieds receipt ... --json`, `aieds explain [...] --json`, `aieds account [reset] --json` | The same answer as one JSON object of unrounded numbers. See [JSON output](#json-output). |
 | `aieds connect \| disconnect \| status \| flush` | The optional account link (above). |
 | `aieds contribute on \| off \| status \| preview \| submit \| delete` | The optional community totals (above). Off by default. |
+
+## JSON output
+
+`aieds receipt`, `aieds explain` and `aieds account` take `--json`. Each then
+prints exactly one JSON object on one line of stdout, followed by a newline:
+no color (not even with `AIEDS_COLOR=always` or `FORCE_COLOR`), no prose, and
+numbers as the library computed them, not the rounded "~50 Wh" text.
+
+| Command | Keys |
+| ------- | ---- |
+| `aieds receipt ... --json` | `aiedsVersion`, `methodologyVersion`, `host`, `response`, `session`, `account`, `record` |
+| `aieds account --json` | `aiedsVersion`, `methodologyVersion`, `sessions`, `since`, `linked`, `counted`, `file` |
+| `aieds account reset --json` | `reset`, `sessionsBefore` |
+| `aieds explain [...] --json` | `aiedsVersion`, `methodologyVersion`, `impactModelVersion`, `formulas`, `constants`, `water`, `coefficients`, `anyOtherModel`, `confidence`, `notes`, `fullText`, `receipt`, `account` |
+
+- `response` and `session` each hold `calls`, `models`, `tokens`, `energyWh`,
+  `carbonGrams`, `treeTimeMinutes`, `water`, `provenance`, `confidence`,
+  `noFigure` and `counted`. The figures at the top of each are the ratified
+  count of methodology section 2.4.1 (cache reads charged at the full input
+  rate), the same ones the local log and the account link keep. `counted` is
+  the short receipt's floor (cache reads free, proposed section 2.7), kept
+  under its own name. `water` is the library's estimate with its low, default
+  and high values in mL, or `null` when there is no water claim.
+- `account` is `sessions`, `since`, `linked` and `counted`: the total as the
+  file on this computer keeps it, which is the short receipt's count only. It
+  is `null` when the total cannot be read. `receipt --json` never changes it.
+- `record` is the session as an AiEDs disclosure record, built by the
+  reference library and valid against `spec/aieds.schema.json`. Its `id`
+  carries a hash of the session id, not the id. Its `window` runs from the
+  first to the last model call the session file gives a time for, in whole
+  seconds, at least one. A session file with no times gives `"record": null`.
+- `explain --json` carries the formulas, constants, water factors and every
+  coefficient with its source. `receipt` and `account` in it are `null` unless
+  a session was named and found.
+- `--format rk-receipts` is not applied together with `--json`; `--sync` still
+  queues, and reports on stderr.
+
+Errors and exit codes. Where the command would print a sentence in place of
+its answer, `--json` prints `{"error": "<that sentence>"}`, and the exit code
+is the one the command gives without `--json`: 0 when no session or transcript
+can be found (as today, so a caller must look for the `error` key), 2 for a
+bad `account` subcommand, 1 for an unexpected failure.
+
+A sample, `aieds account --json`, wrapped here for reading:
+
+```json
+{
+  "aiedsVersion": "AiEDs v2",
+  "methodologyVersion": "2.5.1",
+  "sessions": 1,
+  "since": "2026-11-25T05:18:14.958Z",
+  "linked": false,
+  "counted": {
+    "energyWh": 60.37799999999999,
+    "carbonGrams": 25.902161999999997,
+    "waterMl": 294.64464,
+    "treeTimeMinutes": 648.2941117714286
+  },
+  "file": "<your config folder>/random-knights/account-total.json"
+}
+```
 
 ## Turn receipts off
 

@@ -18,6 +18,8 @@
 //                                   also that receipt unrounded, with the water range.
 //   aieds account [reset]           The local account total on this computer; reset
 //                                   starts it again from zero.
+//   receipt, explain and account take --json: one JSON object of unrounded
+//   numbers on stdout, no color and no prose.
 //
 // For tools with no hook mechanism:
 //   aieds ollama --model <m> [--host <url>] [--num-ctx <n>] [--stream] [--no-text] <prompt>
@@ -192,11 +194,73 @@ async function accountFor(parsed, receipt, sessionId, env, { write }) {
   }
 }
 
-/** `aieds account` and `aieds account reset`. Local only: no network, ever. */
-async function runAccount(args, env = process.env) {
+/**
+ * --json: prints the ONE object `build` returns, then a newline, and nothing
+ * else on stdout: no color, no prose. A sentence the command would have
+ * printed becomes { "error": "..." }, and the exit code is the one the command
+ * gives without --json (`build` sets it). An unexpected failure is an error
+ * object too, with exit code 1, as it is without --json.
+ */
+async function printJson(build) {
+  let out;
+  try {
+    out = await build();
+  } catch (e) {
+    out = { error: String(e && e.message ? e.message : e) };
+    process.exitCode = 1;
+  }
+  process.stdout.write(`${JSON.stringify(out)}\n`);
+}
+
+const SUBJECT_NAMES = { claude: "Claude Code", codex: "Codex CLI", grok: "Grok Build" };
+
+/**
+ * The session as an AiEDs disclosure record (spec/aieds.schema.json), for
+ * `aieds receipt --json`. The id carries a hash of the session id, never the
+ * id itself. Undefined when the session file has no times, because a record
+ * must state the window it covers.
+ */
+async function sessionRecord(core, parsed, receipt, sessionId) {
+  const window = core.windowOfCalls(parsed.calls);
+  if (window === undefined) return undefined;
+  const [receipts, client] = await Promise.all([import("./receipts.mjs"), import("./syncclient.mjs")]);
+  const host = hostOf(parsed);
+  return core.schemaRecordFor(receipt.session, {
+    id: `aieds:${host}:session:${receipts.shortHash(`${host}:${sessionId}`)}`,
+    subject: { kind: "agent", name: SUBJECT_NAMES[host] ?? "AI coding session" },
+    scope: "inference",
+    window,
+    source: `${client.CLIENT_NAME} ${client.CLIENT_VERSION}`,
+  });
+}
+
+/** `aieds account --json` and `aieds account reset --json`. */
+async function accountJsonObject(sub, env) {
   const store = await import("./store.mjs");
   const core = await import("./core.mjs");
+  if (sub === "reset") {
+    return { reset: true, sessionsBefore: store.resetAccount(env) };
+  }
+  if (sub !== undefined && sub !== "show") {
+    process.exitCode = 2;
+    return { error: "usage: aieds account [show | reset] [--json]" };
+  }
+  const t = store.accountTotal(store.loadAccount(env));
+  return core.accountReportJson(
+    { ...t, linked: store.loadConnection(env) !== undefined },
+    store.accountPath(env),
+  );
+}
+
+/** `aieds account` and `aieds account reset`. Local only: no network, ever. */
+async function runAccount(args, env = process.env) {
   const sub = args.find((a) => !a.startsWith("--"));
+  if (args.includes("--json")) {
+    await printJson(() => accountJsonObject(sub, env));
+    return;
+  }
+  const store = await import("./store.mjs");
+  const core = await import("./core.mjs");
   if (sub === "reset") {
     try {
       const n = store.resetAccount(env);
@@ -378,25 +442,25 @@ function argValue(args, flag) {
  * Finds and parses the transcript the flags name. Prints the reason and returns
  * undefined when there is none, so `receipt` and `explain` answer the same way.
  */
-async function resolveTranscript(args, core) {
+async function resolveTranscript(args, core, say = console.log) {
   const hosts = await import("./hosts.mjs");
   let path = argValue(args, "--transcript");
   const last = argValue(args, "--last");
   if (path === undefined && last !== undefined) {
     if (last !== "grok") {
-      console.log("--last supports grok today (the newest Grok Build session). For other tools use --session or --transcript.");
+      say("--last supports grok today (the newest Grok Build session). For other tools use --session or --transcript.");
       return;
     }
-    path = hosts.findNewestGrokSession(env);
+    path = hosts.findNewestGrokSession(process.env);
     if (path === undefined) {
-      console.log("No Grok Build session was found under GROK_HOME or ~/.grok/sessions, so no receipt can be built.");
+      say("No Grok Build session was found under GROK_HOME or ~/.grok/sessions, so no receipt can be built.");
       return;
     }
   }
   if (path === undefined) {
     const session = argValue(args, "--session");
     if (!core.isSafeSessionId(session)) {
-      console.log(
+      say(
         "No session id was provided, so no receipt can be built. " +
           "Run /random-knights:aieds inside a Claude Code session, or pass --transcript <file> or --last grok.",
       );
@@ -407,7 +471,7 @@ async function resolveTranscript(args, core) {
       path = hosts.findHostSession(session);
     }
     if (path === undefined) {
-      console.log(
+      say(
         "No transcript was found for this session yet, so no receipt can be built. " +
           "Receipts start after the first response.",
       );
@@ -418,17 +482,75 @@ async function resolveTranscript(args, core) {
   try {
     parsed = core.readTranscript(path);
   } catch {
-    console.log("The transcript could not be read, so no receipt can be built.");
+    say("The transcript could not be read, so no receipt can be built.");
     return;
   }
   if (parsed.calls.length === 0) {
-    console.log("The transcript has no model calls yet, so there is nothing to total.");
+    say("The transcript has no model calls yet, so there is nothing to total.");
     return;
   }
   return { parsed, path };
 }
 
+/**
+ * `aieds receipt --json`: the response, the session and the account total as
+ * one object of unrounded numbers. --format is not applied (the object is the
+ * output); --sync still queues and reports on stderr.
+ */
+async function receiptJsonObject(args, env) {
+  const core = await import("./core.mjs");
+  let reason = "";
+  const found = await resolveTranscript(args, core, (text) => {
+    reason = text;
+  });
+  if (found === undefined) return { error: reason };
+  const { parsed, path } = found;
+  const receipt = core.receiptFor(parsed);
+  const sessionId = sessionIdFromPath(path);
+  const account = await accountFor(parsed, receipt, sessionId, env, { write: false });
+  const record = await sessionRecord(core, parsed, receipt, sessionId);
+  if (args.includes("--sync")) {
+    const { receipts, flow } = await loadSync();
+    if (!flow.syncActive(env)) {
+      console.error("Not connected, so nothing was queued. Run `aieds connect` first.");
+    } else {
+      const entries = receipts.receiptsFromParsed(
+        parsed,
+        { host: hostOf(parsed), sessionId, tsMs: Date.now(), useRecordTime: true },
+        { all: true },
+      );
+      const r = await flow.queueAndFlush(entries, { env, budgetMs: 15_000 });
+      console.error(`Queued ${r.queued} receipt(s) (${r.invalid} failed the local check). Sync: ${r.flush?.state ?? "n/a"}.`);
+    }
+  }
+  return core.receiptJson(receipt, account, { host: hostOf(parsed), record });
+}
+
+/** `aieds explain --json`: the formulas and sources as data, plus the named session's figures. */
+async function explainJsonObject(args, env) {
+  const core = await import("./core.mjs");
+  const named =
+    argValue(args, "--session") !== undefined ||
+    argValue(args, "--transcript") !== undefined ||
+    argValue(args, "--last") !== undefined;
+  let receipt;
+  let account;
+  if (named) {
+    // As without --json: a session that cannot be found leaves the formulas alone.
+    const found = await resolveTranscript(args, core, () => {});
+    if (found !== undefined) {
+      receipt = core.receiptFor(found.parsed);
+      account = await accountFor(found.parsed, receipt, sessionIdFromPath(found.path), env, { write: false });
+    }
+  }
+  return core.explanationJson(receipt, account);
+}
+
 async function runReceipt(args, env = process.env) {
+  if (args.includes("--json")) {
+    await printJson(() => receiptJsonObject(args, env));
+    return;
+  }
   const core = await import("./core.mjs");
   const found = await resolveTranscript(args, core);
   if (found === undefined) return;
@@ -607,7 +729,8 @@ async function runUsage(args, env = process.env) {
 
 const USAGE =
   "usage: aieds hook [host] | connect | disconnect | status | flush | install <host> | " +
-  "receipt [--session <id> | --transcript <file> | --last grok] | explain [--session <id>] | account [reset] | " +
+  "receipt [--session <id> | --transcript <file> | --last grok] [--json] | explain [--session <id>] [--json] | " +
+  "account [reset] [--json] | " +
   "ollama | chat-completion | usage | contribute on|off|status|preview|submit|delete";
 
 /** The file the user ran (the bin, or the plugin script), symlinks resolved. */
@@ -668,6 +791,10 @@ export async function main() {
     return;
   }
   if (mode === "explain") {
+    if (rest.includes("--json")) {
+      await printJson(() => explainJsonObject(rest, env));
+      return;
+    }
     const core = await import("./core.mjs");
     // With a session (or --transcript / --last grok) the explanation also
     // carries the unrounded figures of that receipt. Without one, or when the
