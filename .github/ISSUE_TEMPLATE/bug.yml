@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in the standard, the library, the aieds command, the plugin or the MCP server is wrong or broken.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. Do not paste prompts, replies, tokens or keys. A made-up example is enough.
+        For a security problem, do not open an issue. See SECURITY.md.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where is the problem?
+      options:
+        - The standard text or the factor tables (spec)
+        - The reference library (lib)
+        - The aieds command or the npm package
+        - The Claude Code or Codex plugin
+        - The MCP server
+        - The website (standard.rand0m.ai)
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The AiEDs version, the npm package version or the plugin version. Run `npx @randomknights/aieds version` if you use the command.
+      placeholder: "2.5.1"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The exact command or the steps, one per line.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Paste the output. Remove anything private first.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Node.js version, and the tool (Claude Code, Codex, Grok Build, Copilot CLI, Ollama) with its version.
+      placeholder: "Windows 11, Node 22, Claude Code 2.1"
+    validations:
+      required: false
