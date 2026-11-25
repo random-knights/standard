@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url";
 
 import { disclosureFromResponse } from "../vendor/lib/dist/index.js";
 import { disclose, formatReceipt, parseSession, receiptFor } from "../scripts/core.mjs";
-import { scopeLines } from "./helpers.mjs";
+import { plainEnv, scopeLines } from "./helpers.mjs";
 import {
   TESTED_HOSTS,
   findHostSession,
@@ -46,7 +46,7 @@ const CANARIES = /CANARY_[A-Z0-9_]+/;
 function run(args, input, { env = {}, timeoutMs = 15000 } = {}) {
   return new Promise((resolvePromise) => {
     const child = spawn(process.execPath, [script, ...args], {
-      env: { ...process.env, AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
+      env: { ...plainEnv(), AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -185,13 +185,14 @@ test("codex hook: prints the receipt as systemMessage with the five-line shape",
   const out = JSON.parse(r.stdout);
   assert.deepEqual(Object.keys(out), ["systemMessage"]);
   const lines = out.systemMessage.split("\n");
-  assert.equal(lines.length, 7);
-  assert.match(lines[6], /^A guess, not a measurement\. Cached text counted as free\./);
+  assert.equal(lines.length, 9);
+  assert.equal(lines[0], "AiEDs energy receipt");
+  assert.match(lines[8], /^A guess, not a measurement\. Cached text counted as free\./);
   assert.doesNotMatch(out.systemMessage, CANARIES);
   // The response and session lines are the formatter's for this rollout:
   // turn-B's 15,733 in and 5 out, and all three calls (see the energy test above).
   assert.deepEqual(scopeLines(out.systemMessage), expectedScopes(fixtureText("codex-rollout.jsonl")));
-  assert.match(lines[2], /^your account on this computer {2}~/);
+  assert.match(lines[4], /^your account on this computer {2}~/);
 });
 
 test("codex hook: a null transcript_path (an ephemeral run) is silent", async () => {

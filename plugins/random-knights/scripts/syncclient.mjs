@@ -26,7 +26,7 @@ import { MAX_RECEIPTS_PER_BATCH, batchBody } from "./receipts.mjs";
 
 export const CLIENT_NAME = "aieds-cli";
 /** Keep equal to plugins/random-knights/package.json (a test checks). */
-export const CLIENT_VERSION = "0.7.2";
+export const CLIENT_VERSION = "0.8.0";
 /** The shared functions project (production). Staging is randomknights-abc. */
 export const DEFAULT_ENDPOINT = "https://us-central1-randomknights-xyz.cloudfunctions.net";
 

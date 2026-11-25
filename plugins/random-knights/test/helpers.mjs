@@ -27,12 +27,23 @@ export function tmpDir(prefix = "rk sync test ") {
   return mkdtempSync(join(tmpdir(), prefix));
 }
 
+/**
+ * The environment a child process starts from: this process's own, without the
+ * color switches. A developer or a CI runner that sets FORCE_COLOR or NO_COLOR
+ * must not change what a test sees; a test that wants color sets it itself.
+ */
+export function plainEnv() {
+  const env = { ...process.env };
+  for (const name of ["NO_COLOR", "FORCE_COLOR", "AIEDS_COLOR", "AIEDS_THEME", "COLORTERM"]) delete env[name];
+  return env;
+}
+
 /** Runs the CLI (the plugin script) as a child process. */
 export function runCli(args, { input, env = {}, timeoutMs = 20000 } = {}) {
   return new Promise((resolvePromise) => {
     const started = Date.now();
     const child = spawn(process.execPath, [script, ...args], {
-      env: { ...process.env, ...env },
+      env: { ...plainEnv(), ...env },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";

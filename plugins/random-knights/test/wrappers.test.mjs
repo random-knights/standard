@@ -24,6 +24,8 @@ import {
   usageFromOllama,
 } from "../scripts/wrappers.mjs";
 
+import { plainEnv } from "./helpers.mjs";
+
 // Every child process gets its own config folder, so the local account
 // total a receipt writes never lands in the real user config.
 const TEST_CONFIG_DIR = mkdtempSync(join(tmpdir(), "rk test config "));
@@ -37,7 +39,7 @@ const EN_DASH = String.fromCharCode(0x2013);
 function run(args, input, { env = {}, timeoutMs = 15000 } = {}) {
   return new Promise((resolvePromise) => {
     const child = spawn(process.execPath, [script, ...args], {
-      env: { ...process.env, AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
+      env: { ...plainEnv(), AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -95,7 +97,7 @@ function libraryWh(provider, model, inputTokens, outputTokens) {
 // short receipt's count: cache reads left out.
 function assertWh(receiptText, wh, label) {
   assert.ok(
-    receiptText.includes(`this response   ${formatEnergy(wh)}, `),
+    receiptText.includes(`this response   ${formatEnergy(wh)}  `),
     `${label}: ${formatEnergy(wh)} not in: ${receiptText}`,
   );
 }
@@ -241,13 +243,13 @@ test("ollama CLI: end to end against a local server, prints the reply then the r
     const r = await run(["ollama", "--model", "llama3.2:1b", "--host", host, "hello", "there"]);
     assert.equal(r.code, 0, r.stderr);
     assert.match(r.stdout, /^CANARY_REPLY_TEXT\n/);
-    assert.match(r.stdout, /^this response {3}~.* Wh, ~.* g CO2e, ~.* water, ~.* tree-time$/m);
+    assert.match(r.stdout, /^this response {3}~\S+ Wh {2,}~\S+ g CO2e {2,}~\S+ (mL|L) {2,}~\S+ (min|h)$/m);
     assertWh(r.stdout, libraryWh("Ollama", "llama3.2:1b", 1, 107), "ollama CLI");
     assert.equal(hits, 1);
 
     const quiet = await run(["ollama", "--model", "m", "--host", host, "--no-text", "hi"]);
     assert.doesNotMatch(quiet.stdout, /CANARY_/);
-    assert.match(quiet.stdout, /^this response {3}/);
+    assert.match(quiet.stdout, /^this response {3}/m);
 
     const noModel = await run(["ollama", "--host", host, "hi"], undefined, {
       env: { OLLAMA_MODEL: "" },

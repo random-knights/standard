@@ -21,7 +21,7 @@ import { fileURLToPath } from "node:url";
 
 import { disclosureFromResponse } from "../vendor/lib/dist/index.js";
 import { formatReceipt, parseSession, receiptFor } from "../scripts/core.mjs";
-import { scopeLines } from "./helpers.mjs";
+import { plainEnv, scopeLines } from "./helpers.mjs";
 import {
   TESTED_HOSTS,
   findHostSession,
@@ -47,7 +47,7 @@ const CANARIES = /CANARY_[A-Z0-9_]+/;
 function run(args, input, { env = {}, timeoutMs = 15000 } = {}) {
   return new Promise((resolvePromise) => {
     const child = spawn(process.execPath, [script, ...args], {
-      env: { ...process.env, AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
+      env: { ...plainEnv(), AIEDS_CONFIG_DIR: TEST_CONFIG_DIR, ...env },
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";

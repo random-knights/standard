@@ -654,6 +654,10 @@ It has, in this order:
    only when a model has no published figure, "No published figure for
    <model>, so a general guess is used."
 
+A tool may print one header line before the scope lines, reading "AiEDs
+energy receipt" with no version, and one row of column names. It may align
+the figures in columns.
+
 The short receipt carries no level names, no version stamp, no percentages and
 no token counts. The full breakdown (both counts below, the token split, the
 coefficients, the water range and the three required sentences) stays
