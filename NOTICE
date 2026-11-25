@@ -15,6 +15,10 @@ npm packages built from this repository:
   @randomknights/aieds   the AiEDs reference library (Apache 2.0), the AiEDs
                          JSON Schema (Apache 2.0) and the published coefficient
                          tables (CC BY 4.0). SPDX: Apache-2.0 AND CC-BY-4.0
+  @randomknights/aieds-mcp
+                         the AiEDs MCP server (Apache 2.0), the AiEDs JSON
+                         Schema (Apache 2.0) and the published coefficient
+                         tables (CC BY 4.0). SPDX: Apache-2.0 AND CC-BY-4.0
   @randomknights/earthplus
                          the E+ conformance checker (Apache 2.0) and the E+
                          methodology text, methodology.md (CC BY 4.0).

@@ -1,0 +1,53 @@
+{
+  "name": "@randomknights/aieds-mcp",
+  "version": "2.5.1",
+  "mcpName": "io.github.random-knights/aieds",
+  "description": "AiEDs (AI Energy Disclosure Standard) 2.5.1 MCP server: energy, carbon and modeled water estimates from compute metrics, the published factor tables, and a check of a disclosure record against the AiEDs JSON Schema. Runs over stdio, needs no key and makes no network call.",
+  "type": "module",
+  "bin": {
+    "aieds-mcp": "mcp/dist/index.js"
+  },
+  "files": [
+    "mcp/dist/*.js",
+    "spec/aieds.schema.json",
+    "spec/v2/aieds-factors.json",
+    "LICENSE",
+    "LICENSE-DOCS",
+    "NOTICE"
+  ],
+  "scripts": {
+    "prepack": "node ../../scripts/stage-npm-package.mjs aieds-mcp"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "keywords": [
+    "aieds",
+    "mcp",
+    "mcp-server",
+    "ai",
+    "energy",
+    "carbon",
+    "disclosure",
+    "json-schema"
+  ],
+  "license": "Apache-2.0 AND CC-BY-4.0",
+  "author": "Random Knights, LLC",
+  "homepage": "https://standard.rand0m.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/random-knights/standard.git",
+    "directory": "packages/aieds-mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/random-knights/standard/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

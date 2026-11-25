@@ -12,7 +12,7 @@
 //
 // Usage: node scripts/check-npm-packages.mjs
 import { execFileSync, execSync } from "node:child_process";
-import { copyFileSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -56,6 +56,19 @@ const EXPECTED = {
     "src/vendor/lib/dist/index.js",
     "src/vendor/lib/dist/water.js",
     "src/vendor/spec/v2/aieds-factors.json",
+  ],
+  "aieds-mcp": [
+    "LICENSE",
+    "LICENSE-DOCS",
+    "NOTICE",
+    "README.md",
+    "mcp/dist/estimate.js",
+    "mcp/dist/factors.js",
+    "mcp/dist/index.js",
+    "mcp/dist/water.js",
+    "package.json",
+    "spec/aieds.schema.json",
+    "spec/v2/aieds-factors.json",
   ],
   earthplus: [
     "LICENSE",
@@ -115,6 +128,64 @@ const w = waterFromEnergyWh(0.24);
 if (!w || w.confidence !== "low" || w.basis !== "US avg" || !/Modeled estimate\.$/.test(waterLine(w))) throw new Error("bad water estimate");
 console.log("aieds smoke ok", METHODOLOGY_VERSION);
 `,
+  // The installed bin, spoken to over stdio the way an MCP client does:
+  // initialize, list the tools, call each one once. The server must report the
+  // package version, and the package version must be the methodology version
+  // of the table it ships, the same rule as @randomknights/aieds.
+  "aieds-mcp": `
+import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+const require = createRequire(import.meta.url);
+const pkgPath = require.resolve("@randomknights/aieds-mcp/package.json");
+const pkg = require(pkgPath);
+const factors = require("@randomknights/aieds-mcp/spec/v2/aieds-factors.json");
+if (pkg.version !== factors.methodologyVersion) throw new Error("package version " + pkg.version + " is not methodology " + factors.methodologyVersion);
+const child = spawn(process.execPath, [join(dirname(pkgPath), pkg.bin["aieds-mcp"])], { stdio: ["pipe", "pipe", "inherit"] });
+const waiters = new Map();
+let buf = "";
+child.stdout.setEncoding("utf8");
+child.stdout.on("data", (chunk) => {
+  buf += chunk;
+  for (let i = buf.indexOf("\n"); i >= 0; i = buf.indexOf("\n")) {
+    const line = buf.slice(0, i).trim();
+    buf = buf.slice(i + 1);
+    if (!line) continue;
+    const msg = JSON.parse(line);
+    if (waiters.has(msg.id)) waiters.get(msg.id)(msg);
+  }
+});
+const send = (m) => child.stdin.write(JSON.stringify({ jsonrpc: "2.0", ...m }) + "\n");
+let nextId = 1;
+const call = (method, params) =>
+  new Promise((resolve, reject) => {
+    const id = nextId++;
+    const timer = setTimeout(() => reject(new Error("no answer to " + method)), 15000);
+    waiters.set(id, (m) => {
+      clearTimeout(timer);
+      if (m.error) reject(new Error(method + ": " + JSON.stringify(m.error)));
+      else resolve(m.result);
+    });
+    send({ id, method, params });
+  });
+const tool = async (name, args) => JSON.parse((await call("tools/call", { name, arguments: args })).content[0].text);
+try {
+  const init = await call("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "smoke", version: "0.0.0" } });
+  if (init.serverInfo.version !== pkg.version) throw new Error("server reports " + init.serverInfo.version + ", package is " + pkg.version);
+  send({ method: "notifications/initialized" });
+  const names = (await call("tools/list", {})).tools.map((t) => t.name).sort().join(",");
+  if (names !== "aieds_disclose,aieds_estimate,aieds_factors") throw new Error("unexpected tools: " + names);
+  const est = await tool("aieds_estimate", { subject: { kind: "model", name: "smoke" }, compute: { gpuSeconds: 3600, hardware: "NVIDIA H100 SXM" } });
+  if (!(est.energyKWh > 0) || est.confidence !== "med" || est.methodologyVersion !== pkg.version || !est.water) throw new Error("bad estimate");
+  const fac = await tool("aieds_factors", {});
+  if (fac.methodologyVersion !== pkg.version) throw new Error("factors report " + fac.methodologyVersion);
+  const dis = await tool("aieds_disclose", { disclosure: {} });
+  if (dis.conforms !== false || !dis.errors.length) throw new Error("the schema did not reject an empty record");
+  console.log("aieds-mcp smoke ok", pkg.version);
+} finally {
+  child.kill();
+}
+`,
   // Both module systems, one conforming and one nonconforming sample document.
   earthplus: `
 import { verifyPublishedScoreDoc, formatConformanceReport } from "@randomknights/earthplus";
@@ -154,6 +225,7 @@ const fail = (msg) => {
 for (const name of Object.keys(EXPECTED)) {
   const pkgDir = join(repoRoot, "packages", name);
   const outDir = mkdtempSync(join(tmpdir(), `npm-${name}-`));
+  const manifest = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8"));
   const packed = JSON.parse(npm(`pack --json --pack-destination "${outDir}"`, pkgDir));
   const files = packed[0].files.map((f) => f.path).sort();
   const expected = [...EXPECTED[name]].sort();
@@ -172,7 +244,10 @@ for (const name of Object.keys(EXPECTED)) {
   const tgz = readdirSync(outDir).find((f) => f.endsWith(".tgz"));
   const app = mkdtempSync(join(tmpdir(), `npm-${name}-app-`));
   writeFileSync(join(app, "package.json"), '{"name":"smoke","private":true,"type":"module"}\n');
-  npm(`install --no-audit --no-fund --offline "${join(outDir, tgz)}"`, app);
+  // A package with no dependencies installs with no network at all. One with
+  // dependencies (aieds-mcp) fetches them from the registry, the same as a user.
+  const offline = Object.keys(manifest.dependencies ?? {}).length ? "--prefer-offline" : "--offline";
+  npm(`install --no-audit --no-fund ${offline} "${join(outDir, tgz)}"`, app);
   writeFileSync(join(app, "smoke.mjs"), SMOKE[name]);
   for (const f of SAMPLES[name] ?? []) copyFileSync(join(pkgDir, "test", f), join(app, f));
   try {
@@ -199,6 +274,22 @@ for (const name of Object.keys(EXPECTED)) {
     } catch (err) {
       fail(`aieds: the installed bin failed: ${err.message}`);
     }
+  }
+  if (name === "aieds-mcp") {
+    // server.json is what the owner hands to the MCP Registry. It must name
+    // this package, at this version, under the package's own mcpName, or the
+    // registry refuses it (it checks mcpName in the published package.json).
+    const server = JSON.parse(readFileSync(join(pkgDir, "server.json"), "utf8"));
+    const entry = (server.packages ?? []).find((p) => p.registryType === "npm");
+    if (server.name !== manifest.mcpName) fail(`aieds-mcp: server.json name ${server.name} is not mcpName ${manifest.mcpName}`);
+    if (!/^io\.github\.random-knights\//.test(manifest.mcpName ?? "")) fail("aieds-mcp: mcpName is not under io.github.random-knights/");
+    if (server.version !== manifest.version) fail(`aieds-mcp: server.json version ${server.version} is not ${manifest.version}`);
+    if (!entry || entry.identifier !== manifest.name || entry.version !== manifest.version) {
+      fail("aieds-mcp: server.json packages[npm] does not name this package at this version");
+    }
+    if (!(server.description?.length <= 100)) fail("aieds-mcp: server.json description is over the registry's 100 characters");
+    if (!existsSync(join(app, "node_modules", ".bin", "aieds-mcp"))) fail("aieds-mcp: npm linked no aieds-mcp bin");
+    else console.log("aieds-mcp bin ok (linked, server.json matches the package)");
   }
   if (name === "earthplus") {
     // The installed bin: exit 0 on the conforming sample, exit 1 on the other.

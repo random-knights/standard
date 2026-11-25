@@ -87,7 +87,21 @@ AiEDs disclosures are **self-attested** - this tool checks schema conformance on
 
 ## Wiring (stdio)
 
-In your MCP client config (e.g. Claude Desktop `claude_desktop_config.json`):
+From npm, once `@randomknights/aieds-mcp` is published (see "Publishing" below),
+in your MCP client config (e.g. Claude Desktop `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "aieds": {
+      "command": "npx",
+      "args": ["-y", "@randomknights/aieds-mcp"]
+    }
+  }
+}
+```
+
+From a clone of this repository:
 
 ```json
 {
@@ -126,8 +140,27 @@ A disclosure is **schema-conformance self-attestation**:
 
 No server, no registry, no API key. The schema is the contract.
 
+## Publishing
+
+This folder is the build and test workspace and is never published itself. The
+npm package `@randomknights/aieds-mcp` is packed from
+[packages/aieds-mcp](../packages/aieds-mcp): its `prepack` runs
+`scripts/stage-npm-package.mjs aieds-mcp`, which builds this server and copies
+`dist/*.js` (not the tests) and the two spec files it reads into the package,
+side by side, the same layout as here. `scripts/check-npm-packages.mjs` holds
+the tarball to an exact file list and runs the installed bin as an MCP client
+would, in CI on every change.
+
+The package version is the methodology version, and the server reports it in
+`serverInfo.version`.
+
+For the official MCP Registry, the package carries
+`"mcpName": "io.github.random-knights/aieds"` and
+[packages/aieds-mcp/server.json](../packages/aieds-mcp/server.json) describes
+it. The registry only lists a package that is already on npm, so the npm
+publish comes first. Nothing here publishes or submits anything by itself.
+
 ## Roadmap (deferred)
 
 - Read API / SDK for ingesting disclosures from external producers
 - `.well-known/aieds.json` auto-discovery endpoint
-- npm publish `@random-knights/aieds-mcp`

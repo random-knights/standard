@@ -30,7 +30,7 @@ Fixes go into the newest release only.
 
 | What | Supported |
 | ---- | --------- |
-| AiEDs 2.5.x: the methodology, `@randomknights/aieds` on npm and the plugin that ships with it | Yes |
+| AiEDs 2.5.x: the methodology, `@randomknights/aieds` and `@randomknights/aieds-mcp` on npm, and the plugin that ships with it | Yes |
 | AiEDs 2.0.0 to 2.4.0 | No. Records made under them stay valid; update to get fixes. |
 | AiEDs 1.x | No. Superseded; do not implement it. |
 
