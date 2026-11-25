@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest a change to the tools or a new source for the standard.
+title: "Feature: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A change to a coefficient, a constant or a rule of the standard needs a published source. See CONTRIBUTING.md for how the standard changes.
+  - type: dropdown
+    id: area
+    attributes:
+      label: What would change?
+      options:
+        - The standard text or the factor tables (spec)
+        - The reference library (lib)
+        - The aieds command or the npm package
+        - The Claude Code or Codex plugin
+        - The MCP server
+        - The website (standard.rand0m.ai)
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What can you not do today, or what is harder than it should be?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you propose
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources
+      description: For a number or a rule, link the published source. Leave empty for a tooling request.
+    validations:
+      required: false

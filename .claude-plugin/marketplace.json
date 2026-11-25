@@ -11,7 +11,7 @@
       "source": "./plugins/random-knights",
       "description": "AiEDs energy, carbon and tree-time receipt after every Claude Code or Codex response, computed locally from the session's token usage.",
       "homepage": "https://standard.rand0m.ai",
-      "license": "Apache-2.0",
+      "license": "Apache-2.0 AND CC-BY-4.0",
       "keywords": ["aieds", "energy", "carbon", "disclosure", "receipt"]
     }
   ]
