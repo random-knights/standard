@@ -280,6 +280,29 @@ test("grok receipt: --session finds updates.jsonl under GROK_HOME, ids are valid
   }
 });
 
+test("grok receipt: --last grok reads the newest session under GROK_HOME, and says so when there is none", async () => {
+  const dir = tmp();
+  try {
+    const env = { GROK_HOME: dir, CLAUDE_CONFIG_DIR: join(dir, "none") };
+    const none = await run(["receipt", "--last", "grok"], undefined, { env });
+    assert.equal(none.code, 0, none.stderr);
+    assert.match(none.stdout, /No Grok Build session was found/);
+
+    const sessionDir = join(dir, "sessions", "C%3A%5Cproject", "00000000-0000-4000-8000-0000000000d2");
+    mkdirSync(sessionDir, { recursive: true });
+    writeFileSync(join(sessionDir, "updates.jsonl"), fixtureText("grok-updates.jsonl"));
+    const r = await run(["receipt", "--last", "grok"], undefined, { env });
+    assert.equal(r.code, 0, r.stderr);
+    assert.deepEqual(scopeLines(r.stdout), expectedScopes(fixtureText("grok-updates.jsonl")));
+
+    const json = await run(["receipt", "--last", "grok", "--json"], undefined, { env });
+    assert.equal(json.code, 0, json.stderr);
+    assert.equal(JSON.parse(json.stdout).error, undefined);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("grok: the tested version is pinned in code and named in the README", () => {
   assert.equal(TESTED_HOSTS.grok, "1.0.50");
   const readme = readFileSync(join(pluginRoot, "README.md"), "utf8");

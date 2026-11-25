@@ -451,7 +451,7 @@ async function resolveTranscript(args, core, say = console.log) {
       say("--last supports grok today (the newest Grok Build session). For other tools use --session or --transcript.");
       return;
     }
-    path = hosts.findNewestGrokSession(env);
+    path = hosts.findNewestGrokSession(process.env);
     if (path === undefined) {
       say("No Grok Build session was found under GROK_HOME or ~/.grok/sessions, so no receipt can be built.");
       return;

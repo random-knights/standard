@@ -25,6 +25,14 @@ the commit history. Numbers in parentheses are pull requests.
   `receipt --json` includes the session as a disclosure record that validates
   against `spec/aieds.schema.json`. No figure, coefficient or rounding rule
   changes, and the output without `--json` is the same as before.
+- Plugin 0.8.0: the receipt starts with a title line and a row of column
+  names, and the figures line up in columns. Commands run in a terminal can
+  print the figures in color; hooks and files stay plain text (#122).
+
+### Fixed
+
+- Plugin: `aieds receipt --last grok` stopped with an error before it read
+  the session. It now reads the newest Grok Build session again.
 
 ## [2.5.1] - 2026-11-19
 
