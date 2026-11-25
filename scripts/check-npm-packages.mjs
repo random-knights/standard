@@ -147,7 +147,7 @@ let buf = "";
 child.stdout.setEncoding("utf8");
 child.stdout.on("data", (chunk) => {
   buf += chunk;
-  for (let i = buf.indexOf("\n"); i >= 0; i = buf.indexOf("\n")) {
+  for (let i = buf.indexOf("\\n"); i >= 0; i = buf.indexOf("\\n")) {
     const line = buf.slice(0, i).trim();
     buf = buf.slice(i + 1);
     if (!line) continue;
@@ -155,7 +155,7 @@ child.stdout.on("data", (chunk) => {
     if (waiters.has(msg.id)) waiters.get(msg.id)(msg);
   }
 });
-const send = (m) => child.stdin.write(JSON.stringify({ jsonrpc: "2.0", ...m }) + "\n");
+const send = (m) => child.stdin.write(JSON.stringify({ jsonrpc: "2.0", ...m }) + "\\n");
 let nextId = 1;
 const call = (method, params) =>
   new Promise((resolve, reject) => {
