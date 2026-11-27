@@ -1,3 +1,7 @@
+#!/usr/bin/env node
+// The aieds-mcp command: an MCP server over stdio. Published on npm as
+// @randomknights/aieds-mcp (packages/aieds-mcp); the shebang above is what
+// lets npx and an MCP client run dist/index.js as that command.
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -24,8 +28,11 @@ const ajv = new Ajv2020({ strict: false });
 (addFormats as unknown as (a: Ajv2020) => void)(ajv);
 const validateDisclosure = ajv.compile(schema);
 
+// The server reports the methodology version its factor table declares. The
+// published package carries the same version (scripts/check-npm-packages.mjs
+// holds the two equal), so a client sees one number, not two that can drift.
 const server = new Server(
-  { name: "aieds", version: "1.0.0" },
+  { name: "aieds", version: METHODOLOGY_VERSION },
   { capabilities: { tools: {} } },
 );
 
@@ -35,7 +42,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       name: "aieds_estimate",
       description:
         "Estimate energy consumption (kWh) and CO2e emissions (gCO2e) for an AI subject " +
-        "from compute metrics. Returns a deterministic result from AiEDs v1 factor tables. " +
+        `from compute metrics. Returns a deterministic result from the AiEDs ${METHODOLOGY_VERSION} factor tables. ` +
         "Confidence reflects the input path: gpuSeconds + known hardware -> 'med'; " +
         "tokens or flops only -> 'low'. Direct power measurement -> 'high' (not emitted by this tool). " +
         "For inference it also returns a modeled water estimate (consumption, a low to high range, " +
@@ -83,7 +90,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "aieds_factors",
       description:
-        "Return the current AiEDs v1 factor tables: hardware power draw (W), " +
+        `Return the AiEDs ${METHODOLOGY_VERSION} compute-path factor tables: hardware power draw (W), ` +
         "grid carbon intensities (gCO2e/kWh), token energy proxies (Wh/1M tokens), " +
         "and the J/TFLOP constant. Use these to build disclosures manually or audit estimates.",
       inputSchema: {
@@ -96,7 +103,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description:
         "Validate a disclosure object against aieds.schema.json (AiEDs v2 JSON Schema draft 2020-12). " +
         "Returns {conforms, errors, methodologyBadge}. The badge is a short attestation string " +
-        "for display or log embedding (e.g. 'AiEDs v1.0.0, med confidence'). " +
+        `for display or log embedding (e.g. 'AiEDs v${METHODOLOGY_VERSION}, med confidence'). ` +
         "AiEDs disclosures are self-attested - this tool checks schema conformance only.",
       inputSchema: {
         type: "object",

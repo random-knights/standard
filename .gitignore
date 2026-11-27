@@ -20,6 +20,8 @@ packages/*/NOTICE
 packages/aieds/lib/
 packages/aieds/spec/
 packages/aieds/src/
+packages/aieds-mcp/mcp/
+packages/aieds-mcp/spec/
 packages/earthplus/dist/
 packages/earthplus/methodology.md
 *.tgz

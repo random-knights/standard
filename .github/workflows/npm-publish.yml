@@ -1,6 +1,6 @@
-# Publish @randomknights/aieds or @randomknights/earthplus to npm with npm
-# trusted publishing (OIDC) and provenance. Manual dispatch only, from main
-# only.
+# Publish @randomknights/aieds, @randomknights/aieds-mcp or
+# @randomknights/earthplus to npm with npm trusted publishing (OIDC) and
+# provenance. Manual dispatch only, from main only.
 #
 # DISABLED until the owner links each package to this workflow on npmjs.com.
 # The job runs only when the repository variable NPM_TRUSTED_PUBLISHING is
@@ -36,6 +36,7 @@ on:
         type: choice
         options:
           - aieds
+          - aieds-mcp
           - earthplus
 
 permissions:

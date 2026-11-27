@@ -28,6 +28,13 @@ the commit history. Numbers in parentheses are pull requests.
 - Plugin 0.8.0: the receipt starts with a title line and a row of column
   names, and the figures line up in columns. Commands run in a terminal can
   print the figures in color; hooks and files stay plain text (#122).
+- MCP server: ready to publish on npm as `@randomknights/aieds-mcp` 2.5.1,
+  packed from `packages/aieds-mcp`, with `mcpName`
+  `io.github.random-knights/aieds` and a `server.json` for the official MCP
+  Registry. CI packs it, checks its file list and runs the installed
+  `aieds-mcp` bin as an MCP client would. The npm publish workflow offers it.
+  The server now reports the methodology version, and its tool descriptions
+  no longer say "AiEDs v1". No tool, input, figure or coefficient changes.
 
 ### Fixed
 

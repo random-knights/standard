@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.random-knights/aieds",
+  "title": "AiEDs",
+  "description": "AI energy, carbon and water estimates from compute metrics, and AiEDs disclosure record checks",
+  "repository": {
+    "url": "https://github.com/random-knights/standard",
+    "source": "github",
+    "subfolder": "mcp"
+  },
+  "websiteUrl": "https://standard.rand0m.ai",
+  "version": "2.5.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@randomknights/aieds-mcp",
+      "version": "2.5.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
