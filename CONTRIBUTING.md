@@ -63,25 +63,29 @@ npm packages and the production site are released separately.
 
 ### npm packages
 
-Two packages are built from `packages/`, each staged at pack time from its
+Three packages are built from `packages/`, each staged at pack time from its
 canonical files by `scripts/stage-npm-package.mjs`:
 
 | Package | Version source | Contents |
 |---------|----------------|----------|
-| `@randomknights/aieds` | `spec/methodology.md` | reference library, JSON Schema, coefficient tables, and the `aieds` command (staged from `plugins/random-knights/scripts`) |
+| `@randomknights/aieds` | `spec/methodology.md` (same major.minor, patch may run ahead) | reference library, JSON Schema, coefficient tables, and the `aieds` command (staged from `plugins/random-knights/scripts`) |
+| `@randomknights/aieds-mcp` | `spec/methodology.md` (exact) | the AiEDs MCP server (built from `mcp/`), the JSON Schema and the coefficient table, plus `server.json` for the MCP Registry |
 | `@randomknights/earthplus` | `eplus/v1/methodology.md` | E+ conformance checker (library and `eplus-conformance` CLI) and the E+ methodology text |
 
 Nothing else is published. The repository root, `lib/` and `mcp/` are marked
-`"private": true` and are never published; `lib/` and `spec/` reach npm only
-inside `@randomknights/aieds`, and the E+ checker only inside
-`@randomknights/earthplus`. The old `@random-knights/*` scope is retired.
+`"private": true` and are never published; `lib/` reaches npm only inside
+`@randomknights/aieds`, the MCP server only inside `@randomknights/aieds-mcp`,
+and the E+ checker only inside `@randomknights/earthplus`. The old `@random-knights/*` scope is retired.
 
 1. Land the change on `main` via PR with CI green. The `packages` CI job packs
    every package, holds each tarball to an exact file list, installs it into
    an empty project, smoke tests it, and runs `npm publish --dry-run`.
-2. Bump the version in `packages/<name>/package.json` to the version of the
-   standard it carries, on `main`, via PR. npm refuses to publish over an
-   existing version.
+2. Bump the version in `packages/<name>/package.json` on `main`, via PR, by
+   the rule in the table above. `@randomknights/aieds` may move its patch on
+   its own for a code change that leaves the standard alone (2.5.2 implements
+   2.5.1); `@randomknights/aieds-mcp` and its `server.json` carry the exact
+   methodology version. npm refuses to publish over an existing version, and
+   a staged version holds its number too.
 3. STAGE it with the `npm publish` workflow
    (`.github/workflows/npm-publish.yml`, manual dispatch from `main`, choose
    the package). It uses npm trusted publishing with provenance; there is no
@@ -102,6 +106,11 @@ inside `@randomknights/aieds`, and the E+ checker only inside
    ```
 
 5. Confirm: `npm run check:published` should report every surface `ok`.
+6. For `@randomknights/aieds-mcp` only, list the new version on the official
+   MCP Registry: run the `MCP Registry publish` workflow
+   (`.github/workflows/mcp-registry-publish.yml`, manual dispatch from
+   `main`) once npm serves it. It signs in with the job's GitHub identity
+   and stops if npm does not serve the `server.json` version and `mcpName`.
 
 WHY TWO STEPS. The trusted publisher is deliberately configured WITHOUT "allow
 direct publish", which is npm's own recommendation. CI builds the tarball and

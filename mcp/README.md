@@ -158,7 +158,12 @@ For the official MCP Registry, the package carries
 `"mcpName": "io.github.random-knights/aieds"` and
 [packages/aieds-mcp/server.json](../packages/aieds-mcp/server.json) describes
 it. The registry only lists a package that is already on npm, so the npm
-publish comes first. Nothing here publishes or submits anything by itself.
+publish comes first. The listing is the manual workflow
+[mcp-registry-publish.yml](../.github/workflows/mcp-registry-publish.yml): run
+it from main once npm serves the version `server.json` names. It signs in with
+the job's GitHub identity (OIDC), so it needs no secret, and it stops before
+submitting if npm does not serve that version with that `mcpName`. Nothing
+here publishes or submits anything by itself.
 
 ## Roadmap (deferred)
 
