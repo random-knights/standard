@@ -85,7 +85,7 @@ const REPO = "random-knights/standard";
 // The packages this repository publishes. Only these are compared, so a
 // package that was published once and is no longer built here is not this
 // check's business, whatever the registry still holds for it.
-const PACKAGES = ["aieds", "earthplus"];
+const PACKAGES = ["aieds", "aieds-mcp", "earthplus"];
 
 async function getJson(url, headers = {}) {
   const res = await fetch(url, { headers: { "cache-control": "no-cache", ...headers } });
