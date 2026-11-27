@@ -19,6 +19,7 @@
 
 | Version | Date       | Changes |
 |---------|------------|---------|
+| Proposed | 2026-11-27 | **AMENDS THE 2026-10-26 PROPOSAL; STILL PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Owner decision 2026-11-27: section 2.7 no longer waits for a sourced cache-read energy coefficient. No provider published one as of 2026-11-27, so it moves from the open items to future work. The short receipt still counts cache reads as free, labeled as an understatement floor, and when a provider publishes a figure it still enters through section 6. The other open items in section 2.7 stay open. NUMBERS: nothing moves. Every coefficient, constant, table, schema field and ratified record is unchanged, and records, logs and synced receipts keep the section 2.4.1 count. |
 | Proposed | 2026-10-26 | **PROPOSED, PENDING OWNER RATIFICATION; NO VERSION BUMP UNTIL RATIFIED.** Proposed version 2.6.0. New section 2.7, THE SHORT RECEIPT: three scope lines (this response, this session, the user's account), each with energy, carbon, water and Tree-Time; comparisons from the account total only, with the section 2.5 constants; one plain basis line. On the short receipt cache-read tokens count as free and plain input, cache-creation and output tokens are charged at the profile coefficients with PUE: an understatement floor, labeled as one, opposite the section 2.4.1 ceiling. No discount coefficient is introduced; a sourced cache-read coefficient is still needed before ratification. One significant figure with a tilde, unit steps, thousands separators. The account total is kept on the user's machine, one hashed entry per session, never sent. NUMBERS: nothing moves. Every coefficient, constant, table, schema field and ratified record is unchanged, and records, logs and synced receipts keep the section 2.4.1 count. |
 | 2.5.1   | 2026-11-19 | **PATCH (correction). No number changes; 2.0.0 through 2.5.0 records remain valid.** Owner decision 2026-11-05: the label for the default grid water figure is "US avg", not "US average". WHAT CHANGED: `gridBasisDefaultLabel` and the grid water note in `aieds-factors.json`, section 2.6.5, W10 and V7 now say "US avg". INPUT: a requested region of "US avg" is read as the US average, the same as "US average", "US" or no region, so it does not set `requestedRegion`. WHAT DID NOT CHANGE: every coefficient, Table 5, the water defaults and range, the schema shape and every other rule. The 2.5.0 row below keeps the label 2.5.0 shipped with. |
 | 2.5.0   | 2026-10-18 | **MINOR (additive). No existing number changes; 2.0.0 through 2.4.0 records remain valid.** WORKING LABEL: the owner assigns the final number at publish. WHAT CHANGED: new section 2.6, WATER, and Table 5. A disclosure MAY carry a modeled water figure: `waterL = energyKWh x (siteWUE + gridWaterIntensity)`, consumption basis, inference only, always a low to high range, confidence `low` by rule. Defaults 0.36 L/kWh on site plus 4.52 L/kWh at the power plant (4.88 L/kWh; range 1.77 to 11.3), from LBNL-2001637 (Shehabi et al. 2024), the US average, labeled "US average" wherever it stands in for a region. NEW COPY: the third required sentence, "Water is a modeled estimate.", beside the two existing ones, plus a banned-word list for water copy and conformance rules W1 to W11. NEW COMPARISON: the teaspoon (5 mL), an educational comparison. SCHEMA: new optional top-level `water` block; records without it stay valid. WHAT DID NOT CHANGE: every coefficient, both grid intensities, Tables 1 to 4b, the equivalency constants, the provenance and confidence ladders, and the response-surface path. OUT OF SCOPE: training water, embodied water, scarcity weighting, market-based water. |
@@ -675,11 +676,12 @@ energyWh  = (chargedIn/1000 x whPer1kIn + outTok/1000 x whPer1kOut) x pue
 This is an UNDERSTATEMENT FLOOR, and it is labeled as one. Section 2.4.1
 charges the same tokens at the full input rate and is a ceiling of the same
 kind. The real figure is very likely between the two. No discount coefficient
-is introduced: a guessed ratio would be a number without a source. **Open
-before ratification:** a sourced cache-read energy coefficient is still needed.
-When a provider publishes one it enters through section 6 and replaces the
-zero here. Until then the detail command prints both counts, and records,
-logs and synced receipts keep the section 2.4.1 count unchanged.
+is introduced: a guessed ratio would be a number without a source. **Future
+work, not a blocker (owner decision 2026-11-27):** a sourced cache-read energy
+coefficient. No provider published one as of 2026-11-27, so ratification does
+not wait for it. When a provider publishes one it enters through section 6 and
+replaces the zero here. Until then the detail command prints both counts, and
+records, logs and synced receipts keep the section 2.4.1 count unchanged.
 
 On the sample turn above, the floor gives about 47 Wh (230,000 charged input
 tokens and 9,500 output tokens), about 20 g CO2e, about 0.2 L of water and
@@ -714,7 +716,6 @@ one meter, "less than 1 m".
 
 **Open before ratification.**
 
-- The cache-read coefficient above.
 - Section 2.5 says equivalencies MUST be labeled educational, and rules W6 and
   W11 in section 2.6.13 ask a rendered view with water for the three required
   sentences and a way to reach the range. The short receipt no longer prints
