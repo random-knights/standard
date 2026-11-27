@@ -36,6 +36,18 @@ the commit history. Numbers in parentheses are pull requests.
   The server now reports the methodology version, and its tool descriptions
   no longer say "AiEDs v1". No tool, input, figure or coefficient changes.
 
+### Changed
+
+- npm: `@randomknights/aieds` moves to 2.5.2 to ship plugin 0.8.0 (the
+  receipt title, column names, aligned columns and terminal color, including
+  the maroon ramp for light terminals) and `--json`. The methodology stays
+  2.5.1: no rule, figure, coefficient or schema changes. The package version
+  now carries the methodology's major and minor number and is never lower
+  than it, and its patch can move on its own for a code change, the rule
+  `@randomknights/earthplus` already follows. `@randomknights/aieds-mcp`
+  keeps the exact methodology version. CI checks that the installed package
+  prints the maroon ramp.
+
 ### Fixed
 
 - Plugin: `aieds receipt --last grok` stopped with an error before it read

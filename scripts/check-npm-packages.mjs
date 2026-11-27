@@ -117,7 +117,11 @@ const schema = require("@randomknights/aieds/schema.json");
 const factors = require("@randomknights/aieds/factors.json");
 const pkg = require("@randomknights/aieds/package.json");
 if (METHODOLOGY_VERSION !== factors.methodologyVersion) throw new Error("version drift");
-if (pkg.version !== METHODOLOGY_VERSION) throw new Error("package version " + pkg.version + " is not methodology " + METHODOLOGY_VERSION);
+// The package carries the methodology's major.minor and is never lower than
+// it; the patch can move on its own for a code change (2.5.2 implements 2.5.1).
+const part = (v, i) => parseInt(v.split(".")[i], 10);
+const sameLine = part(pkg.version, 0) === part(METHODOLOGY_VERSION, 0) && part(pkg.version, 1) === part(METHODOLOGY_VERSION, 1);
+if (!sameLine || part(pkg.version, 2) < part(METHODOLOGY_VERSION, 2)) throw new Error("package version " + pkg.version + " does not implement methodology " + METHODOLOGY_VERSION);
 if (!String(schema.$id).includes("aieds")) throw new Error("schema not loaded");
 const d = disclosureFromResponse({ provider: "GoogleAI", model: "gemini-2.0-flash", inputTokens: 412, outputTokens: 890 });
 if (!(d.energyWh > 0) || d.provenance !== "vendor-published") throw new Error("bad disclosure");
@@ -131,7 +135,7 @@ console.log("aieds smoke ok", METHODOLOGY_VERSION);
   // The installed bin, spoken to over stdio the way an MCP client does:
   // initialize, list the tools, call each one once. The server must report the
   // package version, and the package version must be the methodology version
-  // of the table it ships, the same rule as @randomknights/aieds.
+  // of the table it ships, exactly (@randomknights/aieds may run a patch ahead).
   "aieds-mcp": `
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
@@ -268,9 +272,20 @@ for (const name of Object.keys(EXPECTED)) {
       if (!/^this response {3}/m.test(bin("usage --provider Test --model test-model --input 100 --output 20"))) {
         fail("aieds: usage printed no receipt");
       }
+      // The light-terminal maroon ramp ships: forced color, light theme,
+      // truecolor puts the first maroon (#723848) on the receipt.
+      const colorEnv = { ...env, AIEDS_COLOR: "always", AIEDS_THEME: "light", COLORTERM: "truecolor" };
+      delete colorEnv.NO_COLOR;
+      const painted = execSync("npm exec --offline -- aieds usage --provider Test --model test-model --input 100 --output 20", {
+        cwd: app,
+        encoding: "utf8",
+        env: colorEnv,
+        stdio: ["ignore", "pipe", "inherit"],
+      });
+      if (!painted.includes("\u001b[1;38;2;114;56;72m")) fail("aieds: the light theme did not print the maroon ramp");
       if (!/not connected/.test(bin("status"))) fail("aieds: status did not say it is not connected");
       if (!/Nothing was written/.test(bin("install copilot"))) fail("aieds: install copilot did not stop at the diff");
-      console.log("aieds bin ok (version, usage, status, install diff)");
+      console.log("aieds bin ok (version, usage, maroon light theme, status, install diff)");
     } catch (err) {
       fail(`aieds: the installed bin failed: ${err.message}`);
     }

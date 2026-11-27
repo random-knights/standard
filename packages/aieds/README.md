@@ -93,9 +93,13 @@ The library does not bundle a validator.
 
 ## Versions
 
-The package version is the AiEDs methodology version it implements. The
-methodology version the library read from its bundled table is exported as
-`METHODOLOGY_VERSION`.
+The package version starts with the major and minor number of the AiEDs
+methodology it implements, and is never lower than that methodology version.
+The patch number can move on its own for a change to the code or the `aieds`
+command that leaves the standard alone: 2.5.2 implements methodology 2.5.1.
+The methodology version the library read from its bundled table is exported
+as `METHODOLOGY_VERSION`, so check that, not the package version, to know
+which rules a figure follows.
 
 ## License
 
