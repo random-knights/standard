@@ -35,6 +35,10 @@ the commit history. Numbers in parentheses are pull requests.
   `aieds-mcp` bin as an MCP client would. The npm publish workflow offers it.
   The server now reports the methodology version, and its tool descriptions
   no longer say "AiEDs v1". No tool, input, figure or coefficient changes.
+- MCP Registry: a manual workflow, `mcp-registry-publish.yml`, lists the
+  server as `io.github.random-knights/aieds` from `server.json`, signed in
+  with the job's GitHub identity. It checks that npm serves the version and
+  `mcpName` first.
 
 ### Changed
 

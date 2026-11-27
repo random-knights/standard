@@ -1,0 +1,72 @@
+# List the AiEDs MCP server on the official MCP Registry
+# (registry.modelcontextprotocol.io) as io.github.random-knights/aieds, from
+# packages/aieds-mcp/server.json. Manual dispatch only, from main only. The
+# listing is public, so a run is an owner act, the same as an npm publish.
+#
+# Sign-in is GitHub OIDC: the registry trusts this job's identity token for
+# the io.github.random-knights/* namespace because this repository belongs to
+# the random-knights organization. No secret, no personal token and nothing to
+# install or sign in to on the owner's computer.
+#
+# Order: the registry only lists a package that is already on npm at the
+# version server.json names, and it reads mcpName from that published
+# package.json. Publish @randomknights/aieds-mcp first (npm-publish.yml, then
+# `npm stage approve`). The first step below refuses to go on until npm
+# serves that version with that mcpName.
+#
+# A new version: bump packages/aieds-mcp/package.json and server.json together
+# on main (CI holds them equal), publish to npm, then run this again.
+name: MCP Registry publish
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-registry-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: List io.github.random-knights/aieds
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: packages/aieds-mcp
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: npm serves the version server.json names
+        run: |
+          name=$(jq -r '.packages[] | select(.registryType == "npm") | .identifier' server.json)
+          version=$(jq -r '.packages[] | select(.registryType == "npm") | .version' server.json)
+          want=$(jq -r '.name' server.json)
+          live=$(npm view "$name@$version" version 2>/dev/null || true)
+          if [ "$live" != "$version" ]; then
+            echo "::error::$name@$version is not on npm. Publish it with npm-publish.yml and approve the stage first."
+            exit 1
+          fi
+          mcp=$(npm view "$name@$version" mcpName 2>/dev/null || true)
+          if [ "$mcp" != "$want" ]; then
+            echo "::error::npm $name@$version has mcpName '$mcp', but server.json is '$want'."
+            exit 1
+          fi
+          echo "$name@$version is on npm with mcpName $want."
+
+      - name: Install mcp-publisher
+        run: |
+          os=$(uname -s | tr '[:upper:]' '[:lower:]')
+          arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_${os}_${arch}.tar.gz" | tar xz mcp-publisher
+
+      - name: Sign in to the MCP Registry with this job's GitHub identity
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish server.json
+        run: ./mcp-publisher publish
